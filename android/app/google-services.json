@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "747621038326",
+    "firebase_url": "https://do-an-tot-nghiep-afd66-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "do-an-tot-nghiep-afd66",
+    "storage_bucket": "do-an-tot-nghiep-afd66.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:747621038326:android:308c1760d53ec353bc54d7",
+        "android_client_info": {
+          "package_name": "com.example.do_an_tot_nghiep"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAh2HL_bs0--wz0s-097QEHkCAgERYwt8U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
