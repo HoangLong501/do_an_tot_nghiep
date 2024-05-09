@@ -1,9 +1,14 @@
 
+import 'dart:ffi';
+import 'package:do_an_tot_nghiep/service/database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:intl/intl.dart';
+import '../../service/shared_pref.dart';
 import 'login.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 class CreatePassWord extends StatefulWidget {
   final String surname;
   final String name;
@@ -24,16 +29,18 @@ class _CreatePassWordState extends State<CreatePassWord> {
   TextEditingController passwordcontroller=TextEditingController();
   TextEditingController repasswordcontroller=TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  void _creatacc(){
-    String password = passwordcontroller.text;
-    Map<String,dynamic> infoUser={
-      "surName": "${widget.surname}",
-      "name": "${widget.name}",
-      "birthData": "${widget.birthDate}",
-      "sex": "${widget.sex}",
-
-    };
-
+  getvaluefromfirebase()async{
+    QuerySnapshot querySnapshot= await FirebaseFirestore.instance.collection("test").get();
+    print("do dai: ${querySnapshot.size}" );
+  }
+  String generateID(String username) {
+    // Lấy thời gian hiện tại
+    DateTime now = DateTime.now();
+    // Định dạng thời gian thành chuỗi YYYYMMDDHHmm
+    String formattedDate = DateFormat('yyyyMMddHHmm').format(now);
+    // Kết hợp tên người dùng và thời gian để tạo ID
+    String id = '${username}_$formattedDate';
+    return id;
   }
   @override
   Widget build(BuildContext context) {
@@ -63,6 +70,7 @@ class _CreatePassWordState extends State<CreatePassWord> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 20),
+
                           Text(
                             'Tạo mật khẩu của bạn',
                             style: TextStyle(
@@ -147,16 +155,13 @@ class _CreatePassWordState extends State<CreatePassWord> {
                                     setState(() {
                                         passWord=passwordcontroller.text;
                                         rePassWord=repasswordcontroller.text;
+                                        _SignUpState();
 
 
                                     });
                                   }
                                   // Xử lý đăng nhập ở đây
-                                  // Navigator.push(
-                                  //   context,
-                                  //   MaterialPageRoute(builder: (context)=>login()),
-                                  // );
-                                 // _creatacc();
+
                                 },
                                 style: ButtonStyle(
                                   backgroundColor:
@@ -192,5 +197,82 @@ class _CreatePassWordState extends State<CreatePassWord> {
         )
         )
     );
+  }
+  Future<void> _SignUpState() async {
+    String userName = "",
+        birthDate = "",
+        sex = "",
+        phone = "",
+        email = "",
+        image = "";
+    String? resualString = await SharedPreferenceHelper().getUerSinup();
+    int resual = int.parse(resualString.toString());
+    if (resual == 1) {
+
+      phone = widget.phone;
+    } else {
+      //print("else 1");
+      email = widget.phone;
+    }
+    userName = "${widget.surname} ${widget.name}";
+    birthDate = widget.birthDate;
+    sex = widget.sex;
+
+      if (passWord != null ) {
+       // print("dong 216");
+        if (resual == 2) {
+          //print("vao if");
+          try {
+            print(email);
+            print(passWord);
+            UserCredential userCredential = await FirebaseAuth.instance
+                .createUserWithEmailAndPassword(
+                email: email, password: passWord);
+            String id = generateID(widget.name);
+
+            Map<String, dynamic> userInfoMap = {
+              "IdUser": id,
+              "Username": userName,
+              "E-mail": email,
+              "Sex": sex,
+              "Birthdate": birthDate,
+              "Phone": "",
+              "imageAvatar": "",
+              "News": [],
+            };
+            print("UserInfoMap before adding: $userInfoMap");
+            DatabaseMethods().addUserDetail(id, userInfoMap);
+            await SharedPreferenceHelper().saveUserName(userName);
+            await SharedPreferenceHelper().saveIdUser(id);
+            await SharedPreferenceHelper().saveUserPhone(phone);
+            await SharedPreferenceHelper().saveUserEmail(email);
+            await SharedPreferenceHelper().saveImageUser(image);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Đăng kí tài khoản thành công!"),));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => login()));
+          } on FirebaseAuthException catch (e) {
+            print("lỗi code FirebaseAuth: ${e.code}");
+            if (e.code == 'Mật khẩu yếu') {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: Colors.orange,
+                  content: Text("Mật khẩu quá yếu "),
+                ),
+              );
+            } else if (e.code == 'email đã được sử dụng') {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Tài khoản đã tồn tại"),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          } catch (ex) {
+            print(ex);
+          }
+        }else{
+          print("else");
+        }
+
+    }
   }
 }

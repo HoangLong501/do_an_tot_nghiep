@@ -1,8 +1,13 @@
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/register.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../service/database.dart';
+import '../../service/shared_pref.dart';
 class login extends StatefulWidget {
   const login({super.key});
 
@@ -11,7 +16,13 @@ class login extends StatefulWidget {
 }
 
 class _loginState extends State<login> {
+  bool _obscureText = true;
+  TextEditingController userNameConTroller = TextEditingController();
+  TextEditingController passWordConTroller = TextEditingController();
   Color facebookBlue = const Color(0xFF1877F2);
+  final _formKey = GlobalKey<FormState>();
+  String userName="", passWord="";
+  String email="",id="",phone="",username="",image="",birthDate="",sex="";
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,6 +30,8 @@ appBar: AppBar(
   
 ),
       body: SingleChildScrollView(
+    child: Form(
+    key: _formKey,
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -52,8 +65,17 @@ appBar: AppBar(
                 ),
         
                 SizedBox(height: 70),
-                TextField(
+                TextFormField(
+                  validator: (value) {
+
+                    if (value == null || value.isEmpty ) {
+                      return 'Email hoặc số điẹn thoại không được đẻ trống!';
+                    }
+                    return null;
+                  },
+                  controller: userNameConTroller,
                   decoration: InputDecoration(
+
                     filled: true,
                     fillColor: Colors.white,
                     hintText: 'Email hoặc số điện thoại',
@@ -64,7 +86,16 @@ appBar: AppBar(
                   ),
                 ),
                 SizedBox(height: 20),
-                TextField(
+                TextFormField(
+                  validator: (value) {
+
+                    if (value == null || value.isEmpty ) {
+                      return 'Mật khẩu không được để trống!';
+                    }
+                    return null;
+                  },
+                  controller: passWordConTroller,
+                  obscureText: _obscureText,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -72,7 +103,14 @@ appBar: AppBar(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-        
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscureText ? Icons.visibility : Icons.visibility_off), // Thay đổi icon tùy theo trạng thái ẩn hay hiện mật khẩu
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText; // Đảo ngược trạng thái ẩn mật khẩu
+                        });
+                      },
+                    ),
                   ),
                 ),
                 SizedBox(height: 20),
@@ -81,10 +119,12 @@ appBar: AppBar(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context)=>Home()),
-                      );
+                      if (_formKey.currentState!.validate()) {
+                        userName = userNameConTroller.text;
+                        print(userName);
+                        passWord = passWordConTroller.text;
+                        _userLogin();
+                      }
                     },
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(Colors.blue.shade800),                  ),
@@ -137,7 +177,42 @@ appBar: AppBar(
           ),
         ),
       ),
+      )
     );
+  }
+  Future<void> _userLogin()async{
+    try{
+
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: userName, password: passWord);
+
+      QuerySnapshot querySnapshot=await DatabaseMethods().getUserByEmail(userName);
+      print('Number of documents: ${querySnapshot.size}');
+      print(userName);
+      birthDate="${querySnapshot.docs[0]["Birthdate"]}";
+      email="${querySnapshot.docs[0]["E-mail"]}";
+      id="${querySnapshot.docs[0]["IdUser"]}";
+      phone="${querySnapshot.docs[0]["Phone"]}";
+      sex= "${querySnapshot.docs[0]["Sex"]}";
+      username="${querySnapshot.docs[0]["Username"]}";
+      image="${querySnapshot.docs[0]["imageAvatar"]}";
+
+      await SharedPreferenceHelper().saveUserName(userName);
+      await SharedPreferenceHelper().saveIdUser(id);
+      await SharedPreferenceHelper().saveUserPhone(phone);
+      await SharedPreferenceHelper().saveImageUser(image);
+      await SharedPreferenceHelper().saveSex(sex);
+      await SharedPreferenceHelper().saveBirthDate(birthDate);
+
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>Home()));
+    }on FirebaseAuthException catch(e){
+      if(e.code=='tài khoản không tồn tại'){
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("mail không tồn tại",style: TextStyle(fontSize: 18),),backgroundColor: Colors.orange,));
+      }else if(e.code=='sai mật khẩu'){
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("sai mật khẩu",style: TextStyle(fontSize: 18),),backgroundColor: Colors.orange,));
+      }
+    }
   }
 }
 

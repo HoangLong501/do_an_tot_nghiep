@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import '../../service/shared_pref.dart';
 import 'contactmethodemail.dart';
 import 'createpassword.dart';
 import 'login.dart';
@@ -67,6 +67,7 @@ class _ContactMethodSTDState extends State<ContactMethodSTD> {
           ),
           SizedBox(height: 20),
           TextFormField(
+            maxLength: 10,
             validator: (value) {
               bool checkPhone = phoneNumberRegex.hasMatch(value.toString());
               if (value == null || value.isEmpty || checkPhone !=true) {
@@ -105,22 +106,31 @@ class _ContactMethodSTDState extends State<ContactMethodSTD> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  if(_formKey.currentState!.validate()){
-                    setState(() {
-                        phoneNumbwr=phonecontroller.text;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context)=>CreatePassWord(
-                          surname:widget.surname,
-                          name: widget.name,
-                          birthDate:widget.birthDate,
-                          sex: widget.sex,
-                          phone: phoneNumbwr
+                  if (_formKey.currentState!.validate()) {
+                    phoneNumbwr = phonecontroller.text;
 
-                        )),
-                      );
+                    // Thực hiện tác vụ bất đồng bộ ở đây
+                    String tam="1";
+                    SharedPreferenceHelper().savesigup(tam).then((result) {
+                      if (result) {
+                        print(result);
+                        // Cập nhật UI bên trong hàm callback của setState
+                        setState(() {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => CreatePassWord(
+                              surname: widget.surname,
+                              name: widget.name,
+                              birthDate: widget.birthDate,
+                              sex: widget.sex,
+                              phone: phoneNumbwr,
+                            )),
+                          );
+                        });
+                      }
                     });
                   }
+
                   // Xử lý đăng nhập ở đây
 
                 },

@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../service/shared_pref.dart';
 import 'contactmethodstd.dart';
 import 'createpassword.dart';
 import 'login.dart';
@@ -108,22 +109,27 @@ class _ContactMethodEmailState extends State<ContactMethodEmail> {
                               child: ElevatedButton(
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
-                                    setState(() {
-                                      email = emailcontroller.text;
-                                      // Xử lý đăng nhập ở đây
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                CreatePassWord(
-                                                  surname: widget.surname,
-                                                  name: widget.name,
-                                                  birthDate: widget.birthDate,
-                                                  sex: widget.sex,
-                                                  phone: emailcontroller.text
-                                                      .trim(),
-                                                )),
-                                      );
+                                    email = emailcontroller.text;
+
+                                    // Thực hiện tác vụ bất đồng bộ ở đây
+                                    String tam="2";
+                                    SharedPreferenceHelper().savesigup(tam).then((result) {
+                                      if (result) {
+                                        print(result);
+                                        // Cập nhật UI bên trong hàm callback của setState
+                                        setState(() {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (context) => CreatePassWord(
+                                              surname: widget.surname,
+                                              name: widget.name,
+                                              birthDate: widget.birthDate,
+                                              sex: widget.sex,
+                                              phone: email,
+                                            )),
+                                          );
+                                        });
+                                      }
                                     });
                                   }
                                 },

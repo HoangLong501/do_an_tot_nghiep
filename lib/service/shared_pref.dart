@@ -1,13 +1,27 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferenceHelper{
-
+  static String userSinup="0";
   static String userNameKey ="USERNAMEKEY";
   static String userIdKey ="USERIDKEY";
   static String userImageKey ="USERIMAGEKEY";
   static String userEmailKey ="USEREMAILKEY";
   static String userPhoneKey ="USERPHONEKEY";
-  static String disPlayNameKey="USERDISPLAYNAME";
+  static String userSex ="USERSEX";
+  static String userBirthDate="USERBIRTHDATE";
+
+  Future<bool> saveBirthDate(String getBirthDate) async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    return preferences.setString(userBirthDate, getBirthDate);
+  }
+  Future<bool> saveSex(String getSex) async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    return preferences.setString(userSex, getSex);
+  }
+  Future<bool> savesigup(String getSigup) async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    return preferences.setString(userSinup, getSigup);
+  }
 
   Future<bool> saveIdUser(String getIdUser) async{
     SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -29,11 +43,19 @@ class SharedPreferenceHelper{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     return preferences.setString(userPhoneKey, getUserPhone);
   }
-  Future<bool> saveUserDisPlayName(String getUserDisPlayName) async{
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    return preferences.setString(disPlayNameKey, getUserDisPlayName);
-  }
 
+  Future<String?> getUerBirthDate()async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    return preferences.getString(userBirthDate);
+  }
+  Future<String?> getUserSex()async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    return preferences.getString(userSex);
+  }
+  Future<String?> getUerSinup()async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    return preferences.getString(userSinup);
+  }
   Future<String?> getIdUser()async{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     return preferences.getString(userIdKey);
@@ -54,8 +76,5 @@ class SharedPreferenceHelper{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     return preferences.getString(userPhoneKey);
   }
-  Future<String?> getDisPlayName()async{
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    return preferences.getString(disPlayNameKey);
-  }
+
 }
