@@ -21,8 +21,7 @@ class _HomeState extends State<Home> {
 
   getvaluefromfirebase()async{
     QuerySnapshot querySnapshot= await FirebaseFirestore.instance.collection("test").get();
-    print(querySnapshot.size);
-
+    print("do dai: ${querySnapshot.size}" );
   }
   controlScroll(){
     _controller.addListener(() {
