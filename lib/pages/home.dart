@@ -1,4 +1,5 @@
 import 'package:do_an_tot_nghiep/pages/menu.dart';
+import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -233,7 +234,6 @@ class _HomeState extends State<Home> {
                     child: Icon(Icons.notifications_none_outlined ,
                       color: picked==3? Colors.blueAccent:Colors.grey,
                     )),
-
               ],
             ),
             Column(

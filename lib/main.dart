@@ -1,6 +1,9 @@
 
+
 import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
+import 'package:do_an_tot_nghiep/pages/home.dart';
+import 'package:do_an_tot_nghiep/pages/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -24,7 +27,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: Search(),
+      home: Profile(),
     );
   }
 }
