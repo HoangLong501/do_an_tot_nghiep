@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferenceHelper{
 
+  static int signinmethod =0;
   static String userNameKey ="USERNAMEKEY";
   static String userIdKey ="USERIDKEY";
   static String userImageKey ="USERIMAGEKEY";
