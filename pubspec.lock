@@ -368,6 +368,8 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  http:
+    dependency: "direct dev"
   gcloud:
     dependency: transitive
     description:

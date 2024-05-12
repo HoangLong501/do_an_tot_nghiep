@@ -1,6 +1,7 @@
 import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
+import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
@@ -132,6 +133,7 @@ class _HomeState extends State<Home> {
                   padding: EdgeInsets.only(left: 8,right: 8),
                   child: GestureDetector(
                       onTap: (){
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Search()));
                       },
                       child: Icon(Icons.search_outlined,size: 30,)),
                 ),
