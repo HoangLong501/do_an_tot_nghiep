@@ -168,7 +168,7 @@ class _ChooseGenderState extends State<ChooseGender> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context)=>login()),
+                        MaterialPageRoute(builder: (context)=>Login()),
                       );
                     },
                     child: Text(

@@ -181,7 +181,7 @@ class _CreatePassWordState extends State<CreatePassWord> {
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context)=>login()),
+                                  MaterialPageRoute(builder: (context)=>Login()),
                                 );
                               },
                               child: Text(
@@ -248,7 +248,7 @@ class _CreatePassWordState extends State<CreatePassWord> {
             await SharedPreferenceHelper().saveUserEmail(email);
             await SharedPreferenceHelper().saveImageUser(image);
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Đăng kí tài khoản thành công!"),));
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => login()));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Login()));
           } on FirebaseAuthException catch (e) {
             print("lỗi code FirebaseAuth: ${e.code}");
             if (e.code == 'Mật khẩu yếu') {

@@ -7,7 +7,6 @@ import 'package:flutter/widgets.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
-
   @override
   State<Profile> createState() => _ProfileState();
 }
@@ -21,11 +20,15 @@ class _ProfileState extends State<Profile> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-                padding: EdgeInsets.only(top: 40,left: 20,right: 20),
+                padding: EdgeInsets.only(top: 40,left: 20,right: 20,bottom: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.arrow_back,size: 30,),
+                  GestureDetector(
+                      onTap:(){
+                        Navigator.of(context).pop();
+                      },
+                      child: Icon(Icons.arrow_back,size: 30,)),
                   Text("Name user",style: TextStyle(
                     fontSize: 18
                   ),),

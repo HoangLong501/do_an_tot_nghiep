@@ -1,7 +1,8 @@
+import 'package:do_an_tot_nghiep/pages/home.dart';
+import 'package:do_an_tot_nghiep/pages/profile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-
+import 'package:page_transition/page_transition.dart';
 class Menu extends StatefulWidget {
   const Menu({super.key});
 
@@ -10,6 +11,7 @@ class Menu extends StatefulWidget {
 }
 
 class _MenuState extends State<Menu> {
+  int picked=4;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,16 +47,21 @@ class _MenuState extends State<Menu> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SizedBox(
-                        width:MediaQuery.of(context).size.width/2.8,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            CircleAvatar(backgroundImage: Image.network("https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png").image,),
-                            Text("Name user",style: TextStyle(
-                              fontSize: 18
-                            ),),
-                          ],
+                      GestureDetector(
+                        onTap: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=>Profile()));
+                        },
+                        child: SizedBox(
+                          width:MediaQuery.of(context).size.width/2.8,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              CircleAvatar(backgroundImage: Image.network("https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png").image,),
+                              Text("Name user",style: TextStyle(
+                                fontSize: 18
+                              ),),
+                            ],
+                          ),
                         ),
                       ),
                       Icon(Icons.arrow_drop_down_circle_outlined,size: 30,color: Colors.grey.shade700,),
@@ -278,9 +285,16 @@ class _MenuState extends State<Menu> {
                 GestureDetector(
                     onTap: (){
                       print("press ---TREND-- Bottom Appbar");
-                      setState(() {
+                      Navigator.pushReplacement(
+                        context,
+                        PageTransition(
+                          duration: Duration(milliseconds: 500),
+                          type: PageTransitionType.rightToLeft,
+                          isIos: true,
+                          child: Home(),
+                        ),
+                      );
 
-                      });
                     },
                     child: Icon(Icons.home_outlined ,
                       color: Colors.grey,
@@ -336,7 +350,6 @@ class _MenuState extends State<Menu> {
                     onTap: (){
                       print("press ---TREND-- Bottom Appbar");
                       setState(() {
-
                       });
                     },
                     child: Icon(Icons.menu ,

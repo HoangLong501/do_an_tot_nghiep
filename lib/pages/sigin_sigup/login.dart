@@ -6,16 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+
 import '../../service/database.dart';
 import '../../service/shared_pref.dart';
-class login extends StatefulWidget {
-  const login({super.key});
+class Login extends StatefulWidget {
+  const Login({super.key});
 
   @override
-  State<login> createState() => _loginState();
+  State<Login> createState() => _LoginState();
 }
 
-class _loginState extends State<login> {
+class _LoginState extends State<Login> {
   bool _obscureText = true;
   TextEditingController userNameConTroller = TextEditingController();
   TextEditingController passWordConTroller = TextEditingController();
@@ -23,6 +24,23 @@ class _loginState extends State<login> {
   final _formKey = GlobalKey<FormState>();
   String userName="", passWord="";
   String email="",id="",phone="",username="",image="",birthDate="",sex="";
+
+
+
+
+
+  onLoad()async{
+    setState(() {
+
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    onLoad();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,7 +175,7 @@ appBar: AppBar(
                       // Xử lý đăng nhập ở đây
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context)=>register()),
+                        MaterialPageRoute(builder: (context)=>Register()),
                       );
                     },
                     style: ButtonStyle(

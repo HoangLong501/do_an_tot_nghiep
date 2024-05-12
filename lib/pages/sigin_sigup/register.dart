@@ -6,15 +6,15 @@ import 'package:intl/intl.dart';
 import 'choosegender.dart';
 import 'login.dart';
 
-class register extends StatefulWidget {
-  const register({super.key});
+class Register extends StatefulWidget {
+  const Register({super.key});
 
 
   @override
-  State<register> createState() => _registerState();
+  State<Register> createState() => _RegisterState();
 }
 
-class _registerState extends State<register> {
+class _RegisterState extends State<Register> {
   DateTime? selectedDate = DateTime.now();
   String surName="",name="",birthDate="";
 
@@ -257,7 +257,7 @@ class _registerState extends State<register> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context)=>login()),
+                      MaterialPageRoute(builder: (context)=>Login()),
                     );
                   },
                   child: Text(
