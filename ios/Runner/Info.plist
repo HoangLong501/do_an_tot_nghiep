@@ -16,6 +16,13 @@
 	<string>do_an_tot_nghiep</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+    <key>Privacy</key>
+    <string>Camera Usage Description (NSCameraUsageDescription)</string>
+    <key>Privacy</key>
+    <string>Photo Library Usage Description (NSPhotoLibraryUsageDescription)</string>
+    <key>Privacy</key>
+    <string>Photo Library Usage Description (NSPhotoLibraryUsageDescription)</string>
+
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>

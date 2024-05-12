@@ -237,7 +237,7 @@ class _CreatePassWordState extends State<CreatePassWord> {
               "Sex": sex,
               "Birthdate": birthDate,
               "Phone": "",
-              "imageAvatar": "",
+              "imageAvatar": "https://i.ibb.co/jzk0j6j/image.png",
               "News": [],
             };
             print("UserInfoMap before adding: $userInfoMap");
