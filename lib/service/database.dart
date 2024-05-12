@@ -21,4 +21,12 @@ class DatabaseMethods {
       print("Lỗi khi cập nhật thông tin người dùng: $e");
     }
   }
+  Future<QuerySnapshot> getUserByEmail(String email) async {
+    return await FirebaseFirestore.instance
+        .collection("user").where("E-mail", isEqualTo: email).get();
+  }
+
+
+
+
 }

@@ -1,10 +1,14 @@
+import 'package:do_an_tot_nghiep/pages/chatPage.dart';
+import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
+import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'lib_class_import/swipe.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,17 +17,59 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
+
   final ScrollController _controller = ScrollController();
   bool isScrollDown =false;
   String? username, idUser;
   int picked = 0;
   List itemCount=[];
+  String? idUserDevice;
 
-  getvaluefromfirebase()async{
-    QuerySnapshot querySnapshot= await FirebaseFirestore.instance.collection("test").get();
-    print(querySnapshot.size);
 
+  Future<void> setupInteractedMessage() async {
+    // Get any messages which caused the application to open from
+    // a terminated state.
+    RemoteMessage? initialMessage =
+    await FirebaseMessaging.instance.getInitialMessage();
+
+    // If the message also contains a data property with a "type" of "chat",
+    // navigate to a chat screen
+    if (initialMessage != null) {
+      _handleMessage(initialMessage);
+    }
+
+    // Also handle any interaction when the app is in the background via a
+    // Stream listener
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
   }
+
+  void _handleMessage(RemoteMessage message) {
+    print("User nhan vao noti");
+  }
+
+
+
+
+  Future<void> saveTokenToDatabase(String token ) async {
+    // Assume user is logged in for this example
+    await FirebaseFirestore.instance
+        .collection('user')
+        .doc(idUserDevice)
+        .update({
+      'tokens': FieldValue.arrayUnion([token]),
+    });
+  }
+
+  Future<void> setupToken() async {
+    // Get the token each time the application loads
+    String? token = await FirebaseMessaging.instance.getToken();
+    await saveTokenToDatabase(token!);
+    // Any time the token refreshes, store this in the database too.
+    FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
+    print("Token : $token");
+  }
+
   controlScroll(){
     _controller.addListener(() {
       if (_controller.position.userScrollDirection == ScrollDirection.reverse) {
@@ -40,8 +86,9 @@ class _HomeState extends State<Home> {
     });
   }
   onLoad()async{
+    idUserDevice = await SharedPreferenceHelper().getIdUser();
+    await setupToken();
     controlScroll();
-    await getvaluefromfirebase();
     setState(() {});
   }
   @override
@@ -54,6 +101,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -67,6 +115,16 @@ class _HomeState extends State<Home> {
                   padding: EdgeInsets.only(left: 8,right: 8),
                   child: GestureDetector(
                       onTap: (){
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.scale,
+                            alignment: Alignment.topCenter,
+                            duration: Duration(milliseconds: 400),
+                            isIos: true,
+                            child: CreateNewsFeed(),
+                          ),
+                        );
                       },
                       child: Icon(Icons.add_circle_outline ,size: 30,)),
                 ),
@@ -81,6 +139,13 @@ class _HomeState extends State<Home> {
                   padding: EdgeInsets.only(left: 8,right: 8),
                   child: GestureDetector(
                       onTap: (){
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.leftToRight,
+                            child: ChatPage(),
+                          ),
+                        );
                       },
                       child: Icon(Icons.messenger_outline,size: 30,)),
                 ),
@@ -185,7 +250,7 @@ class _HomeState extends State<Home> {
               children: [
                 GestureDetector(
                     onTap: (){
-                      print("press ---TREND-- Bottom Appbar");
+                      print("Home nhấn vào sẽ load lại trang");
                       setState(() {
                         picked = 0;
                       });
@@ -199,10 +264,7 @@ class _HomeState extends State<Home> {
               children: [
                 GestureDetector(
                     onTap: (){
-                      print("press ---TREND-- Bottom Appbar");
-                      setState(() {
-                        picked = 1;
-                      });
+                      NotificationDetail().sendAndroidNotification("e8L63rdPSpO5VXyJTe3VhN:APA91bFThgUoYxUMiDPPvkaG6rXa6vWmush1kV95XDTIPb2xob7-N7nzu_Hj1lTFNVq9wKdPENZ0I58h9TFnJ6vxdqZa2RZZrZ4z3I-K0YYaXRmEXFmAoTVPcVnK5wbidZnaM_Ykol7x", "Gửi thông báo đến điện thoại để test chức năng thông báo", "Bạn có thông báo mới");
                     },
                     child: Icon(Icons.ondemand_video ,
                       color: picked==1? Colors.blueAccent:Colors.grey,
@@ -246,11 +308,10 @@ class _HomeState extends State<Home> {
                         context,
                         PageTransition(
                           duration: Duration(milliseconds: 400),
-                          type: PageTransitionType.topToBottom,
+                          type: PageTransitionType.rightToLeftWithFade,
                           child: Menu(),
                         ),
                       );
-
                     },
                     child: Icon(Icons.menu ,
                       color: Colors.grey,

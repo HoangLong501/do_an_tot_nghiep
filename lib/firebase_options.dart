@@ -90,4 +90,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'do-an-tot-nghiep-afd66.appspot.com',
     measurementId: 'G-6Y1Z8R4T15',
   );
+
 }
