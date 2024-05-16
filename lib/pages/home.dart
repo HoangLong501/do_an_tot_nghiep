@@ -3,6 +3,7 @@ import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
 import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
+import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -88,7 +89,10 @@ class _HomeState extends State<Home> {
   }
   onLoad()async{
     idUserDevice = await SharedPreferenceHelper().getIdUser();
-    await setupToken();
+    //await setupToken();
+    //await DatabaseMethods().requestFriend("Lan_202405091924","hao_202405091921");
+    //await DatabaseMethods().requestFriend("hao_202405091921","Lan_202405091924");
+    
     controlScroll();
     setState(() {});
   }
