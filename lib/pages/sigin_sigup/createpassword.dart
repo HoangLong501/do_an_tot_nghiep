@@ -233,6 +233,7 @@ class _CreatePassWordState extends State<CreatePassWord> {
             Map<String, dynamic> userInfoMap = {
               "IdUser": id,
               "Username": userName,
+              "SearchKey":widget.name,
               "E-mail": email,
               "Sex": sex,
               "Birthdate": birthDate,

@@ -3,14 +3,16 @@ import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
 import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
+import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'lib_class_import/newsfeed_detail.dart';
 import 'lib_class_import/swipe.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-
+import 'package:rxdart/rxdart.dart';
 class Home extends StatefulWidget {
   const Home({super.key});
   @override
@@ -18,7 +20,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
+  Stream? myNewsfeedStream;
 
   final ScrollController _controller = ScrollController();
   bool isScrollDown =false;
@@ -88,7 +90,7 @@ class _HomeState extends State<Home> {
   }
   onLoad()async{
     idUserDevice = await SharedPreferenceHelper().getIdUser();
-    await setupToken();
+    //await setupToken();
     controlScroll();
     setState(() {});
   }
@@ -205,39 +207,42 @@ class _HomeState extends State<Home> {
                   }
                 });
               },
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 400,
-                      child: Center(child: Text("Test cuon")),
-                    ),
-                    SizedBox(
-                      height: 400,
-                      child: Center(child: Text("Test cuon")),
-                    ),
-                    SizedBox(
-                      height: 400,
-                      child: Center(child: Text("Test cuon")),
-                    ),
-                    SizedBox(
-                      height: 400,
-                      child: Center(child: Text("Test cuon")),
-                    ),
-                    SizedBox(
-                      height: 400,
-                      child: Center(child: Text("Test cuon")),
-                    ),
-                    SizedBox(
-                      height: 400,
-                      child: Center(child: Text("Test cuon")),
-                    ),
-                    SizedBox(
-                      height: 400,
-                      child: Center(child: Text("Test cuon")),
-                    ),
-                  ],
-                ),
+              child: FutureBuilder<List<String>>(
+               future: DatabaseMethods().getFriends("Ly Ly_202405091941"),
+                builder: (context , snapshot){
+                  if (!snapshot.hasData) {
+                    return CircularProgressIndicator();
+                  }
+                  List<String> friendIds = snapshot.data!;
+                  List<Stream<QuerySnapshot>> friendNewsfeedStreams = friendIds.map((friendId) {
+                    return FirebaseFirestore.instance
+                        .collection('newsfeed')
+                        .doc(friendId)
+                        .collection('myNewsfeed')
+                        .orderBy('newTimestamp', descending: true)
+                        .snapshots();
+                  }).toList();
+                    return StreamBuilder(
+                          stream: CombineLatestStream.list(friendNewsfeedStreams),
+                          builder: (context, snapshot){
+                            if (!snapshot.hasData) {
+                              return CircularProgressIndicator();
+                            }
+                            List<DocumentSnapshot> allPosts = [];
+                            for (var querySnapshot in snapshot.data!) {
+                              allPosts.addAll(querySnapshot.docs);
+                            }
+                            allPosts.sort((a, b) => (b['newTimestamp'] as Timestamp).compareTo(a['newTimestamp'] as Timestamp));
+                            return IntrinsicHeight(
+                              child: Column(
+                                children:allPosts.map((data){
+                                  //Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+                                  return  WidgetNewsfeed(id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"]??"",);
+                                }).toList(),
+                              ),
+                            );
+                          });
+                },
               ),
             ),
           ],
@@ -266,7 +271,11 @@ class _HomeState extends State<Home> {
               children: [
                 GestureDetector(
                     onTap: (){
-                      NotificationDetail().sendAndroidNotification("e8L63rdPSpO5VXyJTe3VhN:APA91bFThgUoYxUMiDPPvkaG6rXa6vWmush1kV95XDTIPb2xob7-N7nzu_Hj1lTFNVq9wKdPENZ0I58h9TFnJ6vxdqZa2RZZrZ4z3I-K0YYaXRmEXFmAoTVPcVnK5wbidZnaM_Ykol7x", "Gửi thông báo đến điện thoại để test chức năng thông báo", "Bạn có thông báo mới");
+                      print("send noti");
+                      String token="e8L63rdPSpO5VXyJTe3VhN:APA91bFThgUoYxUMiDPPvkaG6rXa6vWmush1kV95XDTIPb2xob7-N7nzu_Hj1lTFNVq9wKdPENZ0I58h9TFnJ6vxdqZa2RZZrZ4z3I-K0YYaXRmEXFmAoTVPcVnK5wbidZnaM_Ykol7x";
+                      String title="Gửi thông báo đến điện thoại để test chức năng thông báo";
+                      String body="Bạn có thông báo mới";
+                      NotificationDetail().sendAndroidNotification(token, title, body);
                     },
                     child: Icon(Icons.ondemand_video ,
                       color: picked==1? Colors.blueAccent:Colors.grey,

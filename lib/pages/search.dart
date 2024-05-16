@@ -163,7 +163,7 @@ class _SearchState extends State<Search> {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => login()));
+                                      builder: (context) => Login()));
                             },
                             child: Container(
                               width: 50,
@@ -182,7 +182,7 @@ class _SearchState extends State<Search> {
                           SizedBox(width: 20),
                           GestureDetector(
                             onTap: () {
-                              // Xử lý khi cột được nhấp vào
+
                             },
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,9 +277,7 @@ class _SearchState extends State<Search> {
                             itemCount: uSers.length, // Số lượng mục trong ListView
                             itemBuilder: (BuildContext context, int index) {
                               return GestureDetector(
-
                                 onTap: () {
-                                  // Xử lý khi GestureDetector được nhấn
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(0),
@@ -381,7 +379,7 @@ class _SearchState extends State<Search> {
                                             ),
                                             TextButton(
                                               onPressed: () {
-                                                // Xử lý khi nút được nhấn
+                                                print("dòng 382");
                                               },
                                               style: ButtonStyle(
                                                 backgroundColor:
