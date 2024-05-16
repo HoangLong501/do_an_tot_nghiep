@@ -240,9 +240,16 @@ class _CreatePassWordState extends State<CreatePassWord> {
               "Phone": "",
               "imageAvatar": "https://i.ibb.co/jzk0j6j/image.png",
               "News": [],
+              "Search":[]
             };
             print("UserInfoMap before adding: $userInfoMap");
             DatabaseMethods().addUserDetail(id, userInfoMap);
+            Map<String, dynamic> relaInfoMap = {
+             "Friends":[],
+              "Request":[],
+              "Received":[]
+            };
+            DatabaseMethods().addRelationship(id,relaInfoMap );
             await SharedPreferenceHelper().saveUserName(userName);
             await SharedPreferenceHelper().saveIdUser(id);
             await SharedPreferenceHelper().saveUserPhone(phone);

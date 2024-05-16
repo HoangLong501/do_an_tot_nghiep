@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -30,22 +31,42 @@ class _SearchState extends State<Search> {
   username="",
   image="";
   List<Person> uSers=[];
-
+   List listRequest=[];
+   List listReceive=[];
+   List listFriend=[];
+   List<String> listHideHintsFriend=[];
+   Stream<List<String>>? listGetHideHintsFriend;
+   Stream<List<Person>>? hideHintsUsers;
+   List<Person> listHideHintsUsers=[];
+   Stream<List<String>>? getListReceived;
 
   onLoad()async{
-    uSers=await DatabaseMethods().getUser();
-    id=(await SharedPreferenceHelper().getIdUser())!;
-    for(int i=0;i<uSers.length;i++){
-      if(uSers[i].id==id){
-        uSers.remove(uSers[i]);
-      }
+    listHideHintsUsers=await DatabaseMethods().getUser();
+    //print(listHideHintsUsers);
+    id=(await SharedPreferenceHelper().getIdUser());
+    hideHintsUsers=await DatabaseMethods().getHideHintsUsers(id!, listHideHintsUsers);
+    await for(List<Person> key in hideHintsUsers!){
+      uSers=key;
     }
-    print(uSers);
+    await for(List<String> list in getListReceived!){
+      listReceive=list;
+    }
+   // print(uSers);
+    //print("danh sách $listHideHintsUsers");
+   // print(id);
+    listRequest=await DatabaseMethods().getRequest(id!);
+
+    listFriend=await DatabaseMethods().getFriends(id!);
+    //print(uSers);
+    //print(uSers);
+
     setState(() {
 
     });
   }
+void sendRequest(String idRequaest,String idReceived){
 
+}
 
    @override
   void initState() {
@@ -172,7 +193,7 @@ class _SearchState extends State<Search> {
                                 borderRadius: BorderRadius.circular(50),
                                 // Độ bo góc
                                 image: DecorationImage(
-                                  image: AssetImage(person.image),
+                                  image:Image.network(person.image).image,
                                   fit: BoxFit
                                       .cover, // Đảm bảo hình ảnh vừa khớp trong container
                                 ),
@@ -181,7 +202,12 @@ class _SearchState extends State<Search> {
                           ),
                           SizedBox(width: 20),
                           GestureDetector(
-                            onTap: () {
+                            onTap: () async {
+                            // List searched;
+                            //   Map<String, dynamic> updateId = {
+                            //     "Searched": person.id,
+                            //   };
+                              _updateSearched(id!,person.id);
 
                             },
                             child: Column(
@@ -262,7 +288,7 @@ class _SearchState extends State<Search> {
                       ],
                     ),
                   ),
-
+                  potentianlFriends(),
                   Row(
                     children: [
                       Expanded(
@@ -1037,6 +1063,7 @@ class _SearchState extends State<Search> {
                             ),
                           ],
                         ),
+
                         child: Row(
                           children: [
                             Container(
@@ -1197,7 +1224,307 @@ class _SearchState extends State<Search> {
       ),
     );
   }
+  Widget potentianlFriends (){
+    return StreamBuilder<List<Person>>(
+        stream: DatabaseMethods().getHideHintsUsers(id!,uSers), // Lắng nghe thay đổi từ Firestore
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          }else {
+            //print(snapshot.hasData);
+    return snapshot.hasData?
 
+      Row(
+      children: [
+        Expanded(
+          child: Container(
+            width: 250,
+            height: 365, // Đặt chiều cao của Container
+            margin: EdgeInsets.only(
+              left: 10,
+            ),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal, // Cho phép cuộn ngang
+              itemCount: uSers.length, // Số lượng mục trong ListView
+              itemBuilder: (BuildContext context, int index) {
+                return GestureDetector(
+
+                  onTap: () {
+
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.grey.shade400,
+                          width: 1,
+                        ),
+
+                        borderRadius:
+                        BorderRadius.circular(10), // Độ bo góc
+                      ),
+                      width: 250,
+                      // Đặt chiều rộng của Container
+                      height: 350,
+                      margin: EdgeInsets.symmetric(horizontal: 2),
+                      // Đặt khoảng cách giữa các phần tử
+
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        // Căn lề trái cho các phần tử trong cột
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(9),
+                                topRight: Radius.circular(
+                                    9)), // Độ cong của góc bo tròn
+                            child: Image.network(
+                              uSers[index].image,
+
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 15),
+                            child: Text(
+                              uSers[index].username,
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment:
+                            MainAxisAlignment.start,
+                            crossAxisAlignment:
+                            CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                height: 30,
+                                // Đặt chiều cao của Container
+                                width: 80,
+                                // Đặt chiều rộng của Container
+                                child: Stack(
+                                  children: List.generate(
+                                      items.length, (index) {
+                                    return Positioned(
+                                      right: 15 + index * 15,
+                                      // Tăng vị trí của mỗi ảnh trước để nó đè lên ảnh sau một phần
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          // Đảm bảo container có hình dạng tròn
+                                          border: Border.all(
+                                            // Định nghĩa viền
+                                            color: Colors.white,
+                                            // Màu của viền
+                                            width:
+                                            2, // Độ dày của viền
+                                          ),
+                                        ),
+                                        child: CircleAvatar(
+                                          radius: 10,
+                                          backgroundImage:
+                                          NetworkImage(
+                                            "https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png",
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                              Text(
+                                "bạn chung",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              )
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 15,
+                              ),
+                              if(listRequest.contains(uSers[index].id))
+                                TextButton(
+                                  onPressed: () async {
+                                    print("danh sách gửi");
+                                    await DatabaseMethods().deleteRequest(id!, uSers[index].id);
+                                    List updateRequest=await DatabaseMethods().getRequest(id!);
+                                    setState(()   {
+                                      listRequest=updateRequest;
+                                      print("danh sách request: $listRequest");
+                                    });
+
+                                  },
+                                  style: ButtonStyle(
+                                    backgroundColor:
+                                    MaterialStateProperty
+                                        .all<Color>(Colors
+                                        .blue
+                                        .shade800),
+                                    // Màu nền của nút
+                                    shape: MaterialStateProperty
+                                        .all<
+                                        RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius:
+                                        BorderRadius
+                                            .circular(
+                                            10.0), // Bo góc của nút
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize:
+                                    MainAxisSize.min,
+                                    children: [
+                                      if(listRequest.contains(uSers[index].id))
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons
+                                                  .person_remove,
+                                              color: Colors
+                                                  .white, // Màu biểu tượng
+                                            ),
+                                            SizedBox(width: 5),
+                                            // Khoảng cách giữa biểu tượng và văn bản
+                                            Text(
+                                              "Hủy lời mời",
+                                              style: TextStyle(
+                                                color: Colors
+                                                    .white, // Màu văn bản
+                                              ),
+                                            )
+                                          ],
+                                        )
+                                      else
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons
+                                                  .person_add_alt_1,
+                                              color: Colors
+                                                  .white, // Màu biểu tượng
+                                            ),
+                                            SizedBox(width: 5),
+                                            // Khoảng cách giữa biểu tượng và văn bản
+                                            Text(
+                                              "thêm bạn bè",
+                                              style: TextStyle(
+                                                color: Colors
+                                                    .white, // Màu văn bản
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                )
+                                else
+                                  TextButton(
+                                    onPressed: ()async {
+                                     // print("elseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+                                      await DatabaseMethods()
+                                          .requestFriend(
+                                          id!,
+                                          uSers[index]
+                                              .id);
+                                      List  updateListRequest=await DatabaseMethods().getRequest(id!) ;
+                                      setState(()   {
+                                        listRequest= updateListRequest;
+                                        print("Thêm bạn bè: $listRequest");
+                                      });
+                                    },
+                                    style: ButtonStyle(
+                                      backgroundColor:
+                                      MaterialStateProperty
+                                          .all<Color>(Colors
+                                          .blue
+                                          .shade800),
+                                      // Màu nền của nút
+                                      shape: MaterialStateProperty
+                                          .all<
+                                          RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius
+                                              .circular(
+                                              10.0), // Bo góc của nút
+                                        ),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize:
+                                      MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons
+                                              .person_add_alt_1,
+                                          color: Colors
+                                              .white, // Màu biểu tượng
+                                        ),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          "Thêm bạn bè",
+                                          style: TextStyle(
+                                            color: Colors
+                                                .white, // Màu văn bản
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+
+                              SizedBox(
+                                width: 20,
+                              ),
+                              TextButton(
+                                  onPressed: () async {
+                                   await DatabaseMethods().addHideHintsFriend(id!, uSers[index].id);
+
+                                  },
+                                  style: ButtonStyle(
+                                    backgroundColor:
+                                    MaterialStateColor
+                                        .resolveWith((states) =>
+                                    Colors.grey.shade300),
+                                    shape: MaterialStateProperty.all<
+                                        RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(10),
+                                        )),
+                                  ),
+                                  child: Text(
+                                    "Xóa",
+                                    style: TextStyle(
+                                        color: Colors.black),
+                                  ))
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    ):Center(child: CircularProgressIndicator(),);
+          }
+    }
+    );
+  }
    Future<List<Person>> _SearchUser() async {
      try {
        String userName = searchConTroller.text;
@@ -1212,6 +1539,29 @@ class _SearchState extends State<Search> {
        return []; // Trả về danh sách trống trong trường hợp có lỗi
      }
    }
+   Future<void> _updateSearched(String id, String idSearchUser) async {
+     try {
+       // Lấy thông tin người dùng từ Firestore
+       QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(id);
+       // Lấy danh sách "Searched" từ tài liệu người dùng
+       List searched = querySnapshot.docs[0]["Searched"];
+       // Kiểm tra xem idSearchUser đã tồn tại trong searched hay chưa
+       if (!searched.contains(idSearchUser)) {
+         // Nếu idSearchUser chưa tồn tại trong searched, thêm nó vào danh sách
+         searched.add(idSearchUser);
+         // Tạo một Map mới để cập nhật thông tin người dùng
+         Map<String, dynamic> updatedUserInfo = {
+           "Searched": searched
+         };
+
+         // Cập nhật thông tin người dùng trong Firestore
+         await DatabaseMethods().updateUserDetail(id, updatedUserInfo);
+       }
+     } catch (e) {
+       print("Lỗi khi cập nhật searched: $e");
+     }
+   }
+
 }
 
 
