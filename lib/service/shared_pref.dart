@@ -76,5 +76,13 @@ class SharedPreferenceHelper{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     return preferences.getString(userPhoneKey);
   }
+  String getChatRoomIdUserName(String a, String b) {
+    if (a.compareTo(b) > 0) {
+      return "$b\_$a";
+    } else {
+      return "$a\_$b";
+    }
+  }
+
 
 }

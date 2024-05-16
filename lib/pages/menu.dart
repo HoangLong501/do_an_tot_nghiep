@@ -1,5 +1,6 @@
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/profile.dart';
+import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
@@ -12,6 +13,24 @@ class Menu extends StatefulWidget {
 
 class _MenuState extends State<Menu> {
   int picked=4;
+  String? idUserCurrent , nameUser , image;
+
+  onLoad()async{
+    idUserCurrent = await SharedPreferenceHelper().getIdUser();
+    nameUser = await SharedPreferenceHelper().getUserName();
+    image = await SharedPreferenceHelper().getImageUser();
+    setState(() {
+
+    });
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    onLoad();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,17 +68,19 @@ class _MenuState extends State<Menu> {
                     children: [
                       GestureDetector(
                         onTap: (){
-                            Navigator.push(context, MaterialPageRoute(builder: (context)=>Profile()));
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=>Profile(idProfileUser:idUserCurrent!)));
                         },
                         child: SizedBox(
                           width:MediaQuery.of(context).size.width/2.8,
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               CircleAvatar(backgroundImage: Image.network("https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png").image,),
-                              Text("Name user",style: TextStyle(
-                                fontSize: 18
-                              ),),
+                              SizedBox(width: 10,),
+                              Text(nameUser ?? "NameUser",style: TextStyle(
+                                  fontSize: 18
+                                ),
+                              ),
                             ],
                           ),
                         ),

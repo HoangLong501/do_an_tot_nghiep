@@ -208,6 +208,7 @@ void sendRequest(String idRequaest,String idReceived){
                             //     "Searched": person.id,
                             //   };
                               _updateSearched(id!,person.id);
+
                             },
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +289,194 @@ void sendRequest(String idRequaest,String idReceived){
                     ),
                   ),
                   potentianlFriends(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          width: 250,
+                          height: 365, // Đặt chiều cao của Container
+                          margin: EdgeInsets.only(
+                            left: 10,
+                          ),
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal, // Cho phép cuộn ngang
+                            itemCount: uSers.length, // Số lượng mục trong ListView
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () {
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey.shade400,
+                                        width: 1,
+                                      ),
 
+                                      borderRadius:
+                                      BorderRadius.circular(10), // Độ bo góc
+                                    ),
+                                    width: 250,
+                                    // Đặt chiều rộng của Container
+                                    height: 350,
+                                    margin: EdgeInsets.symmetric(horizontal: 2),
+                                    // Đặt khoảng cách giữa các phần tử
+
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      // Căn lề trái cho các phần tử trong cột
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(9),
+                                              topRight: Radius.circular(
+                                                  9)), // Độ cong của góc bo tròn
+                                          child: Image.network(
+                                            uSers[index].image,
+
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 15),
+                                          child: Text(
+                                            uSers[index].username,
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                          children: [
+                                            Container(
+                                              height: 30,
+                                              // Đặt chiều cao của Container
+                                              width: 80,
+                                              // Đặt chiều rộng của Container
+                                              child: Stack(
+                                                children: List.generate(
+                                                    items.length, (index) {
+                                                  return Positioned(
+                                                    right: 15 + index * 15,
+                                                    // Tăng vị trí của mỗi ảnh trước để nó đè lên ảnh sau một phần
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        // Đảm bảo container có hình dạng tròn
+                                                        border: Border.all(
+                                                          // Định nghĩa viền
+                                                          color: Colors.white,
+                                                          // Màu của viền
+                                                          width:
+                                                          2, // Độ dày của viền
+                                                        ),
+                                                      ),
+                                                      child: CircleAvatar(
+                                                        radius: 10,
+                                                        backgroundImage:
+                                                        NetworkImage(
+                                                          "https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png",
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                }),
+                                              ),
+                                            ),
+                                            Text(
+                                              "bạn chung",
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 15,
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                print("dòng 382");
+                                              },
+                                              style: ButtonStyle(
+                                                backgroundColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(
+                                                    Colors.blue.shade800),
+                                                // Màu nền của nút
+                                                shape: MaterialStateProperty.all<
+                                                    RoundedRectangleBorder>(
+                                                  RoundedRectangleBorder(
+                                                    borderRadius:
+                                                    BorderRadius.circular(
+                                                        10.0), // Bo góc của nút
+                                                  ),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.person_add_alt_1,
+                                                    color: Colors
+                                                        .white, // Màu biểu tượng
+                                                  ),
+                                                  SizedBox(width: 5),
+                                                  // Khoảng cách giữa biểu tượng và văn bản
+                                                  Text(
+                                                    "Thêm bạn bè",
+                                                    style: TextStyle(
+                                                      color: Colors
+                                                          .white, // Màu văn bản
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 20,
+                                            ),
+                                            TextButton(
+                                                onPressed: () {},
+                                                style: ButtonStyle(
+                                                  backgroundColor:
+                                                  MaterialStateColor
+                                                      .resolveWith((states) =>
+                                                  Colors.grey.shade300),
+                                                  shape: MaterialStateProperty.all<
+                                                      RoundedRectangleBorder>(
+                                                      RoundedRectangleBorder(
+                                                        borderRadius:
+                                                        BorderRadius.circular(10),
+                                                      )),
+                                                ),
+                                                child: Text(
+                                                  "Xóa",
+                                                  style: TextStyle(
+                                                      color: Colors.black),
+                                                ))
+                                          ],
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: Row(
