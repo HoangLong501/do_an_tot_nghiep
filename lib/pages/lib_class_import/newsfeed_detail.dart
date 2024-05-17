@@ -1,13 +1,16 @@
 import 'package:do_an_tot_nghiep/pages/comment.dart';
+import 'package:do_an_tot_nghiep/pages/comment2.dart';
 import 'package:flutter/material.dart';
-import 'package:page_transition/page_transition.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 class WidgetNewsfeed extends StatefulWidget {
   final String username ,time , content ,image, id , idComment;
+  final  DateTime date;
   const WidgetNewsfeed({super.key ,
       required this.id,
     required this.username,
     required this.content,
     required this.time,
+    required this.date,
     required this.image,
     required this.idComment
   });
@@ -16,8 +19,14 @@ class WidgetNewsfeed extends StatefulWidget {
 }
 
 class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
+  String? date;
 
-  final _overlayController = OverlayPortalController();
+
+  @override
+  void initState() {
+    super.initState();
+    date ="${widget.date.day} \/ ${widget.date.month} \/ ${widget.date.year}";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,15 +49,21 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.username,style: TextStyle(fontSize: 18,fontWeight: FontWeight.w600),),
-                        Text("01/01/2001",style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
+                        Text(widget.time,style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
                       ],
                     ),
                   ),
                 ],
               ),
-              Container(
-                margin: EdgeInsets.only(top: 10),
-                child: Icon(Icons.linear_scale_outlined,size: 20,color: Colors.grey,),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(top: 10),
+                    child: Icon(Icons.linear_scale_outlined,size: 20,color: Colors.grey,),
+                  ),
+                  Text(date!??"",style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
+                ],
               ),
             ],
           ),
@@ -84,23 +99,31 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                       ),
                       GestureDetector(
                         onTap: (){
-                          _overlayController.toggle();
+                          // showModalBottomSheet(
+                          //   enableDrag: true,
+                          //   context: context,
+                          //   isScrollControlled: true,
+                          //   builder: (BuildContext context) {
+                          //     return Padding(
+                          //       padding: EdgeInsets.only(
+                          //           bottom: MediaQuery.of(context).viewInsets.bottom
+                          //       ),
+                          //       child: DraggableScrollableSheet(
+                          //         expand: false,
+                          //         initialChildSize: 0.8,
+                          //         minChildSize: 0.3,
+                          //         maxChildSize: 1.0,
+                          //         builder: (BuildContext context, ScrollController scrollController) {
+                          //           return Comment(idComment: widget.idComment,);
+                          //         },
+                          //       ),
+                          //     );
+                          //   },
+                          // );
+                          showMaterialModalBottomSheet(
+                              context: context, builder: (context)=>Comment2(idComment: widget.idComment));
                         },
-                        child: OverlayPortal(
-                          controller: _overlayController,
-                          overlayChildBuilder: (context){
-                            return Draggable(
-                              feedback: SizedBox(),
-                              child: Container(
-                                  margin:EdgeInsets.only(top: 100),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orangeAccent
-                                  ),
-                                  width: MediaQuery.of(context).size.width/1,
-                                  height: 700,
-                                  child: Text("Overplay")),
-                            );
-                          },
+                        child: Container(
                           child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [

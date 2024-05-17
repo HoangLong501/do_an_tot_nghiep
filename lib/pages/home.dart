@@ -237,7 +237,7 @@ class _HomeState extends State<Home> {
                               child: Column(
                                 children:allPosts.map((data){
                                   //Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                                  return  WidgetNewsfeed(id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"]??"",);
+                                  return  WidgetNewsfeed(date: data["newTimestamp"].toDate(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"]??"",);
                                 }).toList(),
                               ),
                             );

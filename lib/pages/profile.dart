@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:do_an_tot_nghiep/pages/comment.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/newsfeed_detail.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
@@ -295,7 +296,7 @@ class _ProfileState extends State<Profile> {
                       child: Column(
                         children: snapshot.data!.docs.map((document){
                           Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                          return  WidgetNewsfeed(id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"??""],);
+                          return  WidgetNewsfeed(date: data["newTimestamp"].toDate(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"??""],);
                         }).toList(),
                       ),
                     );
@@ -304,106 +305,6 @@ class _ProfileState extends State<Profile> {
                   return Center(child: Text(" Dòng 306 Invalid data format"));
                 }
               }),
-            // Column(
-            //     children: [
-            //       Padding(
-            //         padding: EdgeInsets.only(left: 20,right: 20),
-            //         child: Row(
-            //           crossAxisAlignment: CrossAxisAlignment.start,
-            //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //           children: [
-            //             Row(
-            //               children: [
-            //                 CircleAvatar(backgroundImage: Image.network("https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png").image,
-            //                   radius: 24,
-            //                 ),
-            //                 Padding(
-            //                   padding: EdgeInsets.only(left: 10),
-            //                   child: Column(
-            //                     crossAxisAlignment: CrossAxisAlignment.start,
-            //                     children: [
-            //                       Text(name,style: TextStyle(fontSize: 18,fontWeight: FontWeight.w600),),
-            //                       Text("01/01/2001",style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
-            //                     ],
-            //                   ),
-            //                 ),
-            //               ],
-            //             ),
-            //             Container(
-            //                 margin: EdgeInsets.only(top: 10),
-            //                 child: Icon(Icons.linear_scale_outlined,size: 20,color: Colors.grey,),
-            //             ),
-            //           ],
-            //         ),
-            //       ),
-            //       IntrinsicHeight(
-            //         child: Container(
-            //           margin: EdgeInsets.only(top: 16,bottom: 20),
-            //           child: Column(
-            //             crossAxisAlignment: CrossAxisAlignment.start,
-            //             children: [
-            //               Padding(
-            //                 padding: EdgeInsets.only(left: 20,right: 20),
-            //                 child: Text("Title newsfeed"),
-            //               ),
-            //               SizedBox(height: 4,),
-            //               Image(image: Image.network("https://i.ibb.co/y5wgBVP/Modern-We-re-Closed-Announcement-Free-Facebook-Post.png").image,
-            //                  fit: BoxFit.cover,
-            //                  width: MediaQuery.of(context).size.width/1,
-            //                 ),
-            //               SizedBox(height: 10,),
-            //               Padding(
-            //                 padding: EdgeInsets.only(left: 20 , right: 20),
-            //                 child: Row(
-            //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //                   children: [
-            //                     Row(
-            //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //                       children: [
-            //                         Icon(Icons.thumb_up_alt_outlined ,color: Colors.grey.shade600,),
-            //                         SizedBox(width: 6,),
-            //                         Text("Thích" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
-            //                       ],
-            //                     ),
-            //                     Row(
-            //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //                       children: [
-            //                         Icon(Icons.comment_bank_outlined ,color: Colors.grey.shade600,),
-            //                         SizedBox(width: 6,),
-            //                         Text("Bình luận" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
-            //                       ],
-            //                     ),
-            //                     Row(
-            //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //                       children: [
-            //                         Icon(Icons.chat_bubble_outline ,color: Colors.grey.shade600,),
-            //                         SizedBox(width: 6,),
-            //                         Text("Gửi" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
-            //                       ],
-            //                     ),
-            //                     Row(
-            //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //                       children: [
-            //                         Icon(Icons.turn_slight_right_outlined ,color: Colors.grey.shade600,),
-            //                         SizedBox(width: 6,),
-            //                         Text("Chia sẽ" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
-            //                       ],
-            //                     ),
-            //                   ],
-            //                 ),
-            //               ),
-            //             ],
-            //           ),
-            //         ),
-            //       ),
-            //       Container(
-            //         height: 6,
-            //         decoration: BoxDecoration(
-            //           color: Colors.grey.shade400,
-            //         ),
-            //       ),
-            //     ],
-            //   ),
           ],
         ),
       ),
