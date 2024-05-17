@@ -1,4 +1,6 @@
 
+import 'package:do_an_tot_nghiep/pages/friends.dart';
+import 'package:do_an_tot_nghiep/pages/menu.dart';
 import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
@@ -10,11 +12,8 @@ import 'package:do_an_tot_nghiep/pages/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-
-
-
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +34,7 @@ class MyApp extends StatelessWidget {
       ),
       //home: Profile(idProfileUser: "Ly Ly_202405091941",),
       //home: CreateNewsFeed()
-      home: Home(),
+      home: Friends(),
     );
   }
 }

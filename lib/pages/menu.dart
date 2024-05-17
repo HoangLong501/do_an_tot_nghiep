@@ -166,22 +166,28 @@ class _MenuState extends State<Menu> {
                     ),
                   ),
                 ),
-                Container(
-                  margin: EdgeInsets.only(left: 20),
-                  width: MediaQuery.of(context).size.width/2.4,
-                  height: 100,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color:Colors.white
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 20,left:20 ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.people_alt_rounded,size: 30,color: Colors.lightBlue,),
-                        Text("Bạn bè",style: TextStyle(fontSize: 18,fontWeight: FontWeight.w700),)
-                      ],
+                GestureDetector(
+                  onTap: (){
+
+                  },
+                 child:  Container(
+                    margin: EdgeInsets.only(left: 20),
+                    width: MediaQuery.of(context).size.width/2.4,
+                    height: 100,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color:Colors.white
+                    ),
+                    child: Padding(
+
+                      padding: const EdgeInsets.only(top: 20,left:20 ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.people_alt_rounded,size: 30,color: Colors.lightBlue,),
+                          Text("Bạn bè",style: TextStyle(fontSize: 18,fontWeight: FontWeight.w700),)
+                        ],
+                      ),
                     ),
                   ),
                 ),

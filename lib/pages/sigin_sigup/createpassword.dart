@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../service/shared_pref.dart';
+import '../lib_class_import/user.dart';
 import 'login.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,6 +24,7 @@ class CreatePassWord extends StatefulWidget {
 }
 
 class _CreatePassWordState extends State<CreatePassWord> {
+  List<Person> listUser=[];
   bool _obscureText = true;
   String passWord ="",rePassWord="";
   RegExp passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$');
@@ -42,6 +44,18 @@ class _CreatePassWordState extends State<CreatePassWord> {
     String id = '${username}_$formattedDate';
     return id;
   }
+onLoad()async{
+  listUser= await DatabaseMethods().getUserLimit10();
+  setState(() {
+
+  });
+}
+  @override
+   initState()  {
+    super.initState();
+    onLoad();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -240,9 +254,24 @@ class _CreatePassWordState extends State<CreatePassWord> {
               "Phone": "",
               "imageAvatar": "https://i.ibb.co/jzk0j6j/image.png",
               "News": [],
+              "Search":[]
             };
             print("UserInfoMap before adding: $userInfoMap");
             DatabaseMethods().addUserDetail(id, userInfoMap);
+            // Map<String, dynamic> relaInfoMap = {
+            //   "ID":id,
+            // };
+            //DatabaseMethods().addRelationship(id,relaInfoMap );
+            for(int i=0;i<listUser.length;i++){
+              if(listUser[i].id==id){
+                continue;
+              }
+              Map<String , dynamic> statusInfoMap={
+                "id":listUser[i].id,
+                "check":0
+              };
+              await DatabaseMethods().addHints(id, listUser[i].id, statusInfoMap);
+            }
             await SharedPreferenceHelper().saveUserName(userName);
             await SharedPreferenceHelper().saveIdUser(id);
             await SharedPreferenceHelper().saveUserPhone(phone);

@@ -1,4 +1,6 @@
 
+import 'dart:async';
+import 'package:do_an_tot_nghiep/pages/lib_class_import/hintdetail.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -22,30 +24,26 @@ class _SearchState extends State<Search> {
   List items = [0, 1, 2];
   TextEditingController searchConTroller = TextEditingController();
   bool isVisible=true;
-  String? birthDate="",
-  email="",
-  id="",
-  phone="",
-  sex= "",
-  username="",
-  image="";
+  String?id="";
+Stream<QuerySnapshot>? listUser;
   List<Person> uSers=[];
 
+   List<String> listHideHintsFriend=[];
+   Stream<List<String>>? listGetHideHintsFriend;
+   Stream<List<Person>>? hideHintsUsers;
+   List<Person> listHideHintsUsers=[];
+   Stream<List<String>>? getListReceived;
 
   onLoad()async{
-    uSers=await DatabaseMethods().getUser();
-    id=(await SharedPreferenceHelper().getIdUser())!;
-    for(int i=0;i<uSers.length;i++){
-      if(uSers[i].id==id){
-        uSers.remove(uSers[i]);
-      }
-    }
-    print(uSers);
+    id=(await SharedPreferenceHelper().getIdUser());
+    listUser= DatabaseMethods().getMyHint(id!);
     setState(() {
 
     });
   }
+void sendRequest(String idRequaest,String idReceived){
 
+}
 
    @override
   void initState() {
@@ -172,7 +170,7 @@ class _SearchState extends State<Search> {
                                 borderRadius: BorderRadius.circular(50),
                                 // Độ bo góc
                                 image: DecorationImage(
-                                  image: AssetImage(person.image),
+                                  image:Image.network(person.image).image,
                                   fit: BoxFit
                                       .cover, // Đảm bảo hình ảnh vừa khớp trong container
                                 ),
@@ -181,7 +179,12 @@ class _SearchState extends State<Search> {
                           ),
                           SizedBox(width: 20),
                           GestureDetector(
-                            onTap: () {
+                            onTap: () async {
+                            // List searched;
+                            //   Map<String, dynamic> updateId = {
+                            //     "Searched": person.id,
+                            //   };
+                              _updateSearched(id!,person.id);
 
                             },
                             child: Column(
@@ -262,13 +265,13 @@ class _SearchState extends State<Search> {
                       ],
                     ),
                   ),
-
+                  potentianlFriends(),
                   Row(
                     children: [
                       Expanded(
                         child: Container(
                           width: 250,
-                          height: 365, // Đặt chiều cao của Container
+                          height: 5, // Đặt chiều cao của Container
                           margin: EdgeInsets.only(
                             left: 10,
                           ),
@@ -1037,6 +1040,7 @@ class _SearchState extends State<Search> {
                             ),
                           ],
                         ),
+
                         child: Row(
                           children: [
                             Container(
@@ -1197,14 +1201,45 @@ class _SearchState extends State<Search> {
       ),
     );
   }
+  Widget potentianlFriends (){
+    return StreamBuilder<QuerySnapshot>(
+        stream: listUser, // Lắng nghe thay đổi từ Firestore
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          }else {
+           // print("Lấy dữ liệu ?  ${snapshot.hasData}");
 
+    return snapshot.hasData?
+      Row(
+      children: [
+        Expanded(
+          child: Container(
+            width: 250,
+            height: 365, // Đặt chiều cao của Container
+            margin: EdgeInsets.only(
+              left: 10,
+            ),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal, // Cho phép cuộn ngang
+              itemCount:snapshot.data!.docs.length, // Số lượng mục trong ListView
+              itemBuilder: (BuildContext context, int index) {
+                Map<String, dynamic> data =snapshot.data!.docs[index].data() as Map<String, dynamic>;
+                return HintDetail(id: data["id"],);
+              },
+            ),
+          ),
+        ),
+      ],
+    ):Center(child: CircularProgressIndicator(),);
+          }
+    }
+    );
+  }
    Future<List<Person>> _SearchUser() async {
      try {
        String userName = searchConTroller.text;
        List<Person> userlist = (await DatabaseMethods().getUserByName(userName));
-      // print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-      // print(userlist.toString());
-      // print(userlist.length);
        return userlist;
      } catch (e) {
        // Xử lý các lỗi khác nếu có
@@ -1212,6 +1247,29 @@ class _SearchState extends State<Search> {
        return []; // Trả về danh sách trống trong trường hợp có lỗi
      }
    }
+   Future<void> _updateSearched(String id, String idSearchUser) async {
+     try {
+       // Lấy thông tin người dùng từ Firestore
+       QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(id);
+       // Lấy danh sách "Searched" từ tài liệu người dùng
+       List searched = querySnapshot.docs[0]["Searched"];
+       // Kiểm tra xem idSearchUser đã tồn tại trong searched hay chưa
+       if (!searched.contains(idSearchUser)) {
+         // Nếu idSearchUser chưa tồn tại trong searched, thêm nó vào danh sách
+         searched.add(idSearchUser);
+         // Tạo một Map mới để cập nhật thông tin người dùng
+         Map<String, dynamic> updatedUserInfo = {
+           "Searched": searched
+         };
+
+         // Cập nhật thông tin người dùng trong Firestore
+         await DatabaseMethods().updateUserDetail(id, updatedUserInfo);
+       }
+     } catch (e) {
+       print("Lỗi khi cập nhật searched: $e");
+     }
+   }
+
 }
 
 
