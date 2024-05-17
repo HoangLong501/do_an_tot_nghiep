@@ -12,165 +12,11 @@ class DatabaseMethods {
         .collection("user").doc(id)
         .set(userInfoMap);
   }
-  Future addRelationship(String id ,Map<String , dynamic> userInfoMap )async{
+  Future addRelationship(String idUser ,Map<String , dynamic> userInfoMap )async{
     return await FirebaseFirestore.instance
-        .collection("relationship").doc(id)
+        .collection("relationship").doc(idUser)
         .set(userInfoMap);
   }
- Future requestFriend(String requestId, String receiveId) async {
-    // lấy id của người gửi
-    DocumentSnapshot docrequestId =
-    await FirebaseFirestore.instance.collection("relationship").doc(requestId).get();
-    // lấy danh sách theo id
-    Map<String, dynamic> userData = docrequestId.data() as Map<String, dynamic>;
-    // lấy request của người gửi
-    List<String> newListRequest = List<String>.from(userData['Request'] ?? []);
-   // print(newListRequest);
-    if(!newListRequest.contains(receiveId)){
-      newListRequest.add(receiveId);
-
-      Map<String, dynamic> requestMap= {
-        "Request":newListRequest
-      };
-      FirebaseFirestore.instance
-          .collection("relationship")
-          .doc(requestId)
-          .update(requestMap);
-    }else{
-      print("có $receiveId rồi");
-    }
-    // lấy thông tin người nhận
-  DocumentSnapshot docReceiveId =
-  await FirebaseFirestore.instance.collection("relationship").doc(receiveId).get() ;
-    // lấy danh sách người nhận
-    Map<String,dynamic> userReceiveData=docReceiveId.data() as Map<String,dynamic>;
-    // lấy received của người nhận
-    List<String>newListReceive=List<String>.from(userReceiveData['Received'] ?? []);
-      if(!newListReceive.contains(requestId)) {
-        newListReceive.add(requestId);
-        Map<String, dynamic> receiveMap = {
-          "Received": newListReceive
-        };
-        FirebaseFirestore.instance.collection("relationship")
-            .doc(receiveId)
-            .update(receiveMap);
-      }else{
-        print("có $requestId rồi");
-      }
-     // lấy received của người gửi
-    List<String>listReqestReceive =List<String>.from(userData['Received'] ?? []);
-      //lấy request của người nhận
-    List<String>listReceiveRequest =List<String>.from(userReceiveData['Request'] ?? []);
-    // Xóa người gửi khi request = receive
-    for(String requestkey in newListRequest ){
-      for(String receivekey in listReqestReceive){
-        if(requestkey == receivekey) {
-          newListRequest.remove(requestkey);
-          Map<String, dynamic> requestMapRemove = {
-            "Request": newListRequest
-          };
-          FirebaseFirestore.instance
-              .collection("relationship")
-              .doc(requestId)
-              .update(requestMapRemove);
-
-          listReqestReceive.remove(receivekey);
-          Map<String, dynamic> receiveMapRemove = {
-            "Received": listReqestReceive
-          };
-          FirebaseFirestore.instance.collection("relationship")
-              .doc(requestId)
-              .update(receiveMapRemove);
-          if(newListReceive.contains(requestId)) {
-            newListReceive.remove(requestId);
-            Map<String, dynamic> receiveMapRemove = {
-              "Received": newListReceive
-            };
-            FirebaseFirestore.instance.collection("relationship")
-                .doc(receiveId)
-                .update(receiveMapRemove);
-          }
-          if(listReceiveRequest.contains(requestId)) {
-            listReceiveRequest.remove(requestId);
-            Map<String, dynamic> receiveMapRemove = {
-              "Request": listReceiveRequest
-            };
-            FirebaseFirestore.instance.collection("relationship")
-                .doc(receiveId)
-                .update(receiveMapRemove);
-          }
-          // thêm bạn của người gửi
-          List<String>newListRequestFriend = List<String>.from(
-              userData['Friends'] ?? []);
-          newListRequestFriend.add(requestId);
-          Map<String, dynamic> requestFriendMap = {
-            "Friends": newListRequestFriend
-          };
-          FirebaseFirestore.instance.collection("relationship")
-              .doc(receiveId)
-              .update(requestFriendMap);
-          // thêm bạn của người nhận
-          List<String>newListReceiveFriend = List<String>.from(
-              userReceiveData['Friends'] ?? []);
-          newListReceiveFriend.add(receiveId);
-          print(newListReceiveFriend);
-          Map<String, dynamic> receiveFriendMap = {
-            "Friends": newListReceiveFriend
-          };
-          print(receiveFriendMap);
-          FirebaseFirestore.instance.collection("relationship")
-              .doc(requestId)
-              .update(receiveFriendMap);
-
-          print("thêm bạn thành công");
-         }
-        }
-      }
-     }
-
-
-  // Future receiveFriend(String requestId , Map<String , dynamic> receiveId) async {
-  //   return await FirebaseFirestore.instance
-  //       .collection("relationship").doc(requestId)
-  //       .set(receiveId);
-  // }
-  // lấy danh sách request
-Future<List<String>>getRequest(String id) async{
-  DocumentSnapshot docRequest =
-  await FirebaseFirestore.instance.collection("relationship").doc(id).get() ;
-  Map<String,dynamic> userReceiveData=docRequest.data() as Map<String,dynamic>;
-  List<String>newListReceive=List<String>.from(userReceiveData['Request'] ?? []);
-  return newListReceive;
-}
-
-//lấy danh sách receive
-  Stream<List<String>>getReceive(String id) async*{
-    List<String> list=[];
-    DocumentSnapshot docRequest =
-    await FirebaseFirestore.instance.collection("relationship").doc(id).get() ;
-    //print("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
-    Map<String,dynamic> userReceiveData=docRequest.data() as Map<String,dynamic>;
-    List<String>newListReceive=List<String>.from(userReceiveData['Received'] ?? []);
-      for(String newList in newListReceive){
-        list.add(newList);
-        yield list;
-      }
-      //print(list);
-
-  }
-  //lấy danh sách friends
-  Future<List<String>>getFriends(String id) async{
-      DocumentSnapshot docRequest =
-      await FirebaseFirestore.instance.collection("relationship")
-          .doc(id)
-          .get();
-      Map<String, dynamic> userReceiveData = docRequest.data() as Map<
-          String,
-          dynamic>;
-      List<String>newListReceive = List<String>.from(
-          userReceiveData['Friends'] ?? []);
-          return newListReceive;
-      }
 
   Stream<QuerySnapshot> getUsers() async* {
     try {
@@ -179,42 +25,6 @@ Future<List<String>>getRequest(String id) async{
           .snapshots();
     } catch (error) {
       print('Đã xảy ra lỗi khi lấy danh sách tin tức: $error');
-    }
-  }
-  Future deleteRequest( String idUser,String idRequest) async{
-    DocumentSnapshot docRequest =
-    await FirebaseFirestore.instance.collection("relationship").doc(idUser).get() ;
-    Map<String,dynamic> userReceiveData=docRequest.data() as Map<String,dynamic>;
-    List<String>newListRequest=List<String>.from(userReceiveData['Request'] ?? []);
-
-    if(newListRequest.contains(idRequest)) {
-      newListRequest.remove(idRequest);
-      // print(idRequest);
-      // print(newListRequest);
-      Map<String, dynamic> requestMap = {
-        "Request": newListRequest
-      };
-      FirebaseFirestore.instance.collection("relationship")
-          .doc(idUser)
-          .update(requestMap);
-
-      DocumentSnapshot docReceive =
-      await FirebaseFirestore.instance.collection("relationship").doc(idRequest).get() ;
-      Map<String,dynamic> userReceiveData=docReceive.data() as Map<String,dynamic>;
-      List<String>newListReceive=List<String>.from(userReceiveData['Received'] ?? []);
-
-      if(newListReceive.contains(idUser)) {
-        newListReceive.remove(idUser);
-        // print(idRequest);
-        // print(newListReceive);
-        Map<String, dynamic> receivetMap = {
-          "Received": newListReceive
-        };
-        FirebaseFirestore.instance.collection("relationship")
-            .doc(idRequest)
-            .update(receivetMap);
-        print("xóa lời mời ok");
-      }
     }
   }
 // cập nhật thông tin người dùng
@@ -254,9 +64,9 @@ Future<List<String>>getRequest(String id) async{
 
     return userList;
   }
-  Future<List<Person>> getUser() async{
+  Future<List<Person>> getUserLimit10() async{
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection("user")
+        .collection("user").limit(10)
         .get();
     List<Person> userList = [];
 
@@ -302,6 +112,31 @@ Future<List<String>>getRequest(String id) async{
       return null;
     }
   }
+  Future<DocumentReference?> addFriends(String idUser,String idReceived, Map<String, dynamic> statusInfoMap) async {
+    try {
+      // Sử dụng ID tùy chỉnh được cung cấp để thêm dữ liệu vào Firestore.
+      DocumentReference docRef = FirebaseFirestore.instance.collection("relationship")
+          .doc(idReceived).collection("friend").doc(idUser);
+      await docRef.set(statusInfoMap);
+      print(idUser);
+      print(idReceived);
+      print("tạo friend thành công");
+      return docRef;
+    } catch (e) {
+      return null;
+    }
+  }
+  Future<DocumentReference?> addHints(String idUser,String idUserRandom, Map<String, dynamic> statusInfoMap) async {
+    try {
+      // Sử dụng ID tùy chỉnh được cung cấp để thêm dữ liệu vào Firestore.
+      DocumentReference docRef = FirebaseFirestore.instance.collection("relationship")
+          .doc(idUser).collection("hint").doc(idUserRandom);
+      await docRef.set(statusInfoMap);
+      return docRef;
+    } catch (e) {
+      return null;
+    }
+  }
   Future<QuerySnapshot> search(String username) async {
     return await FirebaseFirestore.instance.collection("user").where("SearchKey",isEqualTo: username).get();
   }
@@ -321,78 +156,6 @@ Future<List<String>>getRequest(String id) async{
     return await FirebaseFirestore.instance
         .collection("user").where("IdUser", isEqualTo: id).get();
   }
-  Future addHideHintsFriend(String idUser,String idHideHintsFriend) async {
-    DocumentSnapshot docIdUser =
-    await FirebaseFirestore.instance.collection("user").doc(idUser).get();
-    Map<String, dynamic> userData = docIdUser.data() as Map<String, dynamic>;
-    List<String> newListUser = List<String>.from(
-        userData['HideHintsFriend'] ?? []);
-    if (!newListUser.contains(idHideHintsFriend)) {
-      newListUser.add(idHideHintsFriend);
-      Map<String, dynamic> requestMap = {
-        "HideHintsFriend": newListUser
-      };
-      FirebaseFirestore.instance
-          .collection("user")
-          .doc(idUser)
-          .update(requestMap);
-      print("xóa gợi ý bạn bè thành công");
-    }
-  }
-  Stream<List<String>> getHideHintsFriend(String id) async*{
-    List<String> list=[];
-    DocumentSnapshot docId =
-    await FirebaseFirestore.instance.collection("user").doc(id).get();
-    Map<String, dynamic> userData = docId.data() as Map<String, dynamic>;
-    List<String> newListUser = List<String>.from(
-        userData['HideHintsFriend'] ?? []);
-        for(String idUser in newListUser){
-          list.add(idUser);
-          yield list;
-        }
-  }
-  Stream<List<Person>> getHideHintsUsers(String id, List<Person> users) async*{
-    Stream<List<String>>? getHideHintsFriends;
-    Stream<List<String>>? getListReceived;
-    List<String>listReceived=[];
-     getListReceived= await getReceive(id) ;
-     await for(List<String> list in getListReceived){
-       listReceived=list;
-     }
-    List listFriend=await getFriends(id) ;
-    List<String> listGetHideHintsFriend=[];
-    getHideHintsFriends=await getHideHintsFriend(id) ;
-    await for(List<String> list in getHideHintsFriends){
-      listGetHideHintsFriend=list;
-    }
-    //print(id);
-    print(users.length);
-    for(int i=0;i<users.length;i++){
-      bool removed = false;
-       //print(users[i].id);
-      if(users[i].id==id){
-        print("vào được rồi");
-        users.remove(users[i]);
-        removed = true;
-      }
-      if(listFriend.contains(users[i].id)){
-        // print(listFriend);
-        users.remove(users[i]);
-        removed = true;
-      }
-      if(listReceived.contains(users[i])){
-        //  print(listReceive);
-        users.remove(users[i]);
-        removed = true;
-      }
-      if(listGetHideHintsFriend.contains(users[i].id)){
-        users.remove(users[i]);
-        // print(uSers[i]);
-        removed = true;
-      }
-      if (removed) {
-        i--; // Lùi lại chỉ mục `i` khi một phần tử bị xóa
-      }
   Stream<QuerySnapshot> getMyNews(String idUser) async* {
     try {
       yield* FirebaseFirestore.instance
@@ -403,27 +166,161 @@ Future<List<String>>getRequest(String id) async{
       print('Đã xảy ra lỗi khi lấy danh sách tin tức: $error');
     }
   }
+  Stream<QuerySnapshot> getUsers2() async* {
+    try {
+      yield* FirebaseFirestore.instance
+          .collection("user")
+          .snapshots();
+    } catch (error) {
+      print('Đã xảy ra lỗi khi lấy danh sách tin tức: $error');
+    }
+  }
   Future<List<String>> getFriends(String userId) async {
     // CollectionReference friendsRef = FirebaseFirestore.instance.collection('users').doc(userId).collection('friends');
     // QuerySnapshot friendsSnapshot = await friendsRef.where('status', isEqualTo: 'accepted').get();
 
-    List<String> friendIds = ["Ly Ly_202405091941" ,"con_202405091930" ];
+    List<String> friendIds = ["Ly Ly_202405091941", "con_202405091930"];
     // for (var doc in friendsSnapshot.docs) {
     //   friendIds.add(doc.id);
     // }
     return friendIds;
   }
+  // Stream<Map<String, dynamic>> getFriendDocument(String idUser, String idReceived) async* {
+  //   // Tham chiếu đến tài liệu cụ thể
+  //   DocumentReference documentReference = FirebaseFirestore.instance
+  //       .collection("relationship")
+  //       .doc(idUser)
+  //       .collection("friend")
+  //       .doc(idReceived);
+  //
+  //   // Lấy dữ liệu từ tài liệu
+  //   DocumentSnapshot documentSnapshot = await documentReference.get();
+  //
+  //   // Kiểm tra xem tài liệu có tồn tại hay không
+  //   if (documentSnapshot.exists) {
+  //     // Trả về dữ liệu dưới dạng Map<String, dynamic>
+  //     yield documentSnapshot.data() as Map<String, dynamic>;
+  //   } else {
+  //     // Trả về một Map rỗng nếu tài liệu không tồn tại
+  //     yield {};
+  //   }
+  // }
+
+  // Stream<List<Map<String, dynamic>>> getReceived(String idUser) async* {
+  //   CollectionReference collectionReference = FirebaseFirestore.instance
+  //       .collection("relationship")
+  //       .doc(idUser)
+  //       .collection("friend");
+  //   await for (QuerySnapshot querySnapshot in collectionReference.snapshots()) {
+  //     List<Map<String, dynamic>> friends = [];
+  //     for (var documentSnapshot in querySnapshot.docs) {
+  //       if (documentSnapshot.exists) {
+  //         friends.add(documentSnapshot.data() as Map<String, dynamic>);
+  //       }
+  //     }
+  //     yield friends;
+  //   }
+  // }
+  Stream<QuerySnapshot> getReceived(String idUser) async* {
+    print("eeeeeeeeeeeeeeeeeeeeeeeeeeee");
+    try {
+
+      yield* FirebaseFirestore.instance
+          .collection("relationship").doc(idUser).collection("friend")
+          .snapshots();
+    } catch (error) {
+      print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
     }
-    //print(users);
-     yield users;
-   // print(users);
-
-
   }
-}
-
-
+  Stream<QuerySnapshot> getListUserReceive(Stream<QuerySnapshot> received) async* {
+print("qqqqqqqqqqqqqqqqqqqqqqqqqq");
+    await for (var querySnapshot in received) {
+      for (var document in querySnapshot.docs) {
+        var data = document.data() as Map<String, dynamic>;
+        print(data);
+        if (data["status"] == "pending") {
+          QuerySnapshot userSnapshot = await getUserById(data["id"]);
+          if (userSnapshot.docs.isNotEmpty) {
+            yield userSnapshot;
+          }
+        }
+      }
+    }
   }
+
+
+  Future<int> getCkheckHint(String idUser, String idHint) async {
+    try {
+      DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+          .collection("relationship")
+          .doc(idUser)
+          .collection("hint")
+          .doc(idHint)
+          .get();
+      if (snapshot.exists) {
+        return snapshot.data()?['check'] ?? 0;
+      } else {
+        return 0;
+      }
+    } catch (error) {
+      print("Đã xảy ra lỗi: $error");
+      return 0;
+    }
+  }
+
+  Future<void> updateCheckHint(String idUser,String idHint, Map<String, dynamic> hintInfoMap) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("relationship")
+          .doc(idUser)
+          .collection("hint")
+          .doc(idHint)
+          .update(hintInfoMap);
+      print("Cập nhật thông tin người dùng thành công!");
+    } catch (e) {
+      print("Lỗi khi cập nhật thông tin người dùng: $e");
+    }
+  }
+
+  Stream<QuerySnapshot> getMyHint(String idUser) async* {
+    try {
+      yield* FirebaseFirestore.instance
+          .collection("relationship").doc(idUser).collection("hint")
+          .snapshots();
+    } catch (error) {
+      print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
+    }
+  }
+  Future<void> deleteHint(String idUser, String idHint) async {
+
+    try {
+
+      CollectionReference friendsRef = FirebaseFirestore.instance.collection('relationship').doc(idUser).collection('hint');
+      await friendsRef.doc(idHint).delete();
+
+      print('Đã xóa gợi ý có id $idHint từ tài khoản người dùng có id $idUser thành công.');
+    } catch (error) {
+      // Xử lý ngoại lệ (ví dụ: in ra lỗi)
+      print('Lỗi khi xóa gợi ý: $error');
+    }
+  }
+// Future<DocumentReference?> acceptFriend(String idUser,String idReceive,Map<String ,dynamic> acceptInfoMap) async {
+//   try {
+//
+//     DocumentReference docRef = FirebaseFirestore.instance.collection("relationship")
+//         .doc(idUser).collection("friend").doc(idReceive);
+//     await docRef.set(acceptInfoMap);
+//     print("chấp nhận  thành công");
+//     return docRef;
+//   } catch (e) {
+//     return null;
+//   }
+// }
+  }
+
+
+
+
 
 
 
