@@ -179,6 +179,33 @@ class DatabaseMethods {
         userComment)
         .set(userInfoMap);
   }
+  Future<DocumentReference?> addCommentDetail(String idComment,
+      Map<String, dynamic> commentInfoMap) async {
+    try {
+      // Sử dụng ID tùy chỉnh được cung cấp để thêm dữ liệu vào Firestore.
+      DocumentReference docRef = FirebaseFirestore.instance.collection(
+          "comment").doc(idComment).collection("userComment").doc();
+      await docRef.set(commentInfoMap);
+      print('Đã thêm comment thành công ');
+      // Trả về DocumentReference của tài liệu đã thêm.
+      return docRef;
+    } catch (e) {
+      print("Lỗi khi thêm comment vào Firestore: $e");
+      // Xử lý lỗi tại đây nếu cần.
+      return null;
+    }
+  }
+  Stream<QuerySnapshot> getCommentStream(String idComment)async*{
+    try{
+      yield* FirebaseFirestore.instance
+          .collection("comment").doc(idComment).collection("userComment")
+          .orderBy("time", descending: true)
+          .snapshots();
+    }catch(error){
+      print('Đã xảy ra lỗi khi lấy comment tổng : $error');
+    }
+
+  }
 
 
   Future<QuerySnapshot> getUserById(String id) async {

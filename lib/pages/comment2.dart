@@ -1,5 +1,8 @@
 import 'dart:ffi';
-
+import 'package:do_an_tot_nghiep/pages/lib_class_import/commentDetail.dart';
+import 'package:do_an_tot_nghiep/service/database.dart';
+import 'package:intl/intl.dart';
+import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 class Comment2 extends StatefulWidget {
@@ -12,13 +15,18 @@ class _CommentState extends State<Comment2> {
   TextEditingController contentController = TextEditingController();
   List react=[];
   int sumReact=0;
+  String? idUserComment;
+  Stream<QuerySnapshot>? streamComment;
   onLoad()async{
     print(widget.idNewsfeed);
+    streamComment = DatabaseMethods().getCommentStream(widget.idComment);
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(widget.idPoster).collection("myNewsfeed").doc(widget.idNewsfeed).get();
     react=data.get("react") ;
     sumReact= react.reduce((value,e){
       return value+e;
     });
+    idUserComment = await SharedPreferenceHelper().getIdUser();
+
     setState(() {
 
     });
@@ -71,15 +79,34 @@ class _CommentState extends State<Comment2> {
                       Container(
                         decoration: BoxDecoration(),
                         height:600,
-                        child: Text("ngu"),
+                        child: StreamBuilder(
+                          stream: streamComment,
+                          builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
+                            if(snapshot.connectionState == ConnectionState.waiting){
+                              return Center(child: CircularProgressIndicator());
+                            }
+                            if(!snapshot.hasData){
+                              return Center(child: Text("Chưa có comment"));
+                            }
+                            if (snapshot.hasData) {
+                              return IntrinsicHeight(
+                                child: Column(
+                                  children: snapshot.data!.docs.map((document){
+                                    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+                                    return CommentDetail(idUser: data["id_user_comment"], content: data["content"], time: data["time"]);
+                                  }).toList(),
+                                ),
+                              );
+                            }else{
+                              return Center(child: Text(" Dòng 306 Invalid data format"));
+                            }
+
+                          },
+                        ),
                       ),
                     ],
                   ),
                 ),
-                // Container(
-                //   height: 500,
-                //   child: Text("BINH LUAN"),
-                // ),
               ],
             ),
         ),
@@ -100,12 +127,32 @@ class _CommentState extends State<Comment2> {
                   controller: contentController,
                   decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: "Viết bình luận"
+                      hintText: "Viết bình luận",
+                      suffixIcon: IconButton(
+                      onPressed: ()async {
+                        if(contentController.text=="" || contentController.text.isEmpty){
+
+                        }else{
+                          DateTime now = DateTime.now();
+                          String timeNow = DateFormat('h:mma').format(now);
+                          Map<String,dynamic> commentInfoMap={
+                            "id_user_comment":idUserComment,
+                            "content":contentController.text,
+                            "time":timeNow,
+                          };
+                          await DatabaseMethods().addCommentDetail(widget.idComment, commentInfoMap);
+                          print(commentInfoMap);
+
+                        }
+
+                      },
+                      icon: Icon(Icons.send),
                   ),
                 ),
               ),
             ),
           ),
+      ),
       ),
     );
   }

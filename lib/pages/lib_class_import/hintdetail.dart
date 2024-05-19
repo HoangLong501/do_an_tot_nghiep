@@ -71,7 +71,7 @@ class _HintDetailState extends State<HintDetail> {
                     topLeft: Radius.circular(9),
                     topRight: Radius.circular(
                         9)), // Độ cong của góc bo tròn
-                child: Image.network(
+                child:  Image.network(
                   image,
                   fit: BoxFit.cover,
                 ),
