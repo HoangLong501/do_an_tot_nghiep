@@ -22,11 +22,10 @@ class _FriendsState extends State<Friends> {
   bool addFriends=true;
 
   List<Person> listFriends=[];
-onLoad()async{
-  id= (await SharedPreferenceHelper().getIdUser())! ;
-  print(id);
+  onLoad()async{
+    id= (await SharedPreferenceHelper().getIdUser())! ;
 
- // print(getListReceived!.length);
+   // print(getListReceived!.length);
  //  listReceived=  DatabaseMethods().getListUserReceive(getListReceived!) ;
 
 //print(listReceived);
@@ -73,7 +72,6 @@ onLoad()async{
                       TextButton(
                           onPressed: ()
                             async {
-                              await DatabaseMethods().getReceived(id);
                             },
                       style: ButtonStyle(
                         backgroundColor: MaterialStateProperty.all<Color>(Colors.grey.shade400),
@@ -85,6 +83,15 @@ onLoad()async{
                           ),
                           )
                       ),
+                      StreamBuilder(stream: DatabaseMethods().getReceived(id),
+                          builder: (context,AsyncSnapshot<QuerySnapshot> snapshot){
+                             if(snapshot.hasData){
+                               Text(snapshot.data!.docs[0]["id"]??"Null");
+                             }else{
+                               return SizedBox();
+                             }
+                             return SizedBox();
+                          }),
                       SizedBox(width: 10,),
                       TextButton(
                           onPressed: ()

@@ -179,55 +179,18 @@ class DatabaseMethods {
     // CollectionReference friendsRef = FirebaseFirestore.instance.collection('users').doc(userId).collection('friends');
     // QuerySnapshot friendsSnapshot = await friendsRef.where('status', isEqualTo: 'accepted').get();
 
-    List<String> friendIds = ["Ly Ly_202405091941", "con_202405091930"];
+    List<String> friendIds = ["Ly Ly_202405091941","hao_202405091921"];
     // for (var doc in friendsSnapshot.docs) {
     //   friendIds.add(doc.id);
     // }
     return friendIds;
   }
-  // Stream<Map<String, dynamic>> getFriendDocument(String idUser, String idReceived) async* {
-  //   // Tham chiếu đến tài liệu cụ thể
-  //   DocumentReference documentReference = FirebaseFirestore.instance
-  //       .collection("relationship")
-  //       .doc(idUser)
-  //       .collection("friend")
-  //       .doc(idReceived);
-  //
-  //   // Lấy dữ liệu từ tài liệu
-  //   DocumentSnapshot documentSnapshot = await documentReference.get();
-  //
-  //   // Kiểm tra xem tài liệu có tồn tại hay không
-  //   if (documentSnapshot.exists) {
-  //     // Trả về dữ liệu dưới dạng Map<String, dynamic>
-  //     yield documentSnapshot.data() as Map<String, dynamic>;
-  //   } else {
-  //     // Trả về một Map rỗng nếu tài liệu không tồn tại
-  //     yield {};
-  //   }
-  // }
-
-  // Stream<List<Map<String, dynamic>>> getReceived(String idUser) async* {
-  //   CollectionReference collectionReference = FirebaseFirestore.instance
-  //       .collection("relationship")
-  //       .doc(idUser)
-  //       .collection("friend");
-  //   await for (QuerySnapshot querySnapshot in collectionReference.snapshots()) {
-  //     List<Map<String, dynamic>> friends = [];
-  //     for (var documentSnapshot in querySnapshot.docs) {
-  //       if (documentSnapshot.exists) {
-  //         friends.add(documentSnapshot.data() as Map<String, dynamic>);
-  //       }
-  //     }
-  //     yield friends;
-  //   }
-  // }
   Stream<QuerySnapshot> getReceived(String idUser) async* {
-    print("eeeeeeeeeeeeeeeeeeeeeeeeeeee");
     try {
-
       yield* FirebaseFirestore.instance
           .collection("relationship").doc(idUser).collection("friend")
           .snapshots();
+
     } catch (error) {
       print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
     }

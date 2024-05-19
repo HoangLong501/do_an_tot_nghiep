@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
       ),
       //home: Profile(idProfileUser: "Ly Ly_202405091941",),
       //home: CreateNewsFeed()
-      home: Friends(),
+      home: Home(),
     );
   }
 }

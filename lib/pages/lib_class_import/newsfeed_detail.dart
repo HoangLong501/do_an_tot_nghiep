@@ -1,12 +1,15 @@
 import 'package:do_an_tot_nghiep/pages/comment.dart';
 import 'package:do_an_tot_nghiep/pages/comment2.dart';
+import 'package:do_an_tot_nghiep/service/shared_pref.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 class WidgetNewsfeed extends StatefulWidget {
-  final String username ,time , content ,image, id , idComment;
+  final String  idUser,username ,time , content ,image, id , idComment;
   final  DateTime date;
   const WidgetNewsfeed({super.key ,
-      required this.id,
+    required this.idUser,
+    required this.id,
     required this.username,
     required this.content,
     required this.time,
@@ -20,12 +23,20 @@ class WidgetNewsfeed extends StatefulWidget {
 
 class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
   String? date;
+  String idUserReact="";
+  bool longPressReact=false;
 
+  onLoad()async{
+    idUserReact = (await SharedPreferenceHelper().getIdUser())!;
+    date ="${widget.date.day} \/ ${widget.date.month} \/ ${widget.date.year}";
+    setState(() {
 
+    });
+  }
   @override
   void initState() {
     super.initState();
-    date ="${widget.date.day} \/ ${widget.date.month} \/ ${widget.date.year}";
+    onLoad();
   }
 
   @override
@@ -62,7 +73,7 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                     margin: EdgeInsets.only(top: 10),
                     child: Icon(Icons.linear_scale_outlined,size: 20,color: Colors.grey,),
                   ),
-                  Text(date!??"",style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
+                  Text(date??"",style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
                 ],
               ),
             ],
@@ -84,44 +95,32 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                   width: MediaQuery.of(context).size.width/1,
                 ):SizedBox(),
                 SizedBox(height: 10,),
+
                 Padding(
                   padding: EdgeInsets.only(left: 20 , right: 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(Icons.thumb_up_alt_outlined ,color: Colors.grey.shade600,),
-                          SizedBox(width: 6,),
-                          Text("Thích" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
-                        ],
+                      GestureDetector(
+                        onLongPressDown: (detail){
+                            _showPopupMenu(detail.globalPosition.translate(20, -80));
+                        },
+                        onTap: (){
+                          print(idUserReact);
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Icon(Icons.thumb_up_alt_outlined ,color: Colors.grey.shade600,),
+                            SizedBox(width: 6,),
+                            Text("Thích" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
+                          ],
+                        ),
                       ),
                       GestureDetector(
                         onTap: (){
-                          // showModalBottomSheet(
-                          //   enableDrag: true,
-                          //   context: context,
-                          //   isScrollControlled: true,
-                          //   builder: (BuildContext context) {
-                          //     return Padding(
-                          //       padding: EdgeInsets.only(
-                          //           bottom: MediaQuery.of(context).viewInsets.bottom
-                          //       ),
-                          //       child: DraggableScrollableSheet(
-                          //         expand: false,
-                          //         initialChildSize: 0.8,
-                          //         minChildSize: 0.3,
-                          //         maxChildSize: 1.0,
-                          //         builder: (BuildContext context, ScrollController scrollController) {
-                          //           return Comment(idComment: widget.idComment,);
-                          //         },
-                          //       ),
-                          //     );
-                          //   },
-                          // );
                           showMaterialModalBottomSheet(
-                              context: context, builder: (context)=>Comment2(idComment: widget.idComment));
+                              context: context, builder: (context)=>Comment2( idPoster: widget.idUser,idComment: widget.idComment,idNewsfeed: widget.id,));
                         },
                         child: Container(
                           child: Row(
@@ -161,6 +160,30 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
           height: 6,
           decoration: BoxDecoration(
             color: Colors.grey.shade400,
+          ),
+        ),
+      ],
+    );
+  }
+  void _showPopupMenu(Offset position) async {
+    await showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+          position.dx, position.dy, position.dx, position.dy),
+      items: [
+        PopupMenuItem(
+          child: Row(
+            children: [
+              PopupMenuItem<int>(
+                value: 0,
+                child: Icon(Icons.thumb_up),
+              ),
+              PopupMenuItem<int>(
+                value: 1,
+                child: Icon(Icons.emoji_emotions_outlined),
+              ),
+              // Thêm các mục khác vào đây
+            ],
           ),
         ),
       ],
