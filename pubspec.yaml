@@ -59,6 +59,7 @@ dev_dependencies:
   http: ^0.13.0
   awesome_notifications: ^0.8.2
   auto_size_text: ^3.0.0
+  modal_bottom_sheet: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
