@@ -25,8 +25,8 @@ class _HintDetailState extends State<HintDetail> {
   onLoad() async{
     await getData();
     myId=(await SharedPreferenceHelper().getIdUser())!;
-    check=(await DatabaseMethods().getCkheckHint(myId, id))!;
-    print("giá trị của check: $check");
+    check=await DatabaseMethods().getCkheckHint(myId, id)! ;
+
     setState(() {
 
     });
@@ -276,9 +276,9 @@ class _HintDetailState extends State<HintDetail> {
                   ),
                   TextButton(
                       onPressed: () async {
-                        await DatabaseMethods().deleteHint(myId,id);
-                        setState(() {
 
+                        setState(() {
+                          check=0;
                         });
                       },
                       style: ButtonStyle(

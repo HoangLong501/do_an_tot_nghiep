@@ -1,5 +1,6 @@
 
 import 'dart:async';
+import 'package:do_an_tot_nghiep/pages/add_friend/friend.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/hintdetail.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,6 +12,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import '../service/database.dart';
 import 'lib_class_import/user.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 class Search extends StatefulWidget {
   const Search({super.key});
@@ -756,7 +758,7 @@ void sendRequest(String idRequaest,String idReceived){
                   Row(
                     children: [
                       Container(
-                        width: 190,
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -786,11 +788,12 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
-                              margin: EdgeInsets.only(left: 10),
-                              child: Text("Nhắc đến bạn",
+                              width: MediaQuery.of(context).size.width/3.5,
+                              margin: EdgeInsets.only(left: 1),
+                              child: AutoSizeText("Nhắc đến bạn",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14
+                                    fontSize: 12
                                 ),
                               ),
                             ),
@@ -798,7 +801,7 @@ void sendRequest(String idRequaest,String idReceived){
                         ),
                       ),
                       Container(
-                        width: 190,
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -827,11 +830,12 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
+                              width: MediaQuery.of(context).size.width/3.5,
                               margin: EdgeInsets.only(left: 10),
                               child: Text("Bình luận của bạn",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14
+                                    fontSize: 12
                                 ),
                               ),
                             ),
@@ -845,7 +849,7 @@ void sendRequest(String idRequaest,String idReceived){
                   Row(
                     children: [
                       Container(
-                        width: 190,
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -874,11 +878,11 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
-                              margin: EdgeInsets.only(left: 10),
+                              margin: EdgeInsets.only(left: 1),
                               child: Text("Bài viết bạn đã th...",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14
+                                    fontSize: 12
                                 ),
                               ),
                             ),
@@ -886,7 +890,7 @@ void sendRequest(String idRequaest,String idReceived){
                         ),
                       ),
                       Container(
-                        width: 190,
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -915,11 +919,11 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
-                              margin: EdgeInsets.only(left: 10),
+                              margin: EdgeInsets.only(left: 1),
                               child: Text("Sinh nhật",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14
+                                    fontSize: 12
                                 ),
                               ),
                             ),
@@ -933,7 +937,7 @@ void sendRequest(String idRequaest,String idReceived){
                   Row(
                     children: [
                       Container(
-                        width: 190,
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -962,19 +966,24 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
-                              margin: EdgeInsets.only(left: 10),
+                              margin: EdgeInsets.only(left: 1),
                               child: Text("Đã lưu",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16
+                                    fontSize: 12
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        width: 190,
+                      GestureDetector(
+                        onTap: (){
+                          Navigator.push(context,MaterialPageRoute(builder: (context)=>Friends()));
+                        },
+                     child:  Container(
+
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -1003,17 +1012,18 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
-                              margin: EdgeInsets.only(left: 10),
+                              margin: EdgeInsets.only(left: 1),
                               child: Text("Bạn bè",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14
+                                    fontSize: 12
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
+                      )
                     ],
                   ),
                   SizedBox(height: 10,),
@@ -1021,7 +1031,7 @@ void sendRequest(String idRequaest,String idReceived){
                   Row(
                     children: [
                       Container(
-                        width: 190,
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -1051,11 +1061,11 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
-                              margin: EdgeInsets.only(left: 10),
+                              margin: EdgeInsets.only(left: 1),
                               child: Text("Marketplace",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14
+                                    fontSize: 12
                                 ),
                               ),
                             ),
@@ -1063,7 +1073,7 @@ void sendRequest(String idRequaest,String idReceived){
                         ),
                       ),
                       Container(
-                        width: 190,
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -1092,11 +1102,11 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
-                              margin: EdgeInsets.only(left: 10),
+                              margin: EdgeInsets.only(left: 1),
                               child: Text("Nhóm",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14
+                                    fontSize: 12
                                 ),
                               ),
                             ),
@@ -1109,7 +1119,7 @@ void sendRequest(String idRequaest,String idReceived){
                   Row(
                     children: [
                       Container(
-                        width: 190,
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -1138,11 +1148,11 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
-                              margin: EdgeInsets.only(left: 10),
+                              margin: EdgeInsets.only(left: 1),
                               child: Text("Reels",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14
+                                    fontSize: 12
                                 ),
                               ),
                             ),
@@ -1150,7 +1160,7 @@ void sendRequest(String idRequaest,String idReceived){
                         ),
                       ),
                       Container(
-                        width: 190,
+                        width: MediaQuery.of(context).size.width/2.2,
                         height: 45,
                         margin: EdgeInsets.only(left: 10),
                         decoration: BoxDecoration(
@@ -1179,11 +1189,11 @@ void sendRequest(String idRequaest,String idReceived){
                                 ) // Hiển thị ký tự "@"
                             ),
                             Container(
-                              margin: EdgeInsets.only(left: 10),
+                              margin: EdgeInsets.only(left: 1),
                               child: Text("Kỷ niệm",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14
+                                    fontSize: 12
                                 ),
                               ),
                             ),

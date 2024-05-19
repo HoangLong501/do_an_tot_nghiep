@@ -90,6 +90,7 @@ class _HomeState extends State<Home> {
   }
   onLoad()async{
     idUserDevice = await SharedPreferenceHelper().getIdUser();
+
     //await setupToken();
     controlScroll();
     setState(() {});
@@ -208,7 +209,7 @@ class _HomeState extends State<Home> {
                 });
               },
               child: FutureBuilder<List<String>>(
-               future: DatabaseMethods().getFriends("Ly Ly_202405091941"),
+               future: DatabaseMethods().getFriends(idUserDevice!),
                 builder: (context , snapshot){
                   if (!snapshot.hasData) {
                     return CircularProgressIndicator();

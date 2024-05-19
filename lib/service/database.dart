@@ -185,70 +185,24 @@ class DatabaseMethods {
     // }
     return friendIds;
   }
-  // Stream<Map<String, dynamic>> getFriendDocument(String idUser, String idReceived) async* {
-  //   // Tham chiếu đến tài liệu cụ thể
-  //   DocumentReference documentReference = FirebaseFirestore.instance
-  //       .collection("relationship")
-  //       .doc(idUser)
-  //       .collection("friend")
-  //       .doc(idReceived);
-  //
-  //   // Lấy dữ liệu từ tài liệu
-  //   DocumentSnapshot documentSnapshot = await documentReference.get();
-  //
-  //   // Kiểm tra xem tài liệu có tồn tại hay không
-  //   if (documentSnapshot.exists) {
-  //     // Trả về dữ liệu dưới dạng Map<String, dynamic>
-  //     yield documentSnapshot.data() as Map<String, dynamic>;
-  //   } else {
-  //     // Trả về một Map rỗng nếu tài liệu không tồn tại
-  //     yield {};
-  //   }
-  // }
-
-  // Stream<List<Map<String, dynamic>>> getReceived(String idUser) async* {
-  //   CollectionReference collectionReference = FirebaseFirestore.instance
-  //       .collection("relationship")
-  //       .doc(idUser)
-  //       .collection("friend");
-  //   await for (QuerySnapshot querySnapshot in collectionReference.snapshots()) {
-  //     List<Map<String, dynamic>> friends = [];
-  //     for (var documentSnapshot in querySnapshot.docs) {
-  //       if (documentSnapshot.exists) {
-  //         friends.add(documentSnapshot.data() as Map<String, dynamic>);
-  //       }
-  //     }
-  //     yield friends;
-  //   }
-  // }
-  Stream<QuerySnapshot> getReceived(String idUser) async* {
-    print("eeeeeeeeeeeeeeeeeeeeeeeeeeee");
+  Stream<QuerySnapshot> getFriend(String idUser) async*{
     try {
-
       yield* FirebaseFirestore.instance
           .collection("relationship").doc(idUser).collection("friend")
-          .snapshots();
+          .where("status",isEqualTo: "friend").snapshots();
+    } catch (error) {
+      print('Đã xảy ra lỗi khi lấy danh sách  bạn bè: $error');
+    }
+  }
+  Stream<QuerySnapshot> getReceived(String idUser) async* {
+    try {
+      yield* FirebaseFirestore.instance
+          .collection("relationship").doc(idUser).collection("friend")
+          .where("status",isEqualTo: "pending").snapshots();
     } catch (error) {
       print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
     }
   }
-  Stream<QuerySnapshot> getListUserReceive(Stream<QuerySnapshot> received) async* {
-print("qqqqqqqqqqqqqqqqqqqqqqqqqq");
-    await for (var querySnapshot in received) {
-      for (var document in querySnapshot.docs) {
-        var data = document.data() as Map<String, dynamic>;
-        print(data);
-        if (data["status"] == "pending") {
-          QuerySnapshot userSnapshot = await getUserById(data["id"]);
-          if (userSnapshot.docs.isNotEmpty) {
-            yield userSnapshot;
-          }
-        }
-      }
-    }
-  }
-
-
   Future<int> getCkheckHint(String idUser, String idHint) async {
     try {
       DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
@@ -258,7 +212,7 @@ print("qqqqqqqqqqqqqqqqqqqqqqqqqq");
           .doc(idHint)
           .get();
       if (snapshot.exists) {
-        return snapshot.data()?['check'] ?? 0;
+        return snapshot.data()?['check '] ?? 0;
       } else {
         return 0;
       }
