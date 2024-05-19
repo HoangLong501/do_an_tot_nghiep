@@ -175,7 +175,7 @@ class DatabaseMethods {
       print('Đã xảy ra lỗi khi lấy danh sách tin tức: $error');
     }
   }
-  Future<List<String>> getFrien(String userId) async {
+  Future<List<String>> getFriends(String userId) async {
     // CollectionReference friendsRef = FirebaseFirestore.instance.collection('users').doc(userId).collection('friends');
     // QuerySnapshot friendsSnapshot = await friendsRef.where('status', isEqualTo: 'accepted').get();
 
