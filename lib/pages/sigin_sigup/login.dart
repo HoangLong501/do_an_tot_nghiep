@@ -200,9 +200,7 @@ appBar: AppBar(
   }
   Future<void> _userLogin()async{
     try{
-
       await FirebaseAuth.instance.signInWithEmailAndPassword(email: userName, password: passWord);
-
       QuerySnapshot querySnapshot=await DatabaseMethods().getUserByEmail(userName);
       print('Number of documents: ${querySnapshot.size}');
       print(userName);
@@ -213,8 +211,7 @@ appBar: AppBar(
       sex= "${querySnapshot.docs[0]["Sex"]}";
       username="${querySnapshot.docs[0]["Username"]}";
       image="${querySnapshot.docs[0]["imageAvatar"]}";
-
-      await SharedPreferenceHelper().saveUserName(userName);
+      await SharedPreferenceHelper().saveUserName(username);
       await SharedPreferenceHelper().saveIdUser(id);
       await SharedPreferenceHelper().saveUserPhone(phone);
       await SharedPreferenceHelper().saveImageUser(image);
