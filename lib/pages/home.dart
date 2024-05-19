@@ -27,7 +27,7 @@ class _HomeState extends State<Home> {
   String? username, idUser;
   int picked = 0;
   List itemCount=[];
-  String? idUserDevice;
+  String idUserDevice="";
 
 
   Future<void> setupInteractedMessage() async {
@@ -89,7 +89,7 @@ class _HomeState extends State<Home> {
     });
   }
   onLoad()async{
-    idUserDevice = await SharedPreferenceHelper().getIdUser();
+    idUserDevice = (await SharedPreferenceHelper().getIdUser())!;
 
     //await setupToken();
     controlScroll();
