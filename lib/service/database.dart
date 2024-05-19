@@ -185,83 +185,88 @@ class DatabaseMethods {
     // }
     return friendIds;
   }
+
   Stream<QuerySnapshot> getReceived(String idUser) async* {
     try {
       yield* FirebaseFirestore.instance
           .collection("relationship").doc(idUser).collection("friend")
           .snapshots();
 
-  Stream<QuerySnapshot> getFriend(String idUser) async*{
-    try {
-      yield* FirebaseFirestore.instance
-          .collection("relationship").doc(idUser).collection("friend")
-          .where("status",isEqualTo: "friend").snapshots();
-    } catch (error) {
-      print('Đã xảy ra lỗi khi lấy danh sách  bạn bè: $error');
-    }
-  }
-  Stream<QuerySnapshot> getReceived(String idUser) async* {
-    try {
-      yield* FirebaseFirestore.instance
-          .collection("relationship").doc(idUser).collection("friend")
-          .where("status",isEqualTo: "pending").snapshots();
-    } catch (error) {
-      print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
-    }
-  }
-  Future<int> getCkheckHint(String idUser, String idHint) async {
-    try {
-      DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
-          .collection("relationship")
-          .doc(idUser)
-          .collection("hint")
-          .doc(idHint)
-          .get();
-      if (snapshot.exists) {
-        return snapshot.data()?['check '] ?? 0;
-      } else {
-        return 0;
+      Stream<QuerySnapshot> getFriend(String idUser) async* {
+        try {
+          yield* FirebaseFirestore.instance
+              .collection("relationship").doc(idUser).collection("friend")
+              .where("status", isEqualTo: "friend").snapshots();
+        } catch (error) {
+          print('Đã xảy ra lỗi khi lấy danh sách  bạn bè: $error');
+        }
       }
-    } catch (error) {
-      print("Đã xảy ra lỗi: $error");
-      return 0;
-    }
-  }
+      Stream<QuerySnapshot> getReceived(String idUser) async* {
+        try {
+          yield* FirebaseFirestore.instance
+              .collection("relationship").doc(idUser).collection("friend")
+              .where("status", isEqualTo: "pending").snapshots();
+        } catch (error) {
+          print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
+        }
+      }
+      Future<int> getCkheckHint(String idUser, String idHint) async {
+        try {
+          DocumentSnapshot<
+              Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+              .collection("relationship")
+              .doc(idUser)
+              .collection("hint")
+              .doc(idHint)
+              .get();
+          if (snapshot.exists) {
+            return snapshot.data()?['check '] ?? 0;
+          } else {
+            return 0;
+          }
+        } catch (error) {
+          print("Đã xảy ra lỗi: $error");
+          return 0;
+        }
+      }
 
-  Future<void> updateCheckHint(String idUser,String idHint, Map<String, dynamic> hintInfoMap) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection("relationship")
-          .doc(idUser)
-          .collection("hint")
-          .doc(idHint)
-          .update(hintInfoMap);
-      print("Cập nhật thông tin người dùng thành công!");
-    } catch (e) {
-      print("Lỗi khi cập nhật thông tin người dùng: $e");
-    }
-  }
+      Future<void> updateCheckHint(String idUser, String idHint,
+          Map<String, dynamic> hintInfoMap) async {
+        try {
+          await FirebaseFirestore.instance
+              .collection("relationship")
+              .doc(idUser)
+              .collection("hint")
+              .doc(idHint)
+              .update(hintInfoMap);
+          print("Cập nhật thông tin người dùng thành công!");
+        } catch (e) {
+          print("Lỗi khi cập nhật thông tin người dùng: $e");
+        }
+      }
 
-  Stream<QuerySnapshot> getMyHint(String idUser) async* {
-    try {
-      yield* FirebaseFirestore.instance
-          .collection("relationship").doc(idUser).collection("hint")
-          .snapshots();
-    } catch (error) {
-      print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
-    }
-  }
-  Future<void> deleteHint(String idUser, String idHint) async {
+      Stream<QuerySnapshot> getMyHint(String idUser) async* {
+        try {
+          yield* FirebaseFirestore.instance
+              .collection("relationship").doc(idUser).collection("hint")
+              .snapshots();
+        } catch (error) {
+          print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
+        }
+      }
+      Future<void> deleteHint(String idUser, String idHint) async {
+        try {
+          CollectionReference friendsRef = FirebaseFirestore.instance
+              .collection('relationship').doc(idUser).collection('hint');
+          await friendsRef.doc(idHint).delete();
 
-    try {
-
-      CollectionReference friendsRef = FirebaseFirestore.instance.collection('relationship').doc(idUser).collection('hint');
-      await friendsRef.doc(idHint).delete();
-
-      print('Đã xóa gợi ý có id $idHint từ tài khoản người dùng có id $idUser thành công.');
-    } catch (error) {
-      // Xử lý ngoại lệ (ví dụ: in ra lỗi)
-      print('Lỗi khi xóa gợi ý: $error');
+          print(
+              'Đã xóa gợi ý có id $idHint từ tài khoản người dùng có id $idUser thành công.');
+        } catch (error) {
+          // Xử lý ngoại lệ (ví dụ: in ra lỗi)
+          print('Lỗi khi xóa gợi ý: $error');
+        }
+      }
     }
   }
 // Future<DocumentReference?> acceptFriend(String idUser,String idReceive,Map<String ,dynamic> acceptInfoMap) async {
