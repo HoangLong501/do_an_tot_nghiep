@@ -29,8 +29,12 @@ class _HomeState extends State<Home> {
   String? username, idUser;
   int picked = 0;
   List itemCount=[];
-  String? idUserDevice;
+
   Future<List<String>>? listNewFeed;
+
+  String idUserDevice="";
+
+
 
   Future<void> setupInteractedMessage() async {
     // Get any messages which caused the application to open from
@@ -94,6 +98,7 @@ class _HomeState extends State<Home> {
     idUserDevice = await SharedPreferenceHelper().getIdUser();
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
     await setupToken();
+
     controlScroll();
     setState(() {});
   }
@@ -249,7 +254,7 @@ class _HomeState extends State<Home> {
                               child: Column(
                                 children:allPosts.map((data){
                                   //Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                                  return  WidgetNewsfeed(date: data["newTimestamp"].toDate(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"]??"",);
+                                  return  WidgetNewsfeed(idUser: data["UserID"]??"",date: data["newTimestamp"].toDate()??DateTime.now(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"]??"",);
                                 }).toList(),
                               ),
                             );

@@ -108,6 +108,15 @@ onLoad() async{
                                   DatabaseMethods().deleteHint(idReceiveds, widget.idReceived);
                                   DatabaseMethods().addFriends(widget.idReceived, idReceiveds, receivedInfoMap);
                                   DatabaseMethods().addFriends(idReceiveds,widget.idReceived , requestInfoMap);
+                                  String idRoomChat = SharedPreferenceHelper().getChatRoomIdUserName(idReceiveds, widget.idReceived);
+                                  Map<String , dynamic> chatRoomInfoMap={
+                                    "LastMessage":"Các bạn hiện đã là bạn bè , hãy gửi lời nhắn cho $idReceiveds",
+                                    "UserContact":widget.idReceived,
+                                    "ID":idRoomChat,
+                                    "Time":DateTime.now().toString(),
+                                    "user":[idReceiveds,widget.idReceived],
+                                  };
+                                  DatabaseMethods().createChatRoom(idRoomChat, chatRoomInfoMap);
                                   setState(() {
                                     addFriends=false;
                                   });

@@ -14,18 +14,15 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
 
-  Stream? listFriend;
+  Stream<QuerySnapshot>? listChatRoom;
   String? id;
   onLoad()async{
     id=await SharedPreferenceHelper().getIdUser();
-    Stream<DocumentSnapshot> ds = FirebaseFirestore.instance.collection("relationship").doc("hao_202405091921").get().asStream();
-    listFriend=ds;
+    listChatRoom = DatabaseMethods().getChatRooms(id!);
     setState(() {
 
     });
   }
-
-
   @override
   void initState() {
     super.initState();
@@ -102,17 +99,18 @@ class _ChatPageState extends State<ChatPage> {
               ),
           ),
           //Stream để ở đây
-          Expanded(
-              child: ListView.builder(
-                  itemCount: 3,
-                  itemBuilder: (context,index){
-                    return Row(
-                      children: [
-                        
-                      ],
-                    );
-                  },
-              ),
+          StreamBuilder<QuerySnapshot>(stream: listChatRoom,
+              builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
+                  if(snapshot.hasData){
+                    // snapshot.data!.docs.map((data){
+                    //   return Text("${data[""]}");
+                    // });
+                    return Text("Have data");
+                  }else{
+                    return Text("No data");
+                  }
+                    return Text("Failed access Firebase");
+              }
           ),
         ],
       ),

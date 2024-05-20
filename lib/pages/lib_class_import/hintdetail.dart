@@ -39,10 +39,6 @@ class _HintDetailState extends State<HintDetail> {
     myName=(await SharedPreferenceHelper().getUserName())!;
     myId=(await SharedPreferenceHelper().getIdUser())!;
     check=await DatabaseMethods().getCkheckHint(myId, id)! ;
-
-    print("name: $myName");
-   // print("tokens là: $tokens");
-
     setState(() {
 
     });
@@ -95,6 +91,16 @@ class _HintDetailState extends State<HintDetail> {
                     image,
                     fit: BoxFit.cover,
                   ),
+
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(9),
+                    topRight: Radius.circular(
+                        9)), // Độ cong của góc bo tròn
+                child: image==""? Image(image: Image.asset("assets/images/logo.png").image,): Image.network(
+                  image,
+                  fit: BoxFit.cover,
+
                 ),
               ),
               Padding(
