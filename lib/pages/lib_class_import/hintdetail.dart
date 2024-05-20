@@ -26,7 +26,6 @@ class _HintDetailState extends State<HintDetail> {
     await getData();
     myId=(await SharedPreferenceHelper().getIdUser())!;
     check=await DatabaseMethods().getCkheckHint(myId, id)! ;
-
     setState(() {
 
     });
@@ -71,7 +70,7 @@ class _HintDetailState extends State<HintDetail> {
                     topLeft: Radius.circular(9),
                     topRight: Radius.circular(
                         9)), // Độ cong của góc bo tròn
-                child:  Image.network(
+                child: image==""? Image(image: Image.asset("assets/images/logo.png").image,): Image.network(
                   image,
                   fit: BoxFit.cover,
                 ),

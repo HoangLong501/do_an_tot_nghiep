@@ -18,8 +18,7 @@ class _CommentDetailState extends State<CommentDetail> {
     DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance.collection("user").doc(widget.idUser).get();
     nameUser = documentSnapshot.get("Username");
     imageAvatar = documentSnapshot.get("imageAvatar");
-    print(imageAvatar);
-    print(imageAvatar.substring(8));
+    print(imageAvatar.toString());
     content =widget.content;
     time =widget.time;
     setState(() {
@@ -42,9 +41,12 @@ class _CommentDetailState extends State<CommentDetail> {
         children: [
           Container(
             margin: EdgeInsets.only(right: 10),
-            child: CircleAvatar(
+             child: imageAvatar==""?CircleAvatar(
+               backgroundColor: Colors.white30,
+             ): CircleAvatar(
               radius: 30,
-              backgroundImage: Image.network(imageAvatar ,).image,),
+             // backgroundImage: Image.network(imageAvatar ,).image,),
+              backgroundImage: Image.network(imageAvatar,).image,),
           ),
           Expanded(
             child: Column(

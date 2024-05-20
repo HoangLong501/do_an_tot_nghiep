@@ -111,6 +111,14 @@ class DatabaseMethods {
           .set(chatRoomInfoMap);
     }
   }
+  Future<Stream<QuerySnapshot>> getChatRoomMessage(chatRoomId)async{
+    return FirebaseFirestore.instance.collection("chatrooms").doc(chatRoomId).collection("chats").orderBy("time",descending: true).snapshots();
+  }
+  Stream<QuerySnapshot> getChatRooms(String idUser)async*{
+    yield* FirebaseFirestore.instance.collection("chatrooms").orderBy("Time",descending: true)
+        .where("user",arrayContains: idUser).snapshots();
+  }
+
 
   Future<DocumentReference?> addNews(String idUser, String idNewsfeed,
       Map<String, dynamic> newsfeedInfoMap) async {
