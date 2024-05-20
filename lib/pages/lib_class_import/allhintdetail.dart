@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../service/database.dart';
 import '../../service/shared_pref.dart';
+import '../notifications/noti.dart';
 
 class AllHintDetail extends StatefulWidget {
   final String idHint;
@@ -15,20 +16,27 @@ class AllHintDetail extends StatefulWidget {
 }
 
 class _AllHintDetailState extends State<AllHintDetail> {
-  String idUser="",image="",username="",myId="";
+  String idUser="",image="",username="",myId="",myName="";
+  List<String> tokens=[];
   int check=0;
   Future<void> getData() async {
-    QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(widget.idHint);
-    username= querySnapshot.docs[0]["Username"];
-    image= querySnapshot.docs[0]["imageAvatar"];
-    print("dã vào");
-    print(username);
+    try {
+      QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(
+          widget.idHint);
+      username = querySnapshot.docs[0]["Username"];
+      image = querySnapshot.docs[0]["imageAvatar"];
+      tokens = List<String>.from(querySnapshot.docs[0]["tokens"]);
+      print("dã vào");
+      print(username);
+    }catch(error){
+      print("lỗi khi lấy dữ liệu người dùng $error");
+    }
 
   }
   onLoad() async{
     myId= (await SharedPreferenceHelper().getIdUser())!;
     check=(await DatabaseMethods().getCkheckHint(myId, widget.idHint))! ;
-    print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa$check");
+    myName=(await SharedPreferenceHelper().getUserName())!;
     await getData();
 
 
@@ -101,9 +109,15 @@ class _AllHintDetailState extends State<AllHintDetail> {
                                   "id": myId,
                                   "status":"pending"
                                 };
+                                String title="thông báo mới ";
+                                String body="Bạn có lơ mời kết bạn từ $myName";
                                 DatabaseMethods().updateCheckHint(myId, widget.idHint, hintInfoMap);
                                 DatabaseMethods().addFriends(myId, widget.idHint, friendInfoMap);
-                             setState(() {
+                                for(int i=0; i<tokens.length;i++) {
+                                  NotificationDetail().sendAndroidNotification(
+                                      tokens[i], title, body);
+                                }
+                                setState(() {
                                check=1;
                              });
                               },

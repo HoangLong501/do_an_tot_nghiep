@@ -425,7 +425,9 @@ void sendRequest(String idRequaest,String idReceived){
                                               width: 20,
                                             ),
                                             TextButton(
-                                                onPressed: () {},
+                                                onPressed: () {
+
+                                                },
                                                 style: ButtonStyle(
                                                   backgroundColor:
                                                   MaterialStateColor
@@ -1217,7 +1219,12 @@ void sendRequest(String idRequaest,String idReceived){
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return CircularProgressIndicator();
-          }else {
+          }else if(snapshot.hasError){
+            return Text("lỗi rồi");
+          }else if(snapshot.data==null || snapshot.data!.docs.isEmpty){
+            return Text("bạn chưa có gợi ý nào");
+          }
+          else {
            // print("Lấy dữ liệu ?  ${snapshot.hasData}");
 
     return snapshot.hasData?

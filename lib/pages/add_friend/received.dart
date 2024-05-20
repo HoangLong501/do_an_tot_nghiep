@@ -116,7 +116,7 @@ Widget getReceived(){
         stream: getListReceived,
         builder: (context,AsyncSnapshot<QuerySnapshot> snapshot)    {
          if (snapshot.connectionState == ConnectionState.waiting) {
-         return Center(child: Text("DANG LOAT"));
+         return CircularProgressIndicator();
          } else if (snapshot.hasError) {
          return Center(child: Text("lỗi ròi"));
          }else if(snapshot.data == null ||snapshot.data!.docs.isEmpty){

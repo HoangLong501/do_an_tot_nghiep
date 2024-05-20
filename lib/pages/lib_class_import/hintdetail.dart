@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'package:do_an_tot_nghiep/pages/profile_friend.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../notifications/noti.dart';
 class HintDetail extends StatefulWidget {
   final String id ;
   const HintDetail({super.key , required this.id});
@@ -13,17 +16,27 @@ class HintDetail extends StatefulWidget {
 
 class _HintDetailState extends State<HintDetail> {
   List items=[0,1,2];
-  String username='',image='',id='' , myId='';
+  String username='',image='',id='' , myId='',myName="";
+  List<String> tokens=[];
   int check=0;
   Future<void> getData() async {
-    QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(widget.id);
-    username= querySnapshot.docs[0]["Username"];
-    image= querySnapshot.docs[0]["imageAvatar"];
-    id=querySnapshot.docs[0]["IdUser"];
-    print(image);
+    try {
+      QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(
+          widget.id);
+      print(querySnapshot.docs[0].data());
+      username = querySnapshot.docs[0]["Username"];
+      image = querySnapshot.docs[0]["imageAvatar"];
+      id = querySnapshot.docs[0]["IdUser"];
+      tokens = List<String>.from(querySnapshot.docs[0]["tokens"]);
+      print(image);
+    }catch(error){
+      print("lỗi lấy thông tin người dùng");
+    }
+
   }
   onLoad() async{
     await getData();
+    myName=(await SharedPreferenceHelper().getUserName())!;
     myId=(await SharedPreferenceHelper().getIdUser())!;
     check=await DatabaseMethods().getCkheckHint(myId, id)! ;
     setState(() {
@@ -41,6 +54,7 @@ class _HintDetailState extends State<HintDetail> {
     return GestureDetector(
 
       onTap: () {
+        Navigator.push(context,MaterialPageRoute(builder: (context)=>ProfileFriend(idProfileUser: id)));
 
       },
       child: Padding(
@@ -65,6 +79,19 @@ class _HintDetailState extends State<HintDetail> {
             crossAxisAlignment: CrossAxisAlignment.start,
             // Căn lề trái cho các phần tử trong cột
             children: [
+              Container(
+                width: 250,
+                height: 250,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(9),
+                      topRight: Radius.circular(
+                          9)), // Độ cong của góc bo tròn
+                  child:image==""?Image.asset("assets/images/avarta.jpg"): Image.network(
+                    image,
+                    fit: BoxFit.cover,
+                  ),
+
               ClipRRect(
                 borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(9),
@@ -73,6 +100,7 @@ class _HintDetailState extends State<HintDetail> {
                 child: image==""? Image(image: Image.asset("assets/images/logo.png").image,): Image.network(
                   image,
                   fit: BoxFit.cover,
+
                 ),
               ),
               Padding(
@@ -148,9 +176,16 @@ class _HintDetailState extends State<HintDetail> {
                         "id": myId,
                         "status":"pending"
                       };
-                       DatabaseMethods().updateCheckHint(myId, id, hintInfoMap);
-                       DatabaseMethods().addFriends(myId, id, friendInfoMap);
-                       setState(() {
+                      //print("send noti");
+                      String title="thông báo mới ";
+                      String body="Bạn có lơ mời kết bạn từ $myName";
+                      DatabaseMethods().updateCheckHint(myId, id, hintInfoMap);
+                      DatabaseMethods().addFriends(myId, id, friendInfoMap);
+                      for(int i=0; i<tokens.length;i++) {
+                        NotificationDetail().sendAndroidNotification(
+                            tokens[i], title, body);
+                      }
+                      setState(() {
                         check=1;
                       });
 
@@ -275,7 +310,11 @@ class _HintDetailState extends State<HintDetail> {
                   ),
                   TextButton(
                       onPressed: () async {
-
+                        Map<String, dynamic>hintInfoMap={
+                          "check ":0
+                        };
+                        DatabaseMethods().updateCheckHint(myId, id, hintInfoMap);
+                        DatabaseMethods().deleteReceived(myId, id);
                         setState(() {
                           check=0;
                         });
