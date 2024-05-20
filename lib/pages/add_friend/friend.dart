@@ -1,4 +1,5 @@
 import 'package:do_an_tot_nghiep/pages/add_friend/hintfriend.dart';
+import 'package:do_an_tot_nghiep/pages/add_friend/received.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/frienddail.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -56,49 +57,7 @@ class _FriendsState extends State<Friends> {
         body: SingleChildScrollView(
             child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
-                      children: [
-                        TextButton(
-                            onPressed: ()
-                            async {
-                              Navigator.push(context,
-                              MaterialPageRoute(builder: (context)=>HintFriend())
-                              );
-                            },
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(Colors.grey.shade400),
-                            ),
-                            child: Text("Gợi ý",
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black
-                              ),
-                            )
-                        ),
-                        SizedBox(width: 10,),
-                        TextButton(
-                            onPressed: ()
-                            {
-                              Navigator.push(context,
-                              MaterialPageRoute(builder: (context)=>Friends())
-                              );
-                            },
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(Colors.grey.shade400),
 
-                            ),
-                            child: Text("Bạn bè",
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black
-                              ),
-                            )
-                        ),
-                      ],
-                    ),
-                  ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     child: Divider(
@@ -117,10 +76,8 @@ Widget getFriends(){
   return StreamBuilder<QuerySnapshot>(
     stream: getListFriend,
     builder: (context,AsyncSnapshot<QuerySnapshot> snapshot)    {
-      print("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
-      print(snapshot.data!.size);
       if (snapshot.connectionState == ConnectionState.waiting) {
-        return Center(child: Text("DANG LOAT"));
+        return CircularProgressIndicator();
       } else if (snapshot.hasError) {
         return Center(child: Text("lỗi ròi"));
       }else if(snapshot.data == null ||snapshot.data!.docs.isEmpty){

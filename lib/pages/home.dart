@@ -5,9 +5,11 @@ import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
 import 'lib_class_import/newsfeed_detail.dart';
 import 'lib_class_import/swipe.dart';
 import 'package:page_transition/page_transition.dart';
@@ -28,7 +30,7 @@ class _HomeState extends State<Home> {
   int picked = 0;
   List itemCount=[];
   String? idUserDevice;
-
+  Future<List<String>>? listNewFeed;
 
   Future<void> setupInteractedMessage() async {
     // Get any messages which caused the application to open from
@@ -90,8 +92,8 @@ class _HomeState extends State<Home> {
   }
   onLoad()async{
     idUserDevice = await SharedPreferenceHelper().getIdUser();
-
-    //await setupToken();
+    listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
+    await setupToken();
     controlScroll();
     setState(() {});
   }
@@ -209,10 +211,14 @@ class _HomeState extends State<Home> {
                 });
               },
               child: FutureBuilder<List<String>>(
-               future: DatabaseMethods().getFriends(idUserDevice!),
+               future: listNewFeed,
                 builder: (context , snapshot){
                   if (!snapshot.hasData) {
                     return CircularProgressIndicator();
+                  }else if(snapshot.connectionState==ConnectionState.waiting){
+                    return CircularProgressIndicator();
+                  }else if(snapshot.data==null || snapshot.data!.isEmpty){
+                    return Text("không có bài viết nào");
                   }
                   List<String> friendIds = snapshot.data!;
                   List<Stream<QuerySnapshot>> friendNewsfeedStreams = friendIds.map((friendId) {
@@ -227,6 +233,11 @@ class _HomeState extends State<Home> {
                           stream: CombineLatestStream.list(friendNewsfeedStreams),
                           builder: (context, snapshot){
                             if (!snapshot.hasData) {
+                              return CircularProgressIndicator();
+                            }
+                            else if(snapshot.connectionState==ConnectionState.waiting){
+                              return CircularProgressIndicator();
+                            }else if(snapshot.data==null || snapshot.data!.isEmpty){
                               return CircularProgressIndicator();
                             }
                             List<DocumentSnapshot> allPosts = [];
@@ -254,19 +265,24 @@ class _HomeState extends State<Home> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Column(
-              children: [
-                GestureDetector(
-                    onTap: (){
-                      print("Home nhấn vào sẽ load lại trang");
+            GestureDetector(
+              child: Column(
+                children: [
+                  InkWell(
+                    onTap: () {
                       setState(() {
                         picked = 0;
                       });
                     },
-                    child: Icon(Icons.home_outlined ,
-                      color: picked==0? Colors.blueAccent:Colors.grey,
-                    )),
-              ],
+                    splashColor: Colors.blueAccent.withOpacity(0.2), // Màu sắc của hiệu ứng splash
+                    borderRadius: BorderRadius.circular(25), // Bo tròn viền của hiệu ứng splash
+                    child: Icon(
+                      Icons.home_outlined,
+                      color: picked == 0 ? Colors.blueAccent : Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
             ),
             Column(
               children: [

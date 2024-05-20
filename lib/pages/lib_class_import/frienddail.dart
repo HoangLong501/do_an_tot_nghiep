@@ -15,12 +15,16 @@ class _FriendDetailState extends State<FriendDetail> {
 String id="",username="",image="";
 
 Future<void> getData() async {
-  QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(widget.idFriend);
-  username= querySnapshot.docs[0]["Username"];
-  image= querySnapshot.docs[0]["imageAvatar"];
-  print("dã vào");
-  print(username);
-
+  try {
+    QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(
+        widget.idFriend);
+    username = querySnapshot.docs[0]["Username"];
+    image = querySnapshot.docs[0]["imageAvatar"];
+    print("dã vào");
+    print(username);
+  }catch(error){
+    print("Lỗi khi lấy dữ liệu người dùng");
+  }
 }
 onLoad()async{
   print(widget.idFriend);

@@ -38,8 +38,7 @@ class _HintFriendState extends State<HintFriend> {
             children: [
               Expanded(
                 child:  Center(
-
-                  child: Text("Bạn bè",
+                  child: Text("Gợi ý",
                     style: TextStyle(
                         fontWeight: FontWeight.bold
                     ),
@@ -56,45 +55,7 @@ class _HintFriendState extends State<HintFriend> {
         body: SingleChildScrollView(
             child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
-                      children: [
-                        TextButton(
-                            onPressed: ()
-                            async {
-                                Navigator.push(context, MaterialPageRoute(builder: (context)=>Received()));
-                            },
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(Colors.grey.shade400),
-                            ),
-                            child: Text("Lời mời",
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black
-                              ),
-                            )
-                        ),
-                        SizedBox(width: 10,),
-                        TextButton(
-                            onPressed: ()
-                            {
-                                Navigator.push(context,MaterialPageRoute(builder: (context)=>Friends()));
-                            },
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(Colors.grey.shade400),
 
-                            ),
-                            child: Text("Bạn bè",
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black
-                              ),
-                            )
-                        ),
-                      ],
-                    ),
-                  ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     child: Divider(
@@ -114,7 +75,7 @@ class _HintFriendState extends State<HintFriend> {
       stream: getListReceived,
       builder: (context,AsyncSnapshot<QuerySnapshot> snapshot)    {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: Text("DANG LOAT"));
+          return CircularProgressIndicator();
         } else if (snapshot.hasError) {
           return Center(child: Text("lỗi ròi"));
         }else if(snapshot.data == null ||snapshot.data!.docs.isEmpty){

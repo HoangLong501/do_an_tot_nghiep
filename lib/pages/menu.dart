@@ -1,3 +1,5 @@
+import 'package:do_an_tot_nghiep/pages/add_friend/friend.dart';
+import 'package:do_an_tot_nghiep/pages/add_friend/received.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/profile.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
@@ -71,7 +73,7 @@ class _MenuState extends State<Menu> {
                             Navigator.push(context, MaterialPageRoute(builder: (context)=>Profile(idProfileUser:idUserCurrent!)));
                         },
                         child: SizedBox(
-                          width:MediaQuery.of(context).size.width/2.8,
+                          width:MediaQuery.of(context).size.width/2,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
@@ -168,7 +170,7 @@ class _MenuState extends State<Menu> {
                 ),
                 GestureDetector(
                   onTap: (){
-
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>Received()));
                   },
                  child:  Container(
                     margin: EdgeInsets.only(left: 20),

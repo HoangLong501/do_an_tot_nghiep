@@ -16,12 +16,16 @@ String idReceiveds="",username="",image="";
 bool addFriends=true;
 
 Future<void> getData() async {
-  QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(widget.idReceived);
-  username= querySnapshot.docs[0]["Username"];
-  image= querySnapshot.docs[0]["imageAvatar"];
-  print("dã vào");
-  print(username);
-
+  try {
+    QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(
+        widget.idReceived);
+    username = querySnapshot.docs[0]["Username"];
+    image = querySnapshot.docs[0]["imageAvatar"];
+    print("dã vào");
+    print(username);
+  }catch(error){
+    print("Lỗi khi lấy danh sách người dùng");
+  }
 }
 onLoad() async{
   idReceiveds= (await SharedPreferenceHelper().getIdUser())!;

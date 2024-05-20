@@ -178,7 +178,6 @@ class DatabaseMethods {
   Future<List<String>> getFriends(String userId) async {
     // CollectionReference friendsRef = FirebaseFirestore.instance.collection('users').doc(userId).collection('friends');
     // QuerySnapshot friendsSnapshot = await friendsRef.where('status', isEqualTo: 'accepted').get();
-
     List<String> friendIds = ["Ly Ly_202405091941", "con_202405091930"];
     // for (var doc in friendsSnapshot.docs) {
     //   friendIds.add(doc.id);
@@ -258,18 +257,16 @@ class DatabaseMethods {
       print('Lỗi khi xóa gợi ý: $error');
     }
   }
-// Future<DocumentReference?> acceptFriend(String idUser,String idReceive,Map<String ,dynamic> acceptInfoMap) async {
-//   try {
-//
-//     DocumentReference docRef = FirebaseFirestore.instance.collection("relationship")
-//         .doc(idUser).collection("friend").doc(idReceive);
-//     await docRef.set(acceptInfoMap);
-//     print("chấp nhận  thành công");
-//     return docRef;
-//   } catch (e) {
-//     return null;
-//   }
-// }
+  Future<void> deleteReceived(String idUser,String idReceived) async {
+    try{
+      CollectionReference collectionReference=FirebaseFirestore.instance.collection("relationship")
+          .doc(idReceived).collection("friend");
+      await collectionReference.doc(idUser).delete();
+      print("đã hủy kết bạn với $idReceived");
+    }catch(error){
+      print("lỗi khi xóa hủy kết bạn với $idReceived");
+    }
+  }
   }
 
 
