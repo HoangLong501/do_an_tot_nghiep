@@ -1,14 +1,18 @@
 import 'dart:async';
+//import 'dart:js_interop';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:do_an_tot_nghiep/pages/comment.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/newsfeed_detail.dart';
+import 'package:do_an_tot_nghiep/pages/option_profile.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+
+import 'notifications/noti.dart';
 
 
 class ProfileFriend extends StatefulWidget {
@@ -20,20 +24,46 @@ class ProfileFriend extends StatefulWidget {
 
 class _ProfileState extends State<ProfileFriend> {
   Stream<QuerySnapshot>? myNewsfeedStream;
-  String name="",image="",background="";
+  String name="",image="",background="",myId="",myName="";
   bool myProfile=true;
+  List<String> tokens=[];
+  int check=0;
   getDataUser()async{
-    if(widget.idProfileUser!=await SharedPreferenceHelper().getIdUser()){
+    if(widget.idProfileUser!=myId){
       myProfile=false;
     }
-    QuerySnapshot data = await DatabaseMethods().getIdUserDetail(widget.idProfileUser);
-    name = data.docs[0]["Username"];
-    image = data.docs[0]["imageAvatar"];
-    //background=data.docs[0]["imageAvatar"];
+    try {
+      QuerySnapshot data = await DatabaseMethods().getIdUserDetail(
+          widget.idProfileUser);
+      name = data.docs[0]["Username"];
+      image = data.docs[0]["imageAvatar"];
+      tokens = List<String>.from(data.docs[0]["tokens"]);
+      //background=data.docs[0]["imageAvatar"];
+    }catch(e){
+      print("lỗi lấy thông tin người dùng");
+    }
+  }
+  upCheck() async {
+     QuerySnapshot listFriend= await FirebaseFirestore.instance
+         .collection("relationship").doc(myId).collection("friend")
+         .where("status", isEqualTo: "friend").get();
+     var doc=listFriend.docs;
+     print(doc.length);
+    for(int i=0;i<doc.length;i++){
+      if(doc[i]["id"]==widget.idProfileUser){
+        check=2;
+      }
+    }
   }
   onLoad()async{
+    myId=(await SharedPreferenceHelper().getIdUser())!;
     await getDataUser();
+
+    myName=(await SharedPreferenceHelper().getUserName())!;
     myNewsfeedStream = DatabaseMethods().getMyNews(widget.idProfileUser);
+    check=await DatabaseMethods().getCkheckHint(myId, widget.idProfileUser)! ;
+    await upCheck();
+    print("check: $check");
     setState(() {
     });
   }
@@ -99,7 +129,8 @@ class _ProfileState extends State<ProfileFriend> {
             ),
             Row(
               children: [
-                Container(
+                if( check==0)
+               Container(
                   margin: EdgeInsets.only(top: 10,left: 20),
                   width: MediaQuery.of(context).size.width/2.7,
                   height: 40,
@@ -108,7 +139,29 @@ class _ProfileState extends State<ProfileFriend> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child:
-                      Row(
+                      GestureDetector(
+                        onTap: (){
+                          Map<String, dynamic>hintInfoMap={
+                            "check":1
+                          };
+                          Map<String,dynamic> friendInfoMap={
+                            "id": myId,
+                            "status":"pending"
+                          };
+                          //print("send noti");
+                          String title="thông báo mới ";
+                          String body="Bạn có lơ mời kết bạn từ $myName";
+                          DatabaseMethods().updateCheckHint(myId, widget.idProfileUser, hintInfoMap);
+                          DatabaseMethods().addFriends(myId, widget.idProfileUser, friendInfoMap);
+                          for(int i=0; i<tokens.length;i++) {
+                            NotificationDetail().sendAndroidNotification(
+                                tokens[i], title, body);
+                          }
+                          setState(() {
+                            check=1;
+                          });
+                        },
+                     child:  Row(
                         children: [
                           Container(
                               margin: EdgeInsets.only(left: 10),
@@ -124,17 +177,95 @@ class _ProfileState extends State<ProfileFriend> {
                         ],
                       ),
                 ),
-                Container(
+                )else if(check==2)
+               Container(
+                 margin: EdgeInsets.only(top: 10,left: 20),
+                 width: MediaQuery.of(context).size.width/2.7,
+                 height: 40,
+                 decoration: BoxDecoration(
+                   color: Colors.grey.shade300,
+                   borderRadius: BorderRadius.circular(8),
+                 ),
+                 child:
+                 GestureDetector(
+                   onTap: (){
+                   },
+                   child:  Row(
+                     children: [
+                       Container(
+                           margin: EdgeInsets.only(left: 30,right: 10),
+                           child:Icon(CupertinoIcons.person_2_alt,
+                             color: Colors.black,
+                           )
+                       ),
+                       Center(
+                           child: Text("Bạn bè",
+                             style: TextStyle(fontSize: 16,color: Colors.black),
+                           )
+                       ),
+                     ],
+                   ),
+                 ),
+               ) else
+                  Container(
+                    margin: EdgeInsets.only(top: 10,left: 20),
+                    width: MediaQuery.of(context).size.width/2.7,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade700,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child:
+                    GestureDetector(
+                      onTap: (){
+                        Map<String, dynamic>hintInfoMap={
+                          "check":0
+                        };
+                        DatabaseMethods().updateCheckHint(myId, widget.idProfileUser, hintInfoMap);
+                        DatabaseMethods().deleteReceived(myId, widget.idProfileUser);
+                        setState(() {
+                          check=0;
+                        });
+                      },
+                      child:  Row(
+                        children: [
+                          Container(
+                              margin: EdgeInsets.only(left: 10),
+                              child: Icon(Icons.person_remove,
+                                color: Colors.white,
+                              )
+                          ),
+                          Center(
+                              child: Text("Hủy lời mời",
+                                style: TextStyle(fontSize: 16,color: Colors.white),
+                              )
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+               check==2? Container(
                   margin: EdgeInsets.only(top: 10,left: 10),
                   width: MediaQuery.of(context).size.width/3,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: Colors.blue.shade700,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child:
-                  Center(child: Text("Nhắn tin",style: TextStyle(fontSize: 16,color: Colors.black),)),
-                ),
+                  Center(child: Text("Nhắn tin",style: TextStyle(fontSize: 16,color: Colors.white),)),
+                ):
+               Container(
+                 margin: EdgeInsets.only(top: 10,left: 10),
+                 width: MediaQuery.of(context).size.width/3,
+                 height: 40,
+                 decoration: BoxDecoration(
+                   color: Colors.grey.shade300,
+                   borderRadius: BorderRadius.circular(8),
+                 ),
+                 child:
+                 Center(child: Text("Nhắn tin",style: TextStyle(fontSize: 16,color: Colors.black),)),
+               ),
                 Container(
                   margin: EdgeInsets.only(top: 10,left: 10),
                   width: MediaQuery.of(context).size.width/6.5,
@@ -143,8 +274,12 @@ class _ProfileState extends State<ProfileFriend> {
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child:
-                  Center(child: Icon(Icons.more_horiz)),
+                  child:GestureDetector(
+                    onTap: (){
+                      Navigator.push(context,MaterialPageRoute(builder: (context)=>OptionProfile(idProfile:widget.idProfileUser)));
+                    },
+                child: Center(child: Icon(Icons.more_horiz)),
+                  )
                 ),
               ],
             ),
@@ -221,7 +356,7 @@ class _ProfileState extends State<ProfileFriend> {
                     children: [
                       Icon(Icons.list , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
-                      Text("Xem thêm thông tin giới thiệu",style: TextStyle(fontSize: 16),),
+                      Text("Xem thông tin giới thiệu của $name",style: TextStyle(fontSize: 16),),
                     ],
                   ),
         
@@ -325,7 +460,7 @@ class _ProfileState extends State<ProfileFriend> {
                       child: Column(
                         children: snapshot.data!.docs.map((document){
                           Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                          return  WidgetNewsfeed(date: data["newTimestamp"].toDate(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"??""],);
+                          return  WidgetNewsfeed( idUser:data["UserID"] ,date: data["newTimestamp"].toDate(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"??""],);
                         }).toList(),
                       ),
                     );

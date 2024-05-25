@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferenceHelper{
+  static String reload="0";
   static String userSinup="0";
   static String userNameKey ="USERNAMEKEY";
   static String userIdKey ="USERIDKEY";

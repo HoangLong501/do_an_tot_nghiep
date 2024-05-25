@@ -26,7 +26,7 @@ class CreatePassWord extends StatefulWidget {
 class _CreatePassWordState extends State<CreatePassWord> {
   List<Person> listUser=[];
   bool _obscureText = true;
-  String passWord ="",rePassWord="";
+  String passWord ="",rePassWord="",date="";
   RegExp passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$');
   TextEditingController passwordcontroller=TextEditingController();
   TextEditingController repasswordcontroller=TextEditingController();
@@ -35,17 +35,13 @@ class _CreatePassWordState extends State<CreatePassWord> {
     QuerySnapshot querySnapshot= await FirebaseFirestore.instance.collection("test").get();
     print("do dai: ${querySnapshot.size}" );
   }
-  String generateID(String username) {
-    // Lấy thời gian hiện tại
-    DateTime now = DateTime.now();
-    // Định dạng thời gian thành chuỗi YYYYMMDDHHmm
-    String formattedDate = DateFormat('yyyyMMddHHmm').format(now);
-    // Kết hợp tên người dùng và thời gian để tạo ID
-    String id = '${username}_$formattedDate';
-    return id;
+  String generateID(String email) {
+    return email.replaceAll("@gmail.com", "");
   }
+
 onLoad()async{
   listUser= await DatabaseMethods().getUserLimit10();
+  date ="Ngày ${DateTime.now().day} Tháng ${DateTime.now().month} Năm ${DateTime.now().year}";
   setState(() {
 
   });
@@ -242,7 +238,7 @@ onLoad()async{
             UserCredential userCredential = await FirebaseAuth.instance
                 .createUserWithEmailAndPassword(
                 email: email, password: passWord);
-            String id = generateID(widget.name);
+            String id = generateID(email);
 
             Map<String, dynamic> userInfoMap = {
               "IdUser": id,
@@ -272,6 +268,15 @@ onLoad()async{
               };
               await DatabaseMethods().addHints(id, listUser[i].id, statusInfoMap);
             }
+            Map<String,dynamic> userInfoMap1={
+              "id":id,
+              "relationship":"",
+              "born":"",
+              "address":"",
+              "since": date,
+              "imageBackground":"https://i.ibb.co/9WYddvb/image.png"
+            };
+            await DatabaseMethods().addUserInfo(id, userInfoMap1);
             await SharedPreferenceHelper().saveUserName(userName);
             await SharedPreferenceHelper().saveIdUser(id);
             await SharedPreferenceHelper().saveUserPhone(phone);

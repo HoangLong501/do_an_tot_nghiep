@@ -103,7 +103,7 @@ class _AllHintDetailState extends State<AllHintDetail> {
                               onPressed: () async
                               {
                                 Map<String, dynamic>hintInfoMap={
-                                  "check ":1
+                                  "check":1
                                 };
                                 Map<String,dynamic> friendInfoMap={
                                   "id": myId,
@@ -217,7 +217,7 @@ class _AllHintDetailState extends State<AllHintDetail> {
                           child: TextButton(
                             onPressed: () async {
                               Map<String, dynamic>hintInfoMap={
-                                "check ":0
+                                "check":0
                               };
                               DatabaseMethods().updateCheckHint(myId, widget.idHint, hintInfoMap);
                               setState(() {

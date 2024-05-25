@@ -24,14 +24,8 @@ class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   String userName="", passWord="";
   String email="",id="",phone="",username="",image="",birthDate="",sex="";
-
-
-
-
-
   onLoad()async{
     setState(() {
-
     });
   }
 
@@ -45,7 +39,7 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
 appBar: AppBar(
-  
+  automaticallyImplyLeading: false,
 ),
       body: SingleChildScrollView(
     child: Form(

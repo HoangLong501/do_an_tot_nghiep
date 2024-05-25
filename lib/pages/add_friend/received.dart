@@ -18,18 +18,19 @@ class Received extends StatefulWidget {
 class _FriendsState extends State<Received> {
   Stream<QuerySnapshot>? getListReceived;
   String id="";
-onLoad()async{
+  onLoad()async{
   id= (await SharedPreferenceHelper().getIdUser())! ;
   getListReceived=await DatabaseMethods().getReceived(id);
-
   setState(() {
 
   });
 }
+
 @override
   void initState() {
     super.initState();
-    onLoad();
+   onLoad();
+
   }
   @override
   Widget build(BuildContext context) {
@@ -117,12 +118,14 @@ Widget getReceived(){
         builder: (context,AsyncSnapshot<QuerySnapshot> snapshot)    {
          if (snapshot.connectionState == ConnectionState.waiting) {
          return CircularProgressIndicator();
-         } else if (snapshot.hasError) {
+         }
+         if (snapshot.hasError) {
          return Center(child: Text("lỗi ròi"));
-         }else if(snapshot.data == null ||snapshot.data!.docs.isEmpty){
+         }
+         if(snapshot.data == null ||snapshot.data!.docs.isEmpty){
            return Center(child: Text("bạn chưa có lời mời kết bạn nào"));
          }
-         else {
+          // print("kiemtra: ${snapshot.data!.docs[0]["id"]}");
            return snapshot.hasData?
              Container(
              height: MediaQuery.of(context).size.height,
@@ -145,16 +148,15 @@ Widget getReceived(){
                          ],
                        ),
                      ),
-
                      ListView.builder(
                          shrinkWrap: true,
                          physics: NeverScrollableScrollPhysics(),// Ngăn ListView.builder cuộn độc lập
                          itemCount: snapshot.data!.docs.length, // Số lượng mục trong ListView
                          itemBuilder: (BuildContext context, int index) {
                            Map<String, dynamic> data =snapshot.data!.docs[index].data() as Map<String, dynamic>;
-                                //print("id laf : ${data['id']}");
-                           return ReceivedDetail(idReceived: data["id"]);
-
+                            print("data $data");
+                           print("id trước khi vào:${data["id"]}");
+                         return ReceivedDetail( key: ValueKey(data["id"]),idReceived: data["id"]);
                          }
                      ),
 
@@ -163,7 +165,6 @@ Widget getReceived(){
 
            ):Center(child: Text("bị lỗi rồi"));
          }
-        },
 
    );
  }

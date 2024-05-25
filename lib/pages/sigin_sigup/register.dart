@@ -236,9 +236,6 @@ class _RegisterState extends State<Register> {
                             _continuePressed();
                           });
                         }
-
-
-
                       },
                       style: ButtonStyle(
                         backgroundColor:
