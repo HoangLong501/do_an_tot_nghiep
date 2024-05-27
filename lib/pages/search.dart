@@ -1226,7 +1226,6 @@ void sendRequest(String idRequaest,String idReceived){
           }
           else {
            // print("Lấy dữ liệu ?  ${snapshot.hasData}");
-
     return snapshot.hasData?
       Row(
       children: [

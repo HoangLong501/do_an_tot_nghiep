@@ -32,7 +32,7 @@ class _HomeState extends State<Home> {
 
   Future<List<String>>? listNewFeed;
 
-  String idUserDevice="";
+  String? idUserDevice;
 
 
 

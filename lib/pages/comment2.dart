@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/commentDetail.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
+import 'package:flutter/gestures.dart';
 import 'package:intl/intl.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
@@ -17,14 +18,13 @@ class _CommentState extends State<Comment2> {
   int sumReact=0;
   String? idUserComment;
   Stream<QuerySnapshot>? streamComment;
+
   onLoad()async{
     print(widget.idNewsfeed);
     streamComment = DatabaseMethods().getCommentStream(widget.idComment);
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(widget.idPoster).collection("myNewsfeed").doc(widget.idNewsfeed).get();
     react=data.get("react") ;
-    sumReact= react.reduce((value,e){
-      return value+e;
-    });
+    sumReact= react.length;
     idUserComment = await SharedPreferenceHelper().getIdUser();
 
     setState(() {
@@ -37,6 +37,12 @@ class _CommentState extends State<Comment2> {
   void initState() {
     super.initState();
     onLoad();
+  }
+
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -78,7 +84,7 @@ class _CommentState extends State<Comment2> {
                     children: [
                       Container(
                         decoration: BoxDecoration(),
-                        height:600,
+                        height: 535,
                         child: StreamBuilder(
                           stream: streamComment,
                           builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
@@ -89,11 +95,11 @@ class _CommentState extends State<Comment2> {
                               return Center(child: Text("Chưa có comment"));
                             }
                             if (snapshot.hasData) {
-                              return IntrinsicHeight(
+                              return SingleChildScrollView(
                                 child: Column(
                                   children: snapshot.data!.docs.map((document){
                                     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                                    return CommentDetail(idUser: data["id_user_comment"], content: data["content"], time: data["time"]);
+                                    return CommentDetail(key: ValueKey(document.id),idUser: data["id_user_comment"], content: data["content"], time: data["time"]);
                                   }).toList(),
                                 ),
                               );
@@ -131,7 +137,6 @@ class _CommentState extends State<Comment2> {
                       suffixIcon: IconButton(
                       onPressed: ()async {
                         if(contentController.text=="" || contentController.text.isEmpty){
-
                         }else{
                           DateTime now = DateTime.now();
                           String timeNow = DateFormat('h:mma').format(now);
@@ -142,9 +147,12 @@ class _CommentState extends State<Comment2> {
                           };
                           await DatabaseMethods().addCommentDetail(widget.idComment, commentInfoMap);
                           print(commentInfoMap);
-
+                            contentController.clear();
                         }
 
+                        setState(() {
+
+                        });
                       },
                       icon: Icon(Icons.send),
                   ),

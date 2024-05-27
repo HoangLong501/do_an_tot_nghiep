@@ -4,6 +4,7 @@ import 'package:do_an_tot_nghiep/pages/add_friend/hintfriend.dart';
 import 'package:do_an_tot_nghiep/pages/add_friend/received.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/allhintdetail.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/hintdetail.dart';
+import 'package:do_an_tot_nghiep/pages/lib_class_import/test_widget_flutter.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
 import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
       ),
      // home: Profile(idProfileUser: "Ly Ly_202405091941",),
       //home: CreateNewsFeed()
-      home: Search(),
+      home: Home(),
     );
   }
 }
