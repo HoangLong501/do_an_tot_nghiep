@@ -16,6 +16,7 @@ import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/profile.dart';
+import 'package:do_an_tot_nghiep/pages/update_detail_profile/edit_story.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_address.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_birthday.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_born.dart';
@@ -51,9 +52,10 @@ class MyApp extends StatelessWidget {
      // home: Profile(idProfileUser: "Ly Ly_202405091941",),
       //home: CreateNewsFeed()
       //home: ProfileFriend(idProfileUser:"Ly Ly_202405091941",)
-      home: Home(),
+      //home: Home(),
       //home: Profile(idProfileUser: "haonguyen16022002"),
       //home: Login(),
+      home: EditStory(),
     );
   }
 }

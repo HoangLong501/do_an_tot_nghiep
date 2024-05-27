@@ -98,9 +98,9 @@ class DatabaseMethods {
     return userList;
   }
 
-  Future<QuerySnapshot> getIdUserDetail(String id) async {
-    return await FirebaseFirestore.instance
-        .collection("user").where("IdUser", isEqualTo: id).get();
+  Stream<QuerySnapshot> getIdUserDetail(String id) async* {
+    yield* await FirebaseFirestore.instance
+        .collection("user").where("IdUser", isEqualTo: id).snapshots();
   }
 
   createChatRoom(String chatRoomId, Map<String, dynamic>chatRoomInfoMap) async {
@@ -323,6 +323,20 @@ Future<QuerySnapshot> getUserInfoById(String idUser) async {
       return 0;
     }
   }
+  Stream<QuerySnapshot> getUserInfoByIdStream(String userId) {
+    return FirebaseFirestore.instance
+        .collection('userinfo')
+        .where('id', isEqualTo: userId)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot> getUserByIdStream(String userId) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .where('id', isEqualTo: userId)
+        .snapshots();
+  }
+
   Future<void> updateUserInfo(String idUser, Map<String, dynamic> userInfoMap) {
     return FirebaseFirestore.instance.collection("userinfo").doc(idUser)
         .update(userInfoMap)

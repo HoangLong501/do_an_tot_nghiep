@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:do_an_tot_nghiep/pages/comment.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/edit_profile_detail.dart';
@@ -28,38 +27,76 @@ class _ProfileState extends State<Profile> {
     if(widget.idProfileUser!=await SharedPreferenceHelper().getIdUser()){
       myProfile=false;
     }
-    QuerySnapshot data = await DatabaseMethods().getIdUserDetail(widget.idProfileUser);
-    name = data.docs[0]["Username"];
-    image = data.docs[0]["imageAvatar"];
-    //background=data.docs[0]["imageAvatar"];
+    DatabaseMethods().getIdUserDetail(widget.idProfileUser).listen((QuerySnapshot snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        name = snapshot.docs[0]["Username"];
+        image = snapshot.docs[0]["imageAvatar"];
+      } else {
+        print('Không tìm thấy người dùng với id: ${widget.idProfileUser}');
+      }
+    });
   }
-  Future<void> getUserInfo() async {
-    try {
-      QuerySnapshot querySnapshot = await DatabaseMethods().getUserInfoById(widget.idProfileUser);
-      background = querySnapshot.docs[0]["imageBackground"];
-      relationship = querySnapshot.docs[0]["relationship"];
-      born = querySnapshot.docs[0]["born"];
-      address = querySnapshot.docs[0]["address"];
-      since=querySnapshot.docs[0]["since"];
-    }catch(error){
-      print("lỗi lấy thông tin người dùng info");
+  getDataUser1()async{
+    QuerySnapshot snapshot = await DatabaseMethods().getUserById(widget.idProfileUser);
+    if (snapshot.docs.isNotEmpty) {
+      setState(() {
+        name = snapshot.docs[0]["Username"];
+        image = snapshot.docs[0]["imageAvatar"];
+      });
+      } else {
+        print('Không tìm thấy người dùng với id: ${widget.idProfileUser}');
+      }
+  }
+  getUserInfo1() async {
+    QuerySnapshot snapshot=await DatabaseMethods().getUserInfoById(widget.idProfileUser) ;
+      if (snapshot.docs.isNotEmpty) {
+        setState(() {
+        relationship = snapshot.docs[0]["relationship"];
+        born = snapshot.docs[0]["born"];
+        address = snapshot.docs[0]["address"];
+        since = snapshot.docs[0]["since"];
+        background = snapshot.docs[0]["imageBackground"];
+        });
+      } else {
+        print('Không tìm thấy dữ liệu cho người dùng với ID: ${widget.idProfileUser}');
+      }
+
+  }
+  getUserInfo() async {
+    if(widget.idProfileUser!=await SharedPreferenceHelper().getIdUser()){
+      myProfile=false;
     }
+     DatabaseMethods().getUserInfoByIdStream(widget.idProfileUser).listen((QuerySnapshot snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        relationship = snapshot.docs[0]["relationship"];
+        born = snapshot.docs[0]["born"];
+        address = snapshot.docs[0]["address"];
+        since = snapshot.docs[0]["since"];
+        background = snapshot.docs[0]["imageBackground"];
+      } else {
+        print('Không tìm thấy dữ liệu cho người dùng với ID: ${widget.idProfileUser}');
+      }
+    });
   }
   onLoad()async{
-    await getDataUser();
-    await getUserInfo();
+    await getDataUser1();
+    await getUserInfo1();
+    getDataUser();
+    getUserInfo();
     getListFriend= DatabaseMethods().getFriend(widget.idProfileUser)
     .listen((snapshot) {
         indexFriend=snapshot.docs.length;
     });
     myNewsfeedStream = DatabaseMethods().getMyNews(widget.idProfileUser);
-    setState(() {
+    setState(() async {
+
     });
   }
   @override
   void initState() {
     super.initState();
     onLoad();
+
   }
   @override
   Widget build(BuildContext context) {
@@ -128,7 +165,10 @@ class _ProfileState extends State<Profile> {
             ),
             GestureDetector(
                 onTap: () async {
-                Navigator.push(context,MaterialPageRoute(builder: (context)=>EditProfileDetail(idUser: widget.idProfileUser)));
+               await Navigator.push(context,MaterialPageRoute(builder: (context)=>EditProfileDetail( key: ValueKey(widget.idProfileUser),idUser: widget.idProfileUser)));
+                  setState(() {
+
+                  });
                 },
            child:  Container(
               margin: EdgeInsets.only(top: 10,left: 20,right: 20),

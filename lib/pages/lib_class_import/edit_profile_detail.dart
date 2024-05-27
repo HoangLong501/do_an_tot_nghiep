@@ -10,8 +10,11 @@ import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_username.dar
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../../service/database.dart';
+import 'package:random_string/random_string.dart';
 class EditProfileDetail extends StatefulWidget {
   final String idUser;
   const EditProfileDetail({super.key,required this.idUser});
@@ -22,7 +25,9 @@ class EditProfileDetail extends StatefulWidget {
 
 class _EditProfileDetailState extends State<EditProfileDetail> {
   String imageAvata="",imageBackground="",username="",relationship="",address=""
-          ,born="",phone="",sex="",birthday="",email="";
+          ,born="",phone="",sex="",birthday="",email="",urlImage="";
+  final picker = ImagePicker();
+  File? imageFile,imageFileBackground;
   String convertToStars(String text) {
     return '*' * text.length;
   }
@@ -50,6 +55,31 @@ class _EditProfileDetailState extends State<EditProfileDetail> {
       print("lỗi lấy thông tin người dùng");
     }
   }
+  Future getImage() async {
+    final returnImage = await ImagePicker().pickImage(source: ImageSource.gallery);
+    imageFile = File(returnImage!.path);
+    setState(()  {
+
+    });
+  }
+  Future getImageBackground() async {
+    final returnImage = await ImagePicker().pickImage(source: ImageSource.gallery);
+    imageFileBackground = File(returnImage!.path);
+    setState(()  {
+
+    });
+  }
+  Future uploadImage(File image) async {
+    String nameImage = randomAlphaNumeric(10);
+    final ref = FirebaseStorage.instance.ref().child('${widget.idUser}/images/$nameImage.jpg');
+    final taskSnapshot = await ref.putFile(image);
+    final imageUrl = await taskSnapshot.ref.getDownloadURL();
+    urlImage = imageUrl;
+    setState(() {
+
+    });
+  }
+
   onLoad() async {
     await getUser();
     await getUserInfo();
@@ -96,7 +126,57 @@ class _EditProfileDetailState extends State<EditProfileDetail> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          await getImage();
+                          await uploadImage(imageFile!);
+                          Map<String,dynamic> imageInfoMap={
+                            "imageAvatar":urlImage,
+                          };
+                          await DatabaseMethods().updateUser(widget.idUser, imageInfoMap);
+                          print("đã thay đổi ảnh thành công");
+                          showGeneralDialog(
+                            barrierColor: Colors.black.withOpacity(0.5),
+                            transitionBuilder: (context, a1, a2, widget) {
+                              return Transform.scale(
+                                scale: a1.value,
+                                child: Opacity(
+                                  opacity: a1.value,
+                                  child: AlertDialog(
+                                    shape: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16.0),
+                                    ),
+                                    title: Column(
+                                      children: [
+                                        Text('Thông báo'),
+                                        Divider(height: 0.1,color: Colors.grey.shade400,),
+                                      ],
+                                    ),
+                                    content:Text('Bạn đã đổi ảnh đại diện thành công',
+                                      style: TextStyle(
+                                          fontSize: 16
+                                      ),
+                                    ),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        child: Text('OK'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                            transitionDuration: Duration(milliseconds: 200),
+                            barrierDismissible: true,
+                            barrierLabel: '',
+                            context: context,
+                            pageBuilder: (context, animation1, animation2) {
+                              return SizedBox.shrink();
+                            },
+                          );
+                        },
                         child: Text(
                           "Chỉnh sửa",
                           textAlign: TextAlign.right,
@@ -114,7 +194,7 @@ class _EditProfileDetailState extends State<EditProfileDetail> {
                       height: 160,
                       child: CircleAvatar(
                         radius: 80,
-                        backgroundImage:NetworkImage(imageAvata),
+                        backgroundImage:imageFile==null?NetworkImage(imageAvata):Image.file(imageFile!).image,
                         ),
                       ),
                 ],
@@ -137,7 +217,15 @@ class _EditProfileDetailState extends State<EditProfileDetail> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          await getImageBackground();
+                          await uploadImage(imageFileBackground!);
+                          Map<String,dynamic> imageInfoMap={
+                            "imageBackground":urlImage,
+                          };
+                          await DatabaseMethods().updateUserInfo(widget.idUser, imageInfoMap);
+                          print("đã thay đổi ảnh thành công");
+                        },
                         child: Text(
                           "Chỉnh sửa",
                           textAlign: TextAlign.right,
@@ -160,7 +248,8 @@ class _EditProfileDetailState extends State<EditProfileDetail> {
                         borderRadius: BorderRadius.circular(10)
                       ),
                       child:Image(
-                        image: Image.network(imageBackground,).image,
+                        image:imageFileBackground==null? Image.network(imageBackground,).image
+                            :Image.file(imageFileBackground!).image,
                       )
                       ),
                     ),
@@ -199,432 +288,37 @@ class _EditProfileDetailState extends State<EditProfileDetail> {
                       SizedBox(height: 20),
                     ],
                   ),
-                  Column(
+                   Column(
                     children: [
-                      Container(
-                          child:GestureDetector(
-                            onTap: (){
-                              Navigator.push(context,MaterialPageRoute(builder: (context)=>UpdateUserName(idUser: widget.idUser)));
-                            },
-                            child:   Row(
-                              // crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                    padding: EdgeInsets.only(top: 10),
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.grey.shade200,
-                                      radius: 20,
-                                      child: Icon(
-                                        Icons.account_circle,
-                                        color: Colors.black,
-                                        size: 26,
-                                      ),
-                                    )
-                                ),
-                                SizedBox(width: 20,),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width:MediaQuery.of(context).size.width/1.3,
-                                      child: Text(username,
-                                        style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      child: Text("Tên",
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey.shade500
-                                        ),
-                                      ),
-                                    ),
-
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(top: 10),
-                          child:GestureDetector(
-                            onTap: (){
-                              Navigator.push(context,MaterialPageRoute(builder: (context)=>UpdatePassword(idUser: widget.idUser)));
-                            },
-                            child:   Row(
-                              // crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                    padding: EdgeInsets.only(top: 10),
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.grey.shade200,
-                                      radius: 20,
-                                      child: Icon(
-                                        Icons.lock,
-                                        color: Colors.black,
-                                        size: 26,
-                                      ),
-                                    )
-                                ),
-                                SizedBox(width: 20,),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width:MediaQuery.of(context).size.width/1.3,
-                                      child: Text(convertToStars("Lybach12345@"),
-                                        style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      child: Text("Password",
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey.shade500
-                                        ),
-                                      ),
-                                    ),
-
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
-                      Container(
-                        padding: EdgeInsets.only(top: 20),
-                        child:GestureDetector(
-                          onTap: (){
-                            Navigator.push(context,MaterialPageRoute(builder: (context)=>UpdateRelationShip(idUser: widget.idUser)));
-                          },
-                          child:   Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                                child:CircleAvatar(
-                                  backgroundColor: Colors.grey.shade200,
-                                  radius: 20,
-                                  child: Icon(
-                                    Icons.favorite,
-                                    color: Colors.black,
-                                    size: 26,
-                                  ),
-                                )
-                            ),
-                            SizedBox(width: 20,),
-                            Container(
-                              width:MediaQuery.of(context).size.width/1.3,
-                              child: Text(relationship==""?"mối quan hệ":relationship,
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w400
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        )
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
-                      Container(
-                        padding: EdgeInsets.only(top: 20),
-                        child:GestureDetector(
-                          onTap: (){
-                            Navigator.push(context,MaterialPageRoute(builder: (context)=>UpdateAddress(idUser: widget.idUser)));
-                          },
-                          child:   Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                                child:CircleAvatar(
-                                  backgroundColor: Colors.grey.shade200,
-                                  radius: 20,
-                                  child: Icon(
-                                    Icons.home_outlined,
-                                    color: Colors.black,
-                                    size: 26,
-                                  ),
-                                )
-                            ),
-                            SizedBox(width: 20,),
-                            Container(
-                              width:MediaQuery.of(context).size.width/1.3,
-                              child: Text(address==""?"Tỉnh /Thành phố hiện tại":address,
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w400
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        )
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
-
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
-                      Container(
-                        padding: EdgeInsets.only(top: 20),
-                        child:GestureDetector(
-                          onTap: (){
-                            Navigator.push(context,MaterialPageRoute(builder: (context)=>UpdateBorn(idUser: widget.idUser)));
-
-                          },
-                          child:   Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                                child:CircleAvatar(
-                                  backgroundColor: Colors.grey.shade200,
-                                  radius: 20,
-                                  child: Icon(
-                                    Icons.location_on_outlined,
-                                    color: Colors.black,
-                                    size: 26,
-                                  ),
-                                )
-                            ),
-                            SizedBox(width: 20,),
-                            Container(
-                              width:MediaQuery.of(context).size.width/1.3,
-                              child: Text(born==""?"Quê quán":born,
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w400
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        )
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(top: 20),
-                          child:GestureDetector(
-                            onTap: (){
-                              Navigator.push(context,MaterialPageRoute(builder: (context)=>UpdatePhone(idUser: widget.idUser)));
-                            },
-                            child:   Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                    child:CircleAvatar(
-                                      backgroundColor: Colors.grey.shade200,
-                                      radius: 20,
-                                      child: Icon(
-                                        Icons.phone,
-                                        color: Colors.black,
-                                        size: 26,
-                                      ),
-                                    )
-                                ),
-                                SizedBox(width: 20,),
-                                Container(
-                                  width:MediaQuery.of(context).size.width/1.3,
-                                  child: Text(phone==""?"Số điện thoại":phone,
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w400
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(top: 10),
-                          child:GestureDetector(
-                            onTap: (){
-                              Navigator.push(context,MaterialPageRoute(builder: (context)=>UpdateSex(idUser: widget.idUser)));
-                            },
-                            child:   Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.only(top: 10),
-                                  child:CircleAvatar(
-                                    backgroundColor: Colors.grey.shade200,
-                                    radius: 20,
-                                    child: Icon(
-                                      Icons.person,
-                                      color: Colors.black,
-                                      size: 26,
-                                    ),
-                                  )
-                                ),
-                                SizedBox(width: 20,),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width:MediaQuery.of(context).size.width/1.3,
-                                      child: Text("Nam",
-                                        style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      child: Text(sex,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey.shade500
-                                        ),
-                                      ),
-                                    ),
-
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(top: 10),
-                          child:GestureDetector(
-                            onTap: (){
-                              Navigator.push(context,MaterialPageRoute(builder: (context)=>UpdateBirthDay(idUser: widget.idUser)));
-                            },
-                            child:   Row(
-                             // crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.only(top: 10),
-                                  child: CircleAvatar(
-                                    backgroundColor: Colors.grey.shade200,
-                                    radius: 20,
-                                    child: Icon(
-                                      Icons.cake,
-                                      color: Colors.black,
-                                      size: 26,
-                                    ),
-                                  )
-                                ),
-                                SizedBox(width: 20,),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width:MediaQuery.of(context).size.width/1.3,
-                                      child: Text(birthday,
-                                        style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      child: Text("Ngày sinh",
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey.shade500
-                                        ),
-                                      ),
-                                    ),
-
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(top: 10),
-                          child:GestureDetector(
-                            onTap: (){
-                              Navigator.push(context,MaterialPageRoute(builder: (context)=>UpdateEmail(idUser: widget.idUser)));
-                            },
-                            child:   Row(
-                              // crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                    padding: EdgeInsets.only(top: 10),
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.grey.shade200,
-                                      radius: 20,
-                                      child: Icon(
-                                        Icons.alternate_email_rounded,
-                                        color: Colors.black,
-                                        size: 26,
-                                      ),
-                                    )
-                                ),
-                                SizedBox(width: 20,),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width:MediaQuery.of(context).size.width/1.3,
-                                      child: Text(email==""?"Email":email,
-                                        style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      child: Text("Email",
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey.shade500
-                                        ),
-                                      ),
-                                    ),
-
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )
-                      ),
-                      Container(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/9),
-                          child: Divider(height: 0.1,color: Colors.grey.shade300,)
-                      ),
+                      _buildDetailItem("Tên", username, Icons.account_circle, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateUserName(idUser: widget.idUser)));
+                      }),
+                      _buildDetailItem("Password", convertToStars("Lybach12345@"), Icons.lock, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => UpdatePassword(idUser: widget.idUser)));
+                      }),
+                      _buildDetailItem("Mối quan hệ", relationship, Icons.favorite, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateRelationShip(idUser: widget.idUser)));
+                      }),
+                      _buildDetailItem("Địa chỉ", address, Icons.home_outlined, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateAddress(idUser: widget.idUser)));
+                      }),
+                      _buildDetailItem("Quê quán", born, Icons.location_on_outlined, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateBorn(idUser: widget.idUser)));
+                      }),
+                      _buildDetailItem("Số điện thoại", phone, Icons.phone, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => UpdatePhone(idUser: widget.idUser)));
+                      }),
+                      _buildDetailItem("Giới tính", sex, Icons.person, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateSex(idUser: widget.idUser)));
+                      }),
+                      _buildDetailItem("Ngày sinh", birthday, Icons.cake, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateBirthDay(idUser: widget.idUser)));
+                      }),
+                      _buildDetailItem("Email", email, Icons.alternate_email_rounded, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateEmail(idUser: widget.idUser)));
+                      }),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -634,4 +328,48 @@ class _EditProfileDetailState extends State<EditProfileDetail> {
     );
   }
 
+  Widget _buildDetailItem(String title, String value, IconData icon, Function() onTap) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.grey.shade200,
+                radius: 20,
+                child: Icon(icon, color: Colors.black, size: 26),
+              ),
+              SizedBox(width: 20),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width / 1.3,
+                    child: Text(
+                      value,
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+                    ),
+                  ),
+                  Container(
+                    child: Text(
+                      title,
+                      style:
+                          TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width / 9),
+          child: Divider(height: 0.1, color: Colors.grey.shade300),
+        ),
+      ],
+    );
+  }
 }

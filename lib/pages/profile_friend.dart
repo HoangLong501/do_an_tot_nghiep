@@ -33,8 +33,7 @@ class _ProfileState extends State<ProfileFriend> {
       myProfile=false;
     }
     try {
-      QuerySnapshot data = await DatabaseMethods().getIdUserDetail(
-          widget.idProfileUser);
+      QuerySnapshot data = await DatabaseMethods().getUserById(widget.idProfileUser);
       name = data.docs[0]["Username"];
       image = data.docs[0]["imageAvatar"];
       tokens = List<String>.from(data.docs[0]["tokens"]);
