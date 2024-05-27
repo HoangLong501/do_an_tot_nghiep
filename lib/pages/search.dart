@@ -1318,7 +1318,6 @@ class _SearchState extends State<Search> {
           }
           else {
            // print("Lấy dữ liệu ?  ${snapshot.hasData}");
-
     return snapshot.hasData?
       Row(
       children: [

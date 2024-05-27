@@ -1,11 +1,13 @@
 import 'package:do_an_tot_nghiep/pages/comment.dart';
 import 'package:do_an_tot_nghiep/pages/comment2.dart';
+import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 class WidgetNewsfeed extends StatefulWidget {
-  final String  idUser,username ,time , content ,image, id , idComment;
+  final String  idUser,username ,time , content ,image, id , idComment ;
   final  DateTime date;
   const WidgetNewsfeed({super.key ,
     required this.idUser,
@@ -15,7 +17,7 @@ class WidgetNewsfeed extends StatefulWidget {
     required this.time,
     required this.date,
     required this.image,
-    required this.idComment
+    required this.idComment,
   });
   @override
   State<WidgetNewsfeed> createState() => _WidgetNewsfeedState();
@@ -24,11 +26,22 @@ class WidgetNewsfeed extends StatefulWidget {
 class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
   String? date;
   String idUserReact="";
-  bool longPressReact=false;
-
+  bool clicked =true;
+  bool? reacted;
+  int sumReact=0;
+  List react=[];
+  Stream<int>? totalReact;
   onLoad()async{
     idUserReact = (await SharedPreferenceHelper().getIdUser())!;
     date ="${widget.date.day} \/ ${widget.date.month} \/ ${widget.date.year}";
+    reacted = await DatabaseMethods().checkUserReact(widget.id, widget.idUser, idUserReact);
+    // DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(widget.idUser).collection("myNewsfeed").doc(widget.id).get();
+    // react=data.get("react");
+    // sumReact= react.length;
+    totalReact = DatabaseMethods().getReactStream(widget.idUser, widget.id);
+    if(reacted!=null){
+      clicked=reacted!;
+    }
     setState(() {
 
     });
@@ -87,69 +100,98 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
               children: [
                 Padding(
                   padding: EdgeInsets.only(left: 20,right: 20),
-                  child: Text(widget.content),
+                  child: Text(widget.content ,style: TextStyle(fontSize: 18),),
                 ),
                 SizedBox(height: 4,),
                widget.image!=""? Image(image: Image.network(widget.image).image,
                   fit: BoxFit.cover,
                   width: MediaQuery.of(context).size.width/1,
                 ):SizedBox(),
-                SizedBox(height: 10,),
-
+                StreamBuilder<int>(
+                  stream: totalReact,
+                  builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator(); // Hiển thị indicator khi đang tải dữ liệu
+                    } else if (snapshot.hasError) {
+                      return SizedBox();// Hiển thị thông báo lỗi nếu có lỗi xảy ra
+                    } else {
+                      if(snapshot.hasData){
+                        return snapshot.data! >0 ? Container(
+                          margin: EdgeInsets.only(left: 20,right: 20,bottom: 4),
+                          child: Row(
+                            children: [
+                              Icon(CupertinoIcons.hand_thumbsup ,color: Colors.blue,),
+                              SizedBox(width: 8,),
+                              Text("${snapshot.data}" ,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w600,color: Colors.grey),),
+                            ],
+                          ),
+                        ):SizedBox();
+                      }else{
+                        return SizedBox();
+                  }
+                     // Hiển thị số lượng sản phẩm từ snapshot
+                    }
+                  },
+                ),
                 Padding(
                   padding: EdgeInsets.only(left: 20 , right: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onLongPressDown: (detail){
-                            _showPopupMenu(detail.globalPosition.translate(20, -80));
-                        },
-                        onTap: (){
-                          print(idUserReact);
-                        },
-                        child: Row(
+                  child:
+                      Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: ()async{
+                            await DatabaseMethods().updateNewsfeedReact(widget.id,widget.idUser,idUserReact);
+                            setState(()  {
+                              if(clicked==true){
+                                clicked=false;
+                              }else {
+                                clicked=true;
+                              }
+                            });
+                          },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Icon(Icons.thumb_up_alt_outlined ,color: clicked ? Colors.blue :Colors.grey.shade600,),
+                                  SizedBox(width: 6,),
+                                  Text("Thích" , style: TextStyle(color:clicked ? Colors.blue : Colors.grey.shade600,fontSize: 18),),
+                                ],
+                              ),
+                            ),
+                        GestureDetector(
+                          onTap: (){
+                            showMaterialModalBottomSheet(
+                                context: context, builder: (context)=>Comment2( idPoster: widget.idUser,idComment: widget.idComment,idNewsfeed: widget.id,));
+                          },
+                          child: Container(
+                            child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Icon(Icons.comment_bank_outlined ,color: Colors.grey.shade600,),
+                                  SizedBox(width: 6,),
+                                  Text("Bình luận" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
+                                ],
+                              ),
+                          ),
+                        ),
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(Icons.thumb_up_alt_outlined ,color: Colors.grey.shade600,),
+                            Icon(Icons.chat_bubble_outline ,color: Colors.grey.shade600,),
                             SizedBox(width: 6,),
-                            Text("Thích" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
+                            Text("Gửi" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
                           ],
                         ),
-                      ),
-                      GestureDetector(
-                        onTap: (){
-                          showMaterialModalBottomSheet(
-                              context: context, builder: (context)=>Comment2( idPoster: widget.idUser,idComment: widget.idComment,idNewsfeed: widget.id,));
-                        },
-                        child: Container(
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Icon(Icons.comment_bank_outlined ,color: Colors.grey.shade600,),
-                                SizedBox(width: 6,),
-                                Text("Bình luận" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
-                              ],
-                            ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Icon(Icons.turn_slight_right_outlined ,color: Colors.grey.shade600,),
+                            SizedBox(width: 6,),
+                            Text("Chia sẽ" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
+                          ],
                         ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(Icons.chat_bubble_outline ,color: Colors.grey.shade600,),
-                          SizedBox(width: 6,),
-                          Text("Gửi" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(Icons.turn_slight_right_outlined ,color: Colors.grey.shade600,),
-                          SizedBox(width: 6,),
-                          Text("Chia sẽ" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
-                        ],
-                      ),
-                    ],
+                      ],
                   ),
                 ),
               ],
@@ -160,30 +202,6 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
           height: 6,
           decoration: BoxDecoration(
             color: Colors.grey.shade400,
-          ),
-        ),
-      ],
-    );
-  }
-  void _showPopupMenu(Offset position) async {
-    await showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-          position.dx, position.dy, position.dx, position.dy),
-      items: [
-        PopupMenuItem(
-          child: Row(
-            children: [
-              PopupMenuItem<int>(
-                value: 0,
-                child: Icon(Icons.thumb_up),
-              ),
-              PopupMenuItem<int>(
-                value: 1,
-                child: Icon(Icons.emoji_emotions_outlined),
-              ),
-              // Thêm các mục khác vào đây
-            ],
           ),
         ),
       ],

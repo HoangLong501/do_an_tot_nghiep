@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:do_an_tot_nghiep/pages/chatroom.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,7 +16,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
 
   Stream<QuerySnapshot>? listChatRoom;
-  String? id;
+  String? id ;
   onLoad()async{
     id=await SharedPreferenceHelper().getIdUser();
     listChatRoom = DatabaseMethods().getChatRooms(id!);
@@ -67,52 +68,55 @@ class _ChatPageState extends State<ChatPage> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Container(
-            margin: EdgeInsets.only(left: 20,right: 20,top: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: Colors.grey.shade300,
-            ),
-              child: Padding(
-                padding: EdgeInsets.only(left: 20,right: 20),
-                child: Row(
-                  children: [
-                    Icon(Icons.search),
-                    SizedBox(width: 20,),
-                    Expanded(
-                      child: TextField(
-                        maxLines: null,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          helperMaxLines: 1,
-                          hintText: "Tìm kiếm",
-                          hintStyle: TextStyle(fontSize: 18),
-                        ),
-                        onChanged: (value){
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              margin: EdgeInsets.only(left: 20,right: 20,top: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Colors.grey.shade300,
               ),
-          ),
-          //Stream để ở đây
-          StreamBuilder<QuerySnapshot>(stream: listChatRoom,
-              builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
-                  if(snapshot.hasData){
-                    // snapshot.data!.docs.map((data){
-                    //   return Text("${data[""]}");
-                    // });
-                    return Text("Have data");
-                  }else{
-                    return Text("No data");
-                  }
-                    return Text("Failed access Firebase");
-              }
-          ),
-        ],
+                child: Padding(
+                  padding: EdgeInsets.only(left: 20,right: 20),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search),
+                      SizedBox(width: 20,),
+                      Expanded(
+                        child: TextField(
+                          maxLines: null,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            helperMaxLines: 1,
+                            hintText: "Tìm kiếm",
+                            hintStyle: TextStyle(fontSize: 18),
+                          ),
+                          onChanged: (value){
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ),
+            //Stream để ở đây
+            StreamBuilder<QuerySnapshot>(stream: listChatRoom,
+                builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
+                    if(snapshot.hasData){
+                      return Column(
+                        children: snapshot.data!.docs.map((data){
+                          return ChatRoom(chatRoomId: data["ID"], lastMessage: data["LastMessage"], idUser: data["UserContact"], time: data["Time"]);
+                        }).toList(),
+                      );
+                    }else{
+                      return Text("No data");
+                    }
+                      return Text("Failed access Firebase");
+                }
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar:BottomAppBar(
         color: Colors.grey.shade100,

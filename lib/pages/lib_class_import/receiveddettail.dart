@@ -122,7 +122,7 @@ onLoad() async{
                                   DatabaseMethods().addFriends(idReceiveds,widget.idReceived , requestInfoMap);
                                   String idRoomChat = SharedPreferenceHelper().getChatRoomIdUserName(idReceiveds, widget.idReceived);
                                   Map<String , dynamic> chatRoomInfoMap={
-                                    "LastMessage":"Các bạn hiện đã là bạn bè , hãy gửi lời nhắn cho $idReceiveds",
+                                    "LastMessage":"Các bạn hiện đã là bạn bè , hãy gửi lời nhắn cho nhau",
                                     "UserContact":widget.idReceived,
                                     "ID":idRoomChat,
                                     "Time":DateTime.now().toString(),

@@ -33,7 +33,7 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
   }
   Future uploadImage(File image) async {
     String nameImage = randomAlphaNumeric(10);
-    final ref = FirebaseStorage.instance.ref().child('$username/images/$nameImage.jpg');
+    final ref = FirebaseStorage.instance.ref().child('$idUser/images_newsfeed/$nameImage.jpg');
     final taskSnapshot = await ref.putFile(image);
     final imageUrl = await taskSnapshot.ref.getDownloadURL();
     urlImage = imageUrl;
@@ -45,10 +45,8 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
       DateTime now = DateTime.now();
       String id=randomAlphaNumeric(10);
       String idComment=randomAlphaNumeric(16);
-
       Timestamp timestamp = Timestamp.fromDate(now);
       String timeNow = DateFormat('h:mma').format(now);
-      List react=[0,0,0] ;
       Map<String, dynamic> newsInfoMap = {
         "ID":id,
         "UserID":idUser,
@@ -57,7 +55,7 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
         "image": urlImage,
         "ts": timeNow,
         "newTimestamp":timestamp,
-        "react": react,
+        "react": [],
         "id_comment":idComment,
       };
       Map<String, dynamic> commentInfoMap = {
