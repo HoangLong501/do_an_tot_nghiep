@@ -1,3 +1,4 @@
+import 'package:do_an_tot_nghiep/pages/add_friend/received.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -14,6 +15,7 @@ class ReceivedDetail extends StatefulWidget {
 class _ReceivedDetailState extends State<ReceivedDetail> {
 String idReceiveds="",username="",image="";
 bool addFriends=true;
+Received? received;
 
 Future<void> getData() async {
   try {
@@ -21,31 +23,36 @@ Future<void> getData() async {
         widget.idReceived);
     username = querySnapshot.docs[0]["Username"];
     image = querySnapshot.docs[0]["imageAvatar"];
-    print("dã vào");
-    print(username);
+
   }catch(error){
-    print("Lỗi khi lấy danh sách người dùng");
+    print("Lỗi khi lấy danh sách người dùng ");
   }
 }
 onLoad() async{
-  idReceiveds= (await SharedPreferenceHelper().getIdUser())!;
- await getData();
-  print(image);
-  setState(() {
+  try{
+    print("id nhận được:${widget.idReceived}");
+    idReceiveds= (await SharedPreferenceHelper().getIdUser())!;
+    await getData();
 
-  });
+    setState(() {
+
+    });
+  }catch(e)
+  {
+    e.hashCode.toString();
+  }
 }
 @override
   void initState() {
     super.initState();
     onLoad();
+
   }
   @override
   Widget build(BuildContext context) {
     return
          GestureDetector(
           onTap: (){
-            print(image);
           },
           child: Padding(
             padding: const EdgeInsets.all(10.0),
@@ -53,10 +60,13 @@ onLoad() async{
               children: [
                 Container(
                   height: 100,
-                  child: CircleAvatar(
+                  child:image==""? CircleAvatar(
+                    radius: 50,
+                    backgroundImage:AssetImage("assets/images/avarta.jpg"),
+                  ):CircleAvatar(
                     radius: 50,
                     backgroundImage: NetworkImage(image),
-                  ),
+                  )
                 ),
                 Padding(
                   padding: const EdgeInsets.all(10.0),
@@ -106,6 +116,8 @@ onLoad() async{
                                     "status":"friend"
                                   };
                                   DatabaseMethods().deleteHint(idReceiveds, widget.idReceived);
+                                  // print("nhận $idReceiveds");
+                                  // print("gửi ${widget.idReceived}");
                                   DatabaseMethods().addFriends(widget.idReceived, idReceiveds, receivedInfoMap);
                                   DatabaseMethods().addFriends(idReceiveds,widget.idReceived , requestInfoMap);
                                   String idRoomChat = SharedPreferenceHelper().getChatRoomIdUserName(idReceiveds, widget.idReceived);
@@ -117,6 +129,7 @@ onLoad() async{
                                     "user":[idReceiveds,widget.idReceived],
                                   };
                                   DatabaseMethods().createChatRoom(idRoomChat, chatRoomInfoMap);
+                                 print("id nhấn vào:${widget.idReceived}");
                                   setState(() {
                                     addFriends=false;
                                   });
@@ -138,30 +151,6 @@ onLoad() async{
                                 ),
                                )
                           ),
-                                //     TextButton(
-                          //       onPressed: () async
-                          //       {
-                          //
-                          //       },
-                          //       style:  ButtonStyle(
-                          //         backgroundColor:MaterialStateProperty.all<Color>(Colors.grey.shade400),
-                          //         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                          //           RoundedRectangleBorder(
-                          //             borderRadius: BorderRadius.circular(10.0), // Đặt bán kính bo góc ở đây
-                          //
-                          //           ),
-                          //         ),
-                          //       ),
-                          //
-                          //       child: Text("Bạn bè",
-                          //         style: TextStyle(
-                          //             fontSize: 16,
-                          //             color: Colors.black
-                          //         ),
-                          //       ),
-                          //     )
-                          //
-                          // ),
                           SizedBox(width: 10,),
                           Container(
                             width: MediaQuery.of(context).size.width/4,

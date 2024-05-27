@@ -108,7 +108,6 @@ class _ContactMethodSTDState extends State<ContactMethodSTD> {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     phoneNumbwr = phonecontroller.text;
-
                     // Thực hiện tác vụ bất đồng bộ ở đây
                     String tam="1";
                     SharedPreferenceHelper().savesigup(tam).then((result) {

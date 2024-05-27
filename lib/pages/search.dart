@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'package:do_an_tot_nghiep/pages/add_friend/friend.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/hintdetail.dart';
+import 'package:do_an_tot_nghiep/pages/option_profile.dart';
+import 'package:do_an_tot_nghiep/pages/profile_friend.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -27,26 +29,17 @@ class _SearchState extends State<Search> {
   TextEditingController searchConTroller = TextEditingController();
   bool isVisible=true;
   String?id="";
-Stream<QuerySnapshot>? listUser;
+  Stream<QuerySnapshot>? listUser;
   List<Person> uSers=[];
-
-   List<String> listHideHintsFriend=[];
-   Stream<List<String>>? listGetHideHintsFriend;
-   Stream<List<Person>>? hideHintsUsers;
-   List<Person> listHideHintsUsers=[];
-   Stream<List<String>>? getListReceived;
-
+  List<QuerySnapshot> listSearched=[];
   onLoad()async{
     id=(await SharedPreferenceHelper().getIdUser());
     listUser= DatabaseMethods().getMyHint(id!);
+    listSearched=await DatabaseMethods().getSearched(id!);
     setState(() {
 
     });
   }
-void sendRequest(String idRequaest,String idReceived){
-
-}
-
    @override
   void initState() {
   super.initState();
@@ -117,33 +110,8 @@ void sendRequest(String idRequaest,String idReceived){
         child: Container(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        "Gần đây",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "Xem tất cả",
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                  ],
-                ),
-              ),
+              Column(
+                children: [
               ListView.builder(
                 shrinkWrap: true,
                 // Chỉ sử dụng khoảng không gian cần thiết
@@ -160,10 +128,10 @@ void sendRequest(String idRequaest,String idReceived){
                           ),
                           GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => Login()));
+                              // Navigator.push(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //         builder: (context) => Login()));
                             },
                             child: Container(
                               width: 50,
@@ -182,12 +150,10 @@ void sendRequest(String idRequaest,String idReceived){
                           SizedBox(width: 20),
                           GestureDetector(
                             onTap: () async {
-                            // List searched;
-                            //   Map<String, dynamic> updateId = {
-                            //     "Searched": person.id,
-                            //   };
-                              _updateSearched(id!,person.id);
 
+                              DatabaseMethods().updateSearched(id!, person.id);
+                              //_updateSearched(id!,person.id);
+                            Navigator.push(context,MaterialPageRoute(builder: (context)=>ProfileFriend(idProfileUser: person.id)));
                             },
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,6 +204,132 @@ void sendRequest(String idRequaest,String idReceived){
                       );
                 },
               ),
+                ],
+              ),
+              listSearched!=null?
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "Gần đây",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            "Xem tất cả",
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    // Chỉ sử dụng khoảng không gian cần thiết
+                    physics: NeverScrollableScrollPhysics(),
+                    // Không cho phép cuộn trong ListView này
+                    itemCount:listSearched.length ,
+                    // Số lượng mục trong ListView
+                    itemBuilder: (BuildContext context, int index) {
+                      QuerySnapshot snapshot = listSearched[index];
+                      return Row(
+                        children: [
+                          SizedBox(
+                            width: 10,
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              // Navigator.push(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //         builder: (context) => Login()));
+                            },
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(50),
+                                // Độ bo góc
+                                image: DecorationImage(
+                                  image:Image.network(snapshot.docs[0]["imageAvatar"]).image,
+                                  fit: BoxFit.cover, // Đảm bảo hình ảnh vừa khớp trong container
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 20),
+                          GestureDetector(
+                            onTap: () async {
+
+                              DatabaseMethods().updateSearched(id!, snapshot.docs[0]["IdUser"]);
+                              Navigator.push(context,MaterialPageRoute(builder: (context)=>ProfileFriend(idProfileUser: snapshot.docs[0]["IdUser"])));
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              // Căn lề trái cho các phần tử trong cột
+                              children: [
+                                Text(
+                                  snapshot.docs[0]["Username"],
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      size: 8,
+                                      Icons.circle,
+                                      // Sử dụng biểu tượng chấm ngang
+                                      color: Colors
+                                          .blue, // Đặt màu của biểu tượng là màu xanh
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      "thông tin mới",
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade700,
+                                          fontWeight: FontWeight.w500),
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                          Spacer(), // Tạo một khoảng trống linh hoạt
+                          IconButton(
+                            onPressed: () {
+                              // Hành động khi nút được nhấn
+                            },
+                            icon: Icon(
+                              Icons.more_horiz,
+                              color: Colors
+                                  .grey.shade600, // Đặt màu của biểu tượng
+                            ),
+                          ),
+                          SizedBox(width: 20), // Icon hoặc widget khác ở đây
+                        ],
+                      );
+                    },
+                  ),
+
+                ],
+              )
+                  :SizedBox(height: 10,),
               isVisible?
               Column(
                 children: [
@@ -1261,28 +1353,6 @@ void sendRequest(String idRequaest,String idReceived){
        // Xử lý các lỗi khác nếu có
        print("Error searching for user: $e");
        return []; // Trả về danh sách trống trong trường hợp có lỗi
-     }
-   }
-   Future<void> _updateSearched(String id, String idSearchUser) async {
-     try {
-       // Lấy thông tin người dùng từ Firestore
-       QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(id);
-       // Lấy danh sách "Searched" từ tài liệu người dùng
-       List searched = querySnapshot.docs[0]["Searched"];
-       // Kiểm tra xem idSearchUser đã tồn tại trong searched hay chưa
-       if (!searched.contains(idSearchUser)) {
-         // Nếu idSearchUser chưa tồn tại trong searched, thêm nó vào danh sách
-         searched.add(idSearchUser);
-         // Tạo một Map mới để cập nhật thông tin người dùng
-         Map<String, dynamic> updatedUserInfo = {
-           "Searched": searched
-         };
-
-         // Cập nhật thông tin người dùng trong Firestore
-         await DatabaseMethods().updateUserDetail(id, updatedUserInfo);
-       }
-     } catch (e) {
-       print("Lỗi khi cập nhật searched: $e");
      }
    }
 

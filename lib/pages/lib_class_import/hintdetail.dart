@@ -93,7 +93,7 @@ class _HintDetailState extends State<HintDetail> {
                   ),
                   )
               ),
-             
+
               Padding(
                 padding: const EdgeInsets.only(left: 15),
                 child: Text(
@@ -302,7 +302,7 @@ class _HintDetailState extends State<HintDetail> {
                   TextButton(
                       onPressed: () async {
                         Map<String, dynamic>hintInfoMap={
-                          "check ":0
+                          "check":0
                         };
                         DatabaseMethods().updateCheckHint(myId, id, hintInfoMap);
                         DatabaseMethods().deleteReceived(myId, id);

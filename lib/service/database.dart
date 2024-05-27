@@ -1,8 +1,10 @@
 
+import 'dart:convert';
+
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:http/http.dart' as http;
 import '../pages/lib_class_import/user.dart';
 
 class DatabaseMethods {
@@ -163,7 +165,10 @@ class DatabaseMethods {
     return await FirebaseFirestore.instance
         .collection("user").where("E-mail", isEqualTo: email).get();
   }
-
+  Future<QuerySnapshot> getUserByPhone(String phone) async {
+    return await FirebaseFirestore.instance
+        .collection("user").where("Phone", isEqualTo: phone).get();
+  }
   Future<List<Person>> getUserByName(String name) async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection("user")
@@ -208,9 +213,9 @@ class DatabaseMethods {
     return userList;
   }
 
-  Future<QuerySnapshot> getIdUserDetail(String id) async {
-    return await FirebaseFirestore.instance
-        .collection("user").where("IdUser", isEqualTo: id).get();
+  Stream<QuerySnapshot> getIdUserDetail(String id) async* {
+    yield* await FirebaseFirestore.instance
+        .collection("user").where("IdUser", isEqualTo: id).snapshots();
   }
 
   createChatRoom(String chatRoomId, Map<String, dynamic>chatRoomInfoMap) async {
@@ -263,13 +268,9 @@ class DatabaseMethods {
       Map<String, dynamic> statusInfoMap) async {
     try {
       // Sử dụng ID tùy chỉnh được cung cấp để thêm dữ liệu vào Firestore.
-      DocumentReference docRef = FirebaseFirestore.instance.collection(
-          "relationship")
+      DocumentReference docRef = FirebaseFirestore.instance.collection("relationship")
           .doc(idReceived).collection("friend").doc(idUser);
       await docRef.set(statusInfoMap);
-      print(idUser);
-      print(idReceived);
-      print("tạo friend thành công");
       return docRef;
     } catch (e) {
       return null;
@@ -288,6 +289,16 @@ class DatabaseMethods {
     } catch (e) {
       return null;
     }
+  }
+  Future<void> addUserInfo(String idUser, Map<String, dynamic> userInfoMap) {
+    return FirebaseFirestore.instance.collection("userinfo").doc(idUser)
+        .set(userInfoMap)
+        .then((_) {
+      print("Thêm info thành công");
+    })
+        .catchError((error) {
+      print("lỗi info: $error");
+    });
   }
 
   Future<QuerySnapshot> search(String username) async {
@@ -342,6 +353,25 @@ class DatabaseMethods {
         .collection("user").where("IdUser", isEqualTo: id).get();
   }
 
+  Future<List<QuerySnapshot>> getSearched(String idUser) async {
+    List<QuerySnapshot> listSearched=[];
+     QuerySnapshot querySnapshot = await getUserById(idUser);
+     if (querySnapshot.docs.isNotEmpty) {
+       List<String> list = List<String>.from(querySnapshot.docs[0]["Searched"]);
+       for(int i=list.length-1;i>=0;i--){
+         QuerySnapshot query=await getUserById(list[i]);
+         listSearched.add(query);
+       }
+       return listSearched;
+     } else {
+       return [];
+     }
+  }
+Future<QuerySnapshot> getUserInfoById(String idUser) async {
+    return await FirebaseFirestore.instance.collection("userinfo")
+        .where("id",isEqualTo: idUser).get();
+}
+
   Stream<QuerySnapshot> getMyNews(String idUser) async* {
     try {
       yield* FirebaseFirestore.instance
@@ -389,7 +419,7 @@ class DatabaseMethods {
     try {
       yield* FirebaseFirestore.instance
           .collection("relationship").doc(idUser).collection("friend")
-          .where("status", isEqualTo: "pending").snapshots();
+          .where("status", isEqualTo: "pending").snapshots().asBroadcastStream();
     } catch (error) {
       print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
     }
@@ -405,7 +435,7 @@ class DatabaseMethods {
           .doc(idHint)
           .get();
       if (snapshot.exists) {
-        return snapshot.data()?['check '] ?? 0;
+        return snapshot.data()?['check'] ?? 0;
       } else {
         return 0;
       }
@@ -414,7 +444,30 @@ class DatabaseMethods {
       return 0;
     }
   }
+  Stream<QuerySnapshot> getUserInfoByIdStream(String userId) {
+    return FirebaseFirestore.instance
+        .collection('userinfo')
+        .where('id', isEqualTo: userId)
+        .snapshots();
+  }
 
+  Stream<QuerySnapshot> getUserByIdStream(String userId) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .where('id', isEqualTo: userId)
+        .snapshots();
+  }
+
+  Future<void> updateUserInfo(String idUser, Map<String, dynamic> userInfoMap) {
+    return FirebaseFirestore.instance.collection("userinfo").doc(idUser)
+        .update(userInfoMap)
+        .then((_) {
+      print("Thêm info thành công");
+    })
+        .catchError((error) {
+      print("lỗi info: $error");
+    });
+  }
   Future<void> updateCheckHint(String idUser, String idHint,
       Map<String, dynamic> hintInfoMap) async {
     try {
@@ -429,12 +482,24 @@ class DatabaseMethods {
       print("Lỗi khi cập nhật thông tin người dùng: $e");
     }
   }
+  Future<void> updateSearched(String id, String idSearch) async {
+    try {
+        await FirebaseFirestore.instance
+            .collection("user").doc(id)
+            .update({
+          'Searched': FieldValue.arrayUnion([idSearch]),
+        });
+      print("cập nhật lịch sử search thành công");
+    } catch (e) {
+      print("Lỗi khi cập nhật searched: $e");
+    }
+  }
 
   Stream<QuerySnapshot> getMyHint(String idUser) async* {
     try {
       yield* FirebaseFirestore.instance
           .collection("relationship").doc(idUser).collection("hint")
-          .snapshots();
+          .snapshots().asBroadcastStream();
     } catch (error) {
       print('Đã xảy ra lỗi khi lấy danh sách gợi ý bạn bè: $error');
     }
@@ -464,7 +529,30 @@ class DatabaseMethods {
       print("lỗi khi xóa hủy kết bạn với $idReceived");
     }
   }
+  Future<List<String>> getCity() async {
+    List<String> cityNames = []; // Danh sách các full_name
+    final response = await http.get(
+        Uri.parse('https://esgoo.net/api-tinhthanh/1/0.htm'));
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      final List<dynamic> citiesData = responseData['data'];
+      for (var city in citiesData) {
+        String cityname=city["name"];
+       cityNames.add(cityname);
+        // Thêm full_name vào danh sách
+      }
+      return cityNames;
+    } else {
+      print("lỗi khi lấy dữ liệu thành phố");
+      return []; // Trả về danh sách rỗng nếu có lỗi
+    }
   }
+  Future<void> updateUser(String idUser,Map<String,dynamic> userInfoMap){
+    return FirebaseFirestore.instance.collection("user")
+        .doc(idUser).update(userInfoMap);
+  }
+
+
 
 
 

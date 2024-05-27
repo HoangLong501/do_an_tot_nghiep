@@ -60,6 +60,7 @@ dev_dependencies:
   awesome_notifications: ^0.8.2
   auto_size_text: ^3.0.0
   modal_bottom_sheet: ^3.0.0
+  cupertino_icons: ^1.0.8
   emoji_picker_flutter: ^2.2.0
   flutter_sound: ^9.2.13
   permission_handler: ^11.3.1
