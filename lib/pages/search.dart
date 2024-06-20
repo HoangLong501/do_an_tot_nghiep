@@ -24,7 +24,7 @@ class Search extends StatefulWidget {
 }
 
 class _SearchState extends State<Search> {
-   late List<Person> userlist = [];
+   late List<QuerySnapshot> userlist = [];
   List items = [0, 1, 2];
   TextEditingController searchConTroller = TextEditingController();
   bool isVisible=true;
@@ -78,10 +78,10 @@ class _SearchState extends State<Search> {
                       });
                     }
                     try {
-                      List<Person> result = await _SearchUser();
-                      setState(() {
-                        userlist = result;
-                      });
+                      // List<QuerySnapshot> result = await _SearchUser();
+                      // setState(() {
+                      //   userlist = result;
+                      //});
                       print("Kết quả tìm kiếm: ${userlist.toString()}");
                     } catch (e) {
                       print("Lỗi tìm kiếm người dùng: $e");
@@ -110,22 +110,35 @@ class _SearchState extends State<Search> {
         child: Container(
           child: Column(
             children: [
-              Column(
-                children: [
-              ListView.builder(
-                shrinkWrap: true,
-                // Chỉ sử dụng khoảng không gian cần thiết
-                physics: NeverScrollableScrollPhysics(),
-                // Không cho phép cuộn trong ListView này
-                itemCount:userlist.length ,
-                // Số lượng mục trong ListView
-                itemBuilder: (BuildContext context, int index) {
-                  Person person = userlist[index];
-                  return Row(
+          Column(
+          children: [
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: DatabaseMethods().getUserByName(searchConTroller.text),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(child: Text('No users found'));
+                  }
+
+                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      DocumentSnapshot doc = docs[index];
+                      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+                      String id = doc.id;
+                      String username = data['username'];
+                      String image = data['image'];
+
+                      return Row(
                         children: [
-                          SizedBox(
-                            width: 10,
-                          ),
+                          SizedBox(width: 10),
                           GestureDetector(
                             onTap: () {
                               // Navigator.push(
@@ -138,11 +151,9 @@ class _SearchState extends State<Search> {
                               height: 50,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(50),
-                                // Độ bo góc
                                 image: DecorationImage(
-                                  image:Image.network(person.image).image,
-                                  fit: BoxFit
-                                      .cover, // Đảm bảo hình ảnh vừa khớp trong container
+                                  image: Image.network(image).image,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),
@@ -150,17 +161,21 @@ class _SearchState extends State<Search> {
                           SizedBox(width: 20),
                           GestureDetector(
                             onTap: () async {
-
-                              DatabaseMethods().updateSearched(id!, person.id);
-                              //_updateSearched(id!,person.id);
-                            Navigator.push(context,MaterialPageRoute(builder: (context)=>ProfileFriend(idProfileUser: person.id)));
+                              DatabaseMethods().updateSearched('id!', id);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfileFriend(
+                                    idProfileUser: id,
+                                  ),
+                                ),
+                              );
                             },
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              // Căn lề trái cho các phần tử trong cột
                               children: [
                                 Text(
-                                  person.username,
+                                  username,
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
                                     fontSize: 16,
@@ -171,41 +186,45 @@ class _SearchState extends State<Search> {
                                     Icon(
                                       size: 8,
                                       Icons.circle,
-                                      // Sử dụng biểu tượng chấm ngang
-                                      color: Colors
-                                          .blue, // Đặt màu của biểu tượng là màu xanh
+                                      color: Colors.blue,
                                     ),
                                     SizedBox(width: 5),
                                     Text(
                                       "thông tin mới",
                                       style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey.shade700,
-                                          fontWeight: FontWeight.w500),
-                                    )
+                                        fontSize: 13,
+                                        color: Colors.grey.shade700,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ],
-                                )
+                                ),
                               ],
                             ),
                           ),
-                          Spacer(), // Tạo một khoảng trống linh hoạt
+                          Spacer(),
                           IconButton(
                             onPressed: () {
                               // Hành động khi nút được nhấn
                             },
                             icon: Icon(
                               Icons.more_horiz,
-                              color: Colors
-                                  .grey.shade600, // Đặt màu của biểu tượng
+                              color: Colors.grey.shade600,
                             ),
                           ),
-                          SizedBox(width: 20), // Icon hoặc widget khác ở đây
+                          SizedBox(width: 20),
                         ],
                       );
+                    },
+                  );
                 },
               ),
-                ],
-              ),
+            ),
+          ],
+          ),
+
+
+
               listSearched!=null?
               Column(
                 children: [
@@ -1299,11 +1318,11 @@ class _SearchState extends State<Search> {
                   SizedBox(height: 10,)
                 ],
               ): SizedBox(),
-            ],
-          ),
+          ]
+          )
+          )
         ),
-      ),
-    );
+      );
   }
   Widget potentianlFriends (){
     return StreamBuilder<QuerySnapshot>(
@@ -1344,18 +1363,6 @@ class _SearchState extends State<Search> {
     }
     );
   }
-   Future<List<Person>> _SearchUser() async {
-     try {
-       String userName = searchConTroller.text;
-       List<Person> userlist = (await DatabaseMethods().getUserByName(userName));
-       return userlist;
-     } catch (e) {
-       // Xử lý các lỗi khác nếu có
-       print("Error searching for user: $e");
-       return []; // Trả về danh sách trống trong trường hợp có lỗi
-     }
-   }
-
 }
 
 

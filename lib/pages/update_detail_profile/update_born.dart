@@ -210,7 +210,7 @@ class _UpdateBornState extends State<UpdateBorn> {
                                           child: Text('OK'),
                                           onPressed: () {
                                             Navigator.of(context).pop();
-                                            //Navigator.of(context).pop();
+                                            Navigator.of(context).pop();
                                           },
                                         ),
                                       ],

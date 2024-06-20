@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:do_an_tot_nghiep/pages/comment.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/edit_profile_detail.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/newsfeed_detail.dart';
+import 'package:do_an_tot_nghiep/pages/update_detail_profile/edit_story.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
@@ -161,7 +162,12 @@ class _ProfileState extends State<Profile> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child:
-                  Center(child: Text("+ Thêm vào tin",style: TextStyle(fontSize: 18,color: Colors.white),)),
+                  GestureDetector(
+                    onTap: (){
+                      Navigator.push(context,MaterialPageRoute(builder: (context)=>EditStory(idUser: widget.idProfileUser)));
+                    },
+                      child: Center(
+                          child: Text("+ Thêm vào tin",style: TextStyle(fontSize: 18,color: Colors.white),))),
             ),
             GestureDetector(
                 onTap: () async {

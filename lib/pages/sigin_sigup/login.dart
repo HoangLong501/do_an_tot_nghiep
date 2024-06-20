@@ -38,13 +38,14 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-appBar: AppBar(
-  automaticallyImplyLeading: false,
-),
+    // appBar: AppBar(
+    //   automaticallyImplyLeading: false,
+    // ),
       body: SingleChildScrollView(
     child: Form(
     key: _formKey,
         child: Container(
+          height: MediaQuery.of(context).size.height,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.centerLeft, // Bắt đầu từ trái
@@ -79,7 +80,6 @@ appBar: AppBar(
                 SizedBox(height: 70),
                 TextFormField(
                   validator: (value) {
-
                     if (value == null || value.isEmpty ) {
                       return 'Email hoặc số điẹn thoại không được đẻ trống!';
                     }
@@ -87,7 +87,6 @@ appBar: AppBar(
                   },
                   controller: userNameConTroller,
                   decoration: InputDecoration(
-
                     filled: true,
                     fillColor: Colors.white,
                     hintText: 'Email hoặc số điện thoại',
@@ -192,19 +191,19 @@ appBar: AppBar(
       )
     );
   }
-  Future<void> _userLogin()async{
-    try{
+  Future<void> _userLogin() async {
+    try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(email: userName, password: passWord);
-      QuerySnapshot querySnapshot=await DatabaseMethods().getUserByEmail(userName);
+      QuerySnapshot querySnapshot = await DatabaseMethods().getUserByEmail(userName);
       print('Number of documents: ${querySnapshot.size}');
       print(userName);
-      birthDate="${querySnapshot.docs[0]["Birthdate"]}";
-      email="${querySnapshot.docs[0]["E-mail"]}";
-      id="${querySnapshot.docs[0]["IdUser"]}";
-      phone="${querySnapshot.docs[0]["Phone"]}";
-      sex= "${querySnapshot.docs[0]["Sex"]}";
-      username="${querySnapshot.docs[0]["Username"]}";
-      image="${querySnapshot.docs[0]["imageAvatar"]}";
+      birthDate = "${querySnapshot.docs[0]["Birthdate"]}";
+      email = "${querySnapshot.docs[0]["E-mail"]}";
+      id = "${querySnapshot.docs[0]["IdUser"]}";
+      phone = "${querySnapshot.docs[0]["Phone"]}";
+      sex = "${querySnapshot.docs[0]["Sex"]}";
+      username = "${querySnapshot.docs[0]["Username"]}";
+      image = "${querySnapshot.docs[0]["imageAvatar"]}";
       await SharedPreferenceHelper().saveUserName(username);
       await SharedPreferenceHelper().saveIdUser(id);
       await SharedPreferenceHelper().saveUserPhone(phone);
@@ -212,16 +211,103 @@ appBar: AppBar(
       await SharedPreferenceHelper().saveSex(sex);
       await SharedPreferenceHelper().saveBirthDate(birthDate);
 
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>Home()));
-    }on FirebaseAuthException catch(e){
-      if(e.code=='tài khoản không tồn tại'){
+      showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          return Transform.scale(
+            scale: a1.value,
+            child: Opacity(
+              opacity: a1.value,
+              child: AlertDialog(
+                shape: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+                title: Column(
+                  children: [
+                    Text('Thông báo'),
+                    Divider(height: 0.1,color: Colors.grey.shade400,),
+                  ],
+                ),
+                content:Text(' Bạn có muốn lưu Mật khẩu để lần sau đăng nhập thuận tiện hơn không!',
+                  style: TextStyle(
+                      fontSize: 16
+                  ),
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('Cancel'),
+                    onPressed: () {
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+                    },
+                  ),
+                  TextButton(
+                    child: Text('OK'),
+                    onPressed: () async {
+                      Map<String,dynamic> infoMap={
+                        "id":id,
+                        "email":email,
+                        "password":passWord,
+                        "name":username,
+                        "avata":image
+                      };
+                      List<Map<String,dynamic>> listinfoMap=[];
+                      listinfoMap.add(infoMap);
+                      List<Map<String, dynamic>>? userInfoList = await SharedPreferenceHelper().getUserInfoList();
+                      if(userInfoList==null){
+                        await SharedPreferenceHelper().saveUserInfoListUser(listinfoMap);
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+                      }else{
+                        for(var userInfo in userInfoList){
+                          if(userInfo["id"]==infoMap["id"]){
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+                            return;
+                          }
+                        }
+                        await SharedPreferenceHelper().addUserInfo(infoMap);
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: true,
+        barrierLabel: '',
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          return SizedBox.shrink();
+        },
+      );
+
+    } on FirebaseAuthException catch (e) {
+      print("aaaaaaaaaaaaaa${e.code}");
+      if (e.code == 'invalid-email') {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("mail không tồn tại",style: TextStyle(fontSize: 18),),backgroundColor: Colors.orange,));
-      }else if(e.code=='sai mật khẩu'){
+          SnackBar(
+            content: Text("Email không tồn tại", style: TextStyle(fontSize: 18,color: Colors.white)),
+            backgroundColor: Colors.black,
+          ),
+        );
+      } else if (e.code == 'invalid-credential') {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("sai mật khẩu",style: TextStyle(fontSize: 18),),backgroundColor: Colors.orange,));
+          SnackBar(
+            content: Text("Sai mật khẩu", style: TextStyle(fontSize: 18,color: Colors.white)),
+            backgroundColor: Colors.black,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Đăng nhập thất bại ", style: TextStyle(fontSize: 18,color: Colors.white)),
+            backgroundColor: Colors.black,
+          ),
+        );
       }
     }
   }
+
 }
 

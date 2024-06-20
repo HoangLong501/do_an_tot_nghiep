@@ -3,6 +3,10 @@ import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
 import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
+import 'package:do_an_tot_nghiep/pages/update_detail_profile/edit_story.dart';
+import 'package:do_an_tot_nghiep/pages/update_detail_profile/edit_video.dart';
+import 'package:do_an_tot_nghiep/pages/update_detail_profile/story.dart';
+import 'package:do_an_tot_nghiep/pages/video.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,6 +19,8 @@ import 'lib_class_import/swipe.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:http/http.dart' as http;
+import 'package:video_player/video_player.dart';
 class Home extends StatefulWidget {
   const Home({super.key});
   @override
@@ -23,43 +29,29 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   Stream? myNewsfeedStream;
-
+  Stream<QuerySnapshot>? listStory;
   final ScrollController _controller = ScrollController();
-  bool isScrollDown =false;
+  bool isScrollDown =false,type=false;
   String? username, idUser;
   int picked = 0;
   List itemCount=[];
-
   Future<List<String>>? listNewFeed;
-
+  List<String> listFriends=[];
   String? idUserDevice;
-
-
+VideoPlayerController? videoPlayerController;
+  Map<String, int> currentStoryIndex = {};
 
   Future<void> setupInteractedMessage() async {
-    // Get any messages which caused the application to open from
-    // a terminated state.
     RemoteMessage? initialMessage =
     await FirebaseMessaging.instance.getInitialMessage();
-
-    // If the message also contains a data property with a "type" of "chat",
-    // navigate to a chat screen
     if (initialMessage != null) {
       _handleMessage(initialMessage);
     }
-
-    // Also handle any interaction when the app is in the background via a
-    // Stream listener
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
   }
-
   void _handleMessage(RemoteMessage message) {
     print("User nhan vao noti");
   }
-
-
-
-
   Future<void> saveTokenToDatabase(String token ) async {
     // Assume user is logged in for this example
     await FirebaseFirestore.instance
@@ -69,7 +61,6 @@ class _HomeState extends State<Home> {
       'tokens': FieldValue.arrayUnion([token]),
     });
   }
-
   Future<void> setupToken() async {
     // Get the token each time the application loads
     String? token = await FirebaseMessaging.instance.getToken();
@@ -94,11 +85,33 @@ class _HomeState extends State<Home> {
       }
     });
   }
+  Future<bool> checkContentType(url) async {
+    var response = await http.head(Uri.parse(url));
+    var contentType = response.headers['content-type'];
+    if (contentType != null) {
+      if (contentType.startsWith('video/')) {
+        videoPlayerController= VideoPlayerController.networkUrl(Uri.parse(url));
+        await videoPlayerController!.initialize();
+        return true;
+      } else if (contentType.startsWith('image/')) {
+
+        return false;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
   onLoad()async{
     idUserDevice = await SharedPreferenceHelper().getIdUser();
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
+    listFriends=await DatabaseMethods().getFriends(idUserDevice!);
+    List<String> listReceiver=await DatabaseMethods().getReceivered(idUserDevice!);
+    listFriends.addAll(listReceiver);
+    listFriends.add(idUserDevice!);
+    listStory = DatabaseMethods().getAllStory(listFriends);
     await setupToken();
-
     controlScroll();
     setState(() {});
   }
@@ -143,7 +156,7 @@ class _HomeState extends State<Home> {
                   padding: EdgeInsets.only(left: 8,right: 8),
                   child: GestureDetector(
                       onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Search()));
+                       // Navigator.push(context, MaterialPageRoute(builder: (context)=>Search()));
                       },
                       child: Icon(Icons.search_outlined,size: 30,)),
                 ),
@@ -167,8 +180,6 @@ class _HomeState extends State<Home> {
         ),
       ),
       backgroundColor: Colors.white,
-
-
       body:SingleChildScrollView(
         controller: _controller,
         child: Column(
@@ -176,22 +187,211 @@ class _HomeState extends State<Home> {
             Container(
               padding: EdgeInsets.only(top: 8,left: 8 , right: 8),
               height: 240,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: 10,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: (){
-                      print(index);
-                    },
-                    child: SizedBox(
-                      width: 160.0,
-                      child: Card(
-                        child: Center(
-                          child: Text('Card ${index + 1}'),
+              child:  StreamBuilder<QuerySnapshot>(
+                stream: listStory,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Text("lỗi rồi");
+                  }
+                  else if(snapshot.connectionState==ConnectionState.waiting){
+                    return CircularProgressIndicator();
+                  }else if(snapshot.data==null || snapshot.data!.docs.isEmpty){
+                    return Container(
+                      padding: EdgeInsets.only(right: MediaQuery.of(context).size.width/2),
+                      height: 200,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(context,MaterialPageRoute(builder: (context)=>EditStory(idUser: idUserDevice!)));
+                        },
+                        child: SizedBox(
+                          width: 160.0,
+                          height: 200,
+
+                          child: Card(
+                            child: Center(
+                              child: Icon(Icons.add,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    );
+                  }
+                  List<DocumentSnapshot> allStories = snapshot.data!.docs;
+                  Map<String, List<DocumentSnapshot>> userStories = {};
+                  // Phân loại story theo iduser
+                  for (var doc in allStories) {
+                    String iduser = doc['iduser'];
+                    if (!userStories.containsKey(iduser)) {
+                      userStories[iduser] = [];
+                    }
+                    userStories[iduser]!.add(doc);
+                  }
+                  return Container(
+                    height: 200,
+                     child:  ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: userStories.keys.length+1,
+                        itemBuilder: (context, index) {
+                          if(index==0){
+                            return Container(
+                              height: 200,
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(context,MaterialPageRoute(builder: (context)=>EditStory(idUser: idUserDevice!)));
+                                },
+                                child: SizedBox(
+                                  width: 160.0,
+                                  height: 200,
+                                  child: Card(
+                                    child: Center(
+                                      child: Icon(Icons.add,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }else{
+                            int newIndex = index - 1;
+                            if (newIndex < snapshot.data!.docs.length) {
+                              String iduser = userStories.keys.elementAt(newIndex);
+                              List<DocumentSnapshot> stories = userStories[iduser]!;
+                              int storyIndex = currentStoryIndex[iduser] ?? 0;
+                              // Kiểm tra nếu hết story để xem cho người dùng này
+                              if (storyIndex >= stories.length) {
+                                return Container(); // Hoặc một widget khác để thông báo hết story
+                              }
+
+                              var storyDoc = stories[storyIndex];
+                              String imageUrl = storyDoc["urlstory_image"];
+                              return FutureBuilder<bool>(
+                                future: checkContentType(imageUrl),
+                                builder: (context, contentSnapshot) {
+                                  if (!contentSnapshot.hasData) {
+                                    return Container(
+                                      height: 200,
+                                      width: 160,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: GestureDetector(
+                                        child: Card(
+                                          clipBehavior: Clip.antiAlias,
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        ),
+                                      ),
+                                    ); // Hoặc một chỉ báo tải dữ liệu khác
+                                  }
+                                  bool isVideo = contentSnapshot.data!;
+                                  int time = DateTime.now().millisecondsSinceEpoch;
+                                  int retime = storyDoc['times'];
+                                  if (time - retime < 86400000) {
+                                    return Container(
+                                      height: 200,
+                                      width: 160,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          if (mounted) {
+
+                                              Map<String, dynamic> useIdMap = {
+                                                "watched": true,
+                                                "iduser":idUserDevice!,
+                                                "type": false
+                                              };
+                                              DatabaseMethods().addReaction(storyDoc["idstory"], idUserDevice!, useIdMap);
+
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => Story(
+                                                  idUser: idUserDevice!,
+                                                  type: isVideo,
+                                                  idStory: storyDoc["idstory"],
+                                                ),
+                                              ),
+                                            ).then((_) {
+                                              setState(() {
+                                                if(storyDoc['idstory']!=idUserDevice) {
+                                                  currentStoryIndex[iduser] =
+                                                      (currentStoryIndex[iduser] ??
+                                                          0) + 1;
+                                                }
+                                                });
+                                            });
+                                          }
+                                        },
+                                        child: Card(
+                                          clipBehavior: Clip.antiAlias,
+                                          child: Stack(
+                                            children: [
+                                              Positioned.fill(
+                                                child: isVideo
+                                                    ? VideoPlayer(videoPlayerController!)
+                                                    : Image.network(
+                                                  imageUrl,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                              FutureBuilder(
+                                                future: DatabaseMethods().getUserById(iduser),
+                                                builder: (BuildContext context, AsyncSnapshot spt) {
+                                                  if (spt.connectionState == ConnectionState.waiting) {
+                                                    return CircularProgressIndicator();
+                                                  } else if (spt.hasError) {
+                                                    return Text('Lỗi: ${spt.error}');
+                                                  } else if (!spt.hasData) {
+                                                    return Text("data");
+                                                  } else if (spt.data!.docs.isEmpty || spt.data == null) {
+                                                    return Text("rỗng");
+                                                  } else {
+                                                    String imageUserStory = spt.data!.docs.first["imageAvatar"];
+
+                                                    return Positioned(
+                                                      left: 10,
+                                                      top: 10,
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                          shape: BoxShape.circle,
+                                                          border: Border.all(
+                                                            color: Colors.blue,
+                                                            width: 2.0,
+                                                          ),
+                                                        ),
+                                                        child: CircleAvatar(
+                                                          radius: 18, // Điều chỉnh kích thước của avatar
+                                                          backgroundImage: NetworkImage(imageUserStory), // URL của hình ảnh avatar
+                                                        ),
+                                                      ),
+                                                    ); // Hiển thị thông báo nếu không có dữ liệu
+                                                  }
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return Container(); // Trả về một Container rỗng nếu story đã hết hạn
+                                },
+                              );
+                            } else {
+                              return Container(
+                                child: Icon(Icons.ice_skating),
+                              );
+                            }
+
+                          }
+
+                        },
+                      ),
+
                   );
                 },
               ),
@@ -254,7 +454,7 @@ class _HomeState extends State<Home> {
                               child: Column(
                                 children:allPosts.map((data){
                                   //Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                                  return  WidgetNewsfeed(idUser: data["UserID"]??"",date: data["newTimestamp"].toDate()??DateTime.now(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"]??"",);
+                                  return  WidgetNewsfeed(idUser: data["UserID"]??"",date: data["newTimestamp"].toDate()??DateTime.now(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: "",);
                                 }).toList(),
                               ),
                             );
@@ -293,11 +493,7 @@ class _HomeState extends State<Home> {
               children: [
                 GestureDetector(
                     onTap: (){
-                      print("send noti");
-                      String token="e8L63rdPSpO5VXyJTe3VhN:APA91bFThgUoYxUMiDPPvkaG6rXa6vWmush1kV95XDTIPb2xob7-N7nzu_Hj1lTFNVq9wKdPENZ0I58h9TFnJ6vxdqZa2RZZrZ4z3I-K0YYaXRmEXFmAoTVPcVnK5wbidZnaM_Ykol7x";
-                      String title="Gửi thông báo đến điện thoại để test chức năng thông báo";
-                      String body="Bạn có thông báo mới";
-                      NotificationDetail().sendAndroidNotification(token, title, body);
+                    Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
                     },
                     child: Icon(Icons.ondemand_video ,
                       color: picked==1? Colors.blueAccent:Colors.grey,

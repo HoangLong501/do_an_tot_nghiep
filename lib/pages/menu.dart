@@ -2,10 +2,17 @@ import 'package:do_an_tot_nghiep/pages/add_friend/friend.dart';
 import 'package:do_an_tot_nghiep/pages/add_friend/received.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/profile.dart';
+import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
+import 'package:do_an_tot_nghiep/pages/sigin_sigup/register.dart';
+import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 class Menu extends StatefulWidget {
   const Menu({super.key});
 
@@ -16,11 +23,13 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   int picked=4;
   String? idUserCurrent , nameUser , image;
+  List<Map<String,dynamic>>? listUserLogin;
 
   onLoad()async{
     idUserCurrent = await SharedPreferenceHelper().getIdUser();
     nameUser = await SharedPreferenceHelper().getUserName();
     image = await SharedPreferenceHelper().getImageUser();
+    listUserLogin=await SharedPreferenceHelper().getUserInfoList();
     setState(() {
 
     });
@@ -87,7 +96,16 @@ class _MenuState extends State<Menu> {
                           ),
                         ),
                       ),
-                      Icon(Icons.arrow_drop_down_circle_outlined,size: 30,color: Colors.grey.shade700,),
+                      GestureDetector(
+                        onTap: (){
+                          showGridDialog(context,listUserLogin!);
+                        },
+                          child: Icon(
+                            Icons.arrow_drop_down_circle_outlined,
+                            size: 30,
+                            color: Colors.grey.shade700,
+                          )
+                      ),
                     ],
                   ),
                   SizedBox(height: 20,),
@@ -283,7 +301,7 @@ class _MenuState extends State<Menu> {
             ),
             GestureDetector(
               onTap: (){
-                print("Đăng xuất");
+                logOut();
               },
               child: Container(
                 margin: EdgeInsets.only(top: 100),
@@ -303,7 +321,6 @@ class _MenuState extends State<Menu> {
           ],
         ),
       ),
-
       bottomNavigationBar: BottomAppBar(
         height: 50,
         child: Row(
@@ -391,4 +408,209 @@ class _MenuState extends State<Menu> {
       ),
     );
   }
+  Future<void> logOut() async {
+    await SharedPreferenceHelper().saveUserName("");
+    await SharedPreferenceHelper().saveIdUser("");
+    await SharedPreferenceHelper().saveUserPhone("");
+    await SharedPreferenceHelper().saveImageUser("");
+    await SharedPreferenceHelper().saveSex("");
+    await SharedPreferenceHelper().saveBirthDate("");
+    //@gmail.comawait SharedPreferenceHelper().saveUserInfoListUser([]);
+    Navigator.push(context,MaterialPageRoute(builder: (context)=>Login()));
+  }
+  void showGridDialog(BuildContext context, List<Map<String,dynamic>> list) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return SingleChildScrollView(
+          child: Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom
+            ),
+            height: MediaQuery.of(context).size.height/1.6,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 50,
+                  margin: EdgeInsets.only(top: 20),
+                  child:Text(
+                    "Chuyển đổi tài khoản",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600
+                    ),
+                  ) ,
+                ),
+                Divider(color: Colors.grey.shade400,thickness: 1,),
+                Container(
+                  height: MediaQuery.of(context).size.height*0.4,
+                  child: ListView.builder(
+                    itemCount: list.length+1,
+                    itemBuilder: (context, index) {
+                      Map<String, dynamic>? userId;
+                      if(index==list.length){
+                       userId = list[index-1];
+                      }else{
+                        userId = list[index];
+                      }
+                      return Expanded(
+                          child: Column(
+                            children: [
+                              SizedBox(height: 20,),
+                               if((index)==list.length)
+                                 Container(
+                                     child:  Row(
+                                       children: [
+                                         SizedBox(width: 20,),
+                                         Container(
+                                           height: 60,
+                                           width: 60,
+                                           decoration: BoxDecoration(
+                                               borderRadius: BorderRadius.circular(30),
+                                               color: Colors.grey.shade200
+                                           ),
+                                           child: IconButton(
+                                               onPressed: (){
+                                                 Navigator.push(context, MaterialPageRoute(builder: (context)=>Login()));
+                                               },
+                                               icon: Icon(Icons.add)
+
+                                           ),
+                                         ),
+                                         Container(
+                                           margin: EdgeInsets.only(left: 20),
+                                           child: Text(
+                                             "thêm tài khoản khác",
+                                             style: TextStyle(
+                                                 fontSize: 20
+                                             ),
+                                           ),
+                                         ),
+                                       ],
+                                     )
+                                 )else
+                               GestureDetector(
+                                  onTap: (){
+                                    userLogin(userId!["email"], userId["password"]);
+                                  },
+                                child:  Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.only(left: 20),
+                                    child: CircleAvatar(
+                                      radius: 30,
+                                      backgroundImage: NetworkImage(userId!["avata"]),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.only(left: 20),
+                                    child: Text(
+                                      userId["name"],
+                                      style: TextStyle(
+                                        fontSize: 20
+                                      ),
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  IconButton(
+                                      onPressed: (){
+
+                                  },
+                                      icon:Icon(
+                                        Icons.delete
+                                      )
+                                  )
+                                ],
+                              )
+                            ),
+                              Container(
+                                padding: EdgeInsets.only(left: 100),
+                                child: Divider(color: Colors.grey.shade300,thickness: 0.9,),
+                              )
+                            ],
+                          ),
+
+                      );
+
+                    },
+                  ),
+                ),
+
+                Spacer(),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.blue
+                  ),
+                  width: MediaQuery.of(context).size.width/1.2,
+                  child: TextButton(
+                    onPressed: (){
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>Register()));
+                    },
+                    child: Text(
+                      "Tạo tài khoảng mới",
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white
+                      ),
+
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20,)
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  Future<void> userLogin(String gmail,String passWord) async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: gmail, password: passWord);
+      QuerySnapshot querySnapshot = await DatabaseMethods().getUserByEmail(gmail);
+      print('Number of documents: ${querySnapshot.size}');
+       String birthDate = "${querySnapshot.docs[0]["Birthdate"]}";
+      String email = "${querySnapshot.docs[0]["E-mail"]}";
+      String id = "${querySnapshot.docs[0]["IdUser"]}";
+      String phone = "${querySnapshot.docs[0]["Phone"]}";
+      String sex = "${querySnapshot.docs[0]["Sex"]}";
+      String username = "${querySnapshot.docs[0]["Username"]}";
+      String images = "${querySnapshot.docs[0]["imageAvatar"]}";
+      await SharedPreferenceHelper().saveUserName(username);
+      await SharedPreferenceHelper().saveIdUser(id);
+      await SharedPreferenceHelper().saveUserPhone(phone);
+      await SharedPreferenceHelper().saveImageUser(images);
+      await SharedPreferenceHelper().saveSex(sex);
+      await SharedPreferenceHelper().saveBirthDate(birthDate);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+    } on FirebaseAuthException catch (e) {
+      print("aaaaaaaaaaaaaa${e.code}");
+      if (e.code == 'invalid-email') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Email không tồn tại", style: TextStyle(fontSize: 18,color: Colors.white)),
+            backgroundColor: Colors.black,
+          ),
+        );
+      } else if (e.code == 'invalid-credential') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Sai mật khẩu", style: TextStyle(fontSize: 18,color: Colors.white)),
+            backgroundColor: Colors.black,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Đăng nhập thất bại ", style: TextStyle(fontSize: 18,color: Colors.white)),
+            backgroundColor: Colors.black,
+          ),
+        );
+      }
+    }
+  }
+
 }

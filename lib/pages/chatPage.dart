@@ -101,7 +101,8 @@ class _ChatPageState extends State<ChatPage> {
                 ),
             ),
             //Stream để ở đây
-            StreamBuilder<QuerySnapshot>(stream: listChatRoom,
+            StreamBuilder<QuerySnapshot>(
+                stream: listChatRoom,
                 builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
                     if(snapshot.hasData){
                       return Column(

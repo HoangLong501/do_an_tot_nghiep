@@ -39,6 +39,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -65,6 +66,14 @@ dev_dependencies:
   flutter_sound: ^9.2.13
   permission_handler: ^11.3.1
   audioplayers: ^6.0.0
+  flutter_ffmpeg: ^0.4.0
+  visibility_detector: ^0.3.3
+  font_awesome_flutter: ^10.1.0
+  #  ffmpeg_kit_flutter: ^6.0.3
+  video_player: ^2.8.6
+  file_picker: ^4.2.3
+  flutter_spinkit: ^5.1.0
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -78,6 +87,8 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/avarta.jpg
+    - assets/images/heart.png
+    - assets/images/like.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
