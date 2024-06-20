@@ -166,7 +166,7 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                         GestureDetector(
                           onTap: (){
                             showMaterialModalBottomSheet(
-                                context: context, builder: (context)=>Comment2( idPoster: widget.idUser,idNewsfeed: widget.id,));
+                                context: context, builder: (context)=>Comment2( idPoster: widget.idUser,idNewsfeed: widget.id));
                           },
                           child: Container(
                             child: Row(

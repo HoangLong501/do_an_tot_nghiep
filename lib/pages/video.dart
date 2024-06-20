@@ -222,7 +222,7 @@ class _VideoState extends State<Video> {
                             GestureDetector(
                               onTap: (){
                                 showMaterialModalBottomSheet(
-                                    context: context, builder: (context)=>Comment2( idPoster:user['idUserposter'] ,idComment:idMyUser!,idNewsfeed: user['idvideo'] ,));
+                                    context: context, builder: (context)=>Comment2( idPoster:user['idUserposter'] ,idNewsfeed: user['idvideo'] ,));
                               },
                               child: Container(
                                 child: Row(
