@@ -1,18 +1,24 @@
 
+import 'package:do_an_tot_nghiep/fan_page/profile_fanpage.dart';
 import 'package:do_an_tot_nghiep/pages/add_friend/friend.dart';
 import 'package:do_an_tot_nghiep/pages/add_friend/hintfriend.dart';
 import 'package:do_an_tot_nghiep/pages/add_friend/received.dart';
+import 'package:do_an_tot_nghiep/pages/add_member_groupchat.dart';
+import 'package:do_an_tot_nghiep/pages/group_chat.dart';
+import 'package:do_an_tot_nghiep/pages/info_chatroom.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/allhintdetail.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/edit_profile_detail.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/hintdetail.dart';
-import 'package:do_an_tot_nghiep/pages/lib_class_import/test_widget_flutter.dart';
+import 'package:do_an_tot_nghiep/pages/member_chat.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
 import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
+import 'package:do_an_tot_nghiep/pages/message.dart';
 import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
 import 'package:do_an_tot_nghiep/pages/option_profile.dart';
 import 'package:do_an_tot_nghiep/pages/profile_friend.dart';
+import 'package:do_an_tot_nghiep/pages/reels_fanpage.dart';
 import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
@@ -47,19 +53,17 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         useMaterial3: true,
       ),
      // home: Profile(idProfileUser: "Ly Ly_202405091941",),
       //home: CreateNewsFeed()
-
       //home: ProfileFriend(idProfileUser:"Ly Ly_202405091941",)
-      //home: Home(),
-      //home: Profile(idProfileUser: "haonguyen16022002"),
       //home: Login(),
-
-
+      //home: Profile(idProfileUser: "haonguyen16022002"),
+      //home: MemberChat(idChatRoom: "dYn626pQ53"),
       home: Home(),
+      //home: AddMemberGroupChat(idChatRoom: "dYn626pQ53"),
 
     );
   }

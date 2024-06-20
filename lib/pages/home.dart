@@ -1,6 +1,7 @@
 import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
+import 'package:do_an_tot_nghiep/pages/reels_fanpage.dart';
 import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
@@ -29,7 +30,6 @@ class _HomeState extends State<Home> {
   String? username, idUser;
   int picked = 0;
   List itemCount=[];
-
   Future<List<String>>? listNewFeed;
 
   String? idUserDevice;
@@ -98,7 +98,6 @@ class _HomeState extends State<Home> {
     idUserDevice = await SharedPreferenceHelper().getIdUser();
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
     await setupToken();
-
     controlScroll();
     setState(() {});
   }
@@ -106,6 +105,11 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     onLoad();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -170,7 +174,7 @@ class _HomeState extends State<Home> {
 
 
       body:SingleChildScrollView(
-        controller: _controller,
+        // controller: _controller,
         child: Column(
           children: [
             Container(
@@ -196,26 +200,7 @@ class _HomeState extends State<Home> {
                 },
               ),
             ),
-            SwipeDetector(
-              onSwipeLeft: (){
-                setState(() {
-                  if(picked==4){
-                    picked=4;
-                  }else{
-                    picked=picked+1;
-                  }
-                });
-              },
-              onSwipeRight: (){
-                setState(() {
-                  if(picked==0){
-                    picked=0;
-                  }else{
-                    picked=picked-1;
-                  }
-                });
-              },
-              child: FutureBuilder<List<String>>(
+         FutureBuilder<List<String>>(
                future: listNewFeed,
                 builder: (context , snapshot){
                   if (!snapshot.hasData) {
@@ -250,18 +235,35 @@ class _HomeState extends State<Home> {
                               allPosts.addAll(querySnapshot.docs);
                             }
                             allPosts.sort((a, b) => (b['newTimestamp'] as Timestamp).compareTo(a['newTimestamp'] as Timestamp));
-                            return IntrinsicHeight(
-                              child: Column(
-                                children:allPosts.map((data){
-                                  //Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                                  return  WidgetNewsfeed(idUser: data["UserID"]??"",date: data["newTimestamp"].toDate()??DateTime.now(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"]??"",);
-                                }).toList(),
-                              ),
+                            // return Container(
+                            //   child: Column(
+                            //     children:allPosts.map((data){
+                            //       //Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+                            //       return  WidgetNewsfeed(idUser: data["UserID"]??"",date: data["newTimestamp"].toDate()??DateTime.now(),id: data["ID"]??"", username: data["userName"]??"", content: data["content"]??"", time: data["ts"]??"", image: data["image"]??"",idComment: data["id_comment"]??"",);
+                            //     }).toList(),
+                            //   ),
+                            // );
+                            return ListView.builder(
+                              controller: _controller,
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),  // Avoid nested scrolling
+                              itemCount: allPosts.length,
+                              itemBuilder: (context, index) {
+                                var data = allPosts[index];
+                                return WidgetNewsfeed(
+                                  idUser: data["UserID"] ?? "",
+                                  date: data["newTimestamp"].toDate() ?? DateTime.now(),
+                                  id: data["ID"] ?? "",
+                                  username: data["userName"] ?? "",
+                                  content: data["content"] ?? "",
+                                  time: data["ts"] ?? "",
+                                  image: data["image"] ?? "",
+                                );
+                              },
                             );
                           });
                 },
               ),
-            ),
           ],
         ),
       ),
@@ -293,11 +295,7 @@ class _HomeState extends State<Home> {
               children: [
                 GestureDetector(
                     onTap: (){
-                      print("send noti");
-                      String token="e8L63rdPSpO5VXyJTe3VhN:APA91bFThgUoYxUMiDPPvkaG6rXa6vWmush1kV95XDTIPb2xob7-N7nzu_Hj1lTFNVq9wKdPENZ0I58h9TFnJ6vxdqZa2RZZrZ4z3I-K0YYaXRmEXFmAoTVPcVnK5wbidZnaM_Ykol7x";
-                      String title="Gửi thông báo đến điện thoại để test chức năng thông báo";
-                      String body="Bạn có thông báo mới";
-                      NotificationDetail().sendAndroidNotification(token, title, body);
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context)=>ReelFanPage()));
                     },
                     child: Icon(Icons.ondemand_video ,
                       color: picked==1? Colors.blueAccent:Colors.grey,

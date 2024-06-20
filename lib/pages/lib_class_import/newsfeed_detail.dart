@@ -6,8 +6,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+
 class WidgetNewsfeed extends StatefulWidget {
-  final String  idUser,username ,time , content ,image, id , idComment ;
+  final String  idUser,username ,time , content ,image, id  ;
   final  DateTime date;
   const WidgetNewsfeed({super.key ,
     required this.idUser,
@@ -17,7 +19,7 @@ class WidgetNewsfeed extends StatefulWidget {
     required this.time,
     required this.date,
     required this.image,
-    required this.idComment,
+
   });
   @override
   State<WidgetNewsfeed> createState() => _WidgetNewsfeedState();
@@ -42,9 +44,11 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
     if(reacted!=null){
       clicked=reacted!;
     }
-    setState(() {
-
-    });
+    if (mounted) {
+      setState(() {
+        // cập nhật trạng thái
+      });
+    }
   }
   @override
   void initState() {
@@ -134,7 +138,7 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                   },
                 ),
                 Padding(
-                  padding: EdgeInsets.only(left: 20 , right: 20),
+                  padding: EdgeInsets.only(top: 6,left: 20 , right: 20),
                   child:
                       Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -162,7 +166,7 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                         GestureDetector(
                           onTap: (){
                             showMaterialModalBottomSheet(
-                                context: context, builder: (context)=>Comment2( idPoster: widget.idUser,idComment: widget.idComment,idNewsfeed: widget.id,));
+                                context: context, builder: (context)=>Comment2( idPoster: widget.idUser,idNewsfeed: widget.id,));
                           },
                           child: Container(
                             child: Row(

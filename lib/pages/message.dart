@@ -1,5 +1,8 @@
 import 'dart:io';
-import 'dart:ui';
+import 'package:do_an_tot_nghiep/pages/info_chatroom.dart';
+import 'package:do_an_tot_nghiep/pages/info_mess.dart';
+import 'package:do_an_tot_nghiep/pages/lib_class_import/chatMessageTitle.dart';
+import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:random_string/random_string.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
@@ -12,13 +15,15 @@ import 'package:flutter/foundation.dart' as foundation;
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:audioplayers/audioplayers.dart';
 class Message extends StatefulWidget {
-  final String name , image , chatRoomId;
+  final bool group;
+  final String name , image , chatRoomId,contactUser;
   const Message({super.key,
     required this.name,
     required this.image,
     required this.chatRoomId,
+    this.group=false,
+    this.contactUser="",
   });
 
   @override
@@ -29,11 +34,34 @@ class _MessageState extends State<Message> {
   TextEditingController messController = TextEditingController();
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   Stream<QuerySnapshot>? messRoom;
-  String? myId ,messageId,_audioPath;
+  String? myId ,myName,messageId,_audioPath;
   final _scrollController = ScrollController();
   File? _selectedImage;
-  bool _isRecording = false,haveContent =false,_emojiShowing = false;
-  AudioPlayer player = AudioPlayer();
+  bool _isRecording = false,haveContent =false,_emojiShowing = false , openKeyBroad=false;
+  String avatar="" , nameSend="" , block="";
+  Stream<String>? statusStream;
+  Color themeColor = Colors.cyan.shade200;
+  Stream<String> getStatus(String idChatRoom)async*{
+    try{
+      yield* FirebaseFirestore.instance
+          .collection("chatrooms")
+          .doc(idChatRoom)
+          .snapshots()
+          .map((docSnapshot) {
+        if (docSnapshot.exists) {
+          // Nếu tài liệu tồn tại, trả về giá trị số lượng từ tài liệu
+          return docSnapshot.data()?['block'] ?? ""; // Trả về 0 nếu không tìm thấy 'QUANTITY'
+        } else {
+          // Nếu tài liệu không tồn tại, trả về 0
+          return "";
+        }
+      });
+    }catch(e){
+      yield* Stream.empty();
+    }
+  }
+
+
 
   Future _pickImageGallery()async{
     final returnImage = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -41,6 +69,13 @@ class _MessageState extends State<Message> {
         _selectedImage = File(returnImage!.path);
         haveContent=_selectedImage!.isAbsolute;
       });
+  }
+  Future _pickImageCamera()async{
+    final returnImage = await ImagePicker().pickImage(source: ImageSource.camera);
+    setState(() {
+      _selectedImage = File(returnImage!.path);
+      haveContent=_selectedImage!.isAbsolute;
+    });
   }
 
   Future<String> uploadImage(File image) async {
@@ -53,7 +88,6 @@ class _MessageState extends State<Message> {
   Future<void> startRecording() async {
     await Permission.microphone.request();
     if (await Permission.microphone.isGranted) {
-      print("Đã cấp quyền và thực hiện record ");
       String filePath = 'audio_${DateTime.now().millisecondsSinceEpoch}.mp4';
       await _recorder.startRecorder(toFile: filePath);
       setState(() {
@@ -67,9 +101,7 @@ class _MessageState extends State<Message> {
       _isRecording = false;
     });
     _audioPath = await uploadFileAudio(filePath!);
-    print(_audioPath);
     await _recorder.deleteRecord(fileName: filePath);
-    print("Them vao database");
   }
   Future<String?> uploadFileAudio(String filePath) async {
     File file = File(filePath);
@@ -87,10 +119,25 @@ class _MessageState extends State<Message> {
 
 
   onLoad()async{
-    messRoom = DatabaseMethods().getChatRoomMessage(widget.chatRoomId);
+    if(widget.group){
+      messRoom = DatabaseMethods().getChatRoomMessage2(widget.chatRoomId);
+    }else{
+      messRoom = DatabaseMethods().getChatRoomMessage(widget.chatRoomId);
+    }
     myId = await SharedPreferenceHelper().getIdUser();
-    player = AudioPlayer();
-    player.setReleaseMode(ReleaseMode.stop);
+    myName = await SharedPreferenceHelper().getUserName();
+    DocumentSnapshot data= await FirebaseFirestore.instance.collection("chatrooms").doc(widget.chatRoomId).get();
+    try{
+      block = data.get("block");
+    }catch(e){
+      block="";
+    }
+    try{
+      themeColor = Color(int.parse(data.get("Theme")));
+    }catch(e){
+      themeColor = Colors.cyan.shade200;
+    }
+    statusStream = getStatus(widget.chatRoomId);
     setState(() {
 
     });
@@ -105,7 +152,6 @@ class _MessageState extends State<Message> {
   void dispose() {
     messController.dispose();
     _recorder.closeRecorder();
-    player.dispose();
     super.dispose();
   }
   addMessage(bool sendMess ){
@@ -122,18 +168,40 @@ class _MessageState extends State<Message> {
         "ts":timeNow,
         "time":FieldValue.serverTimestamp(),
       };
-      DatabaseMethods().addMessage(widget.chatRoomId, messInfoMap).then((value){
-        Map<String,dynamic> lastMessageInfoMap={
-          "LastMessage":mess,
-          "LastMessageSendTs":timeNow,
-          "Time":DateTime.now().toString(),
-          "LastMessageSendBy":myId,
-        };
-        DatabaseMethods().updateLastMessageSend(widget.chatRoomId, lastMessageInfoMap);
-        if(sendMess){
-          messageId=null;
+      if(widget.group){
+        DatabaseMethods().addMessage2(widget.chatRoomId, messInfoMap).then((value){
+          Map<String,dynamic> lastMessageInfoMap={
+            "LastMessage":mess,
+            "LastMessageSendTs":timeNow,
+            "Time":DateTime.now().toString(),
+            "LastMessageSendBy":myId,
+            "userSent":myName,
+          };
+          DatabaseMethods().updateLastMessageSend2(widget.chatRoomId, lastMessageInfoMap);
+          if(sendMess){
+            messageId=null;
+          }
+          NotificationDetail().sendNotificationToGroupChat(widget.chatRoomId, "$myName : $mess", "Bạn có tin nhắn mới");
+        });
+      }else{
+        DatabaseMethods().addMessage(widget.chatRoomId, messInfoMap).then((value){
+          Map<String,dynamic> lastMessageInfoMap={
+            "LastMessage":mess,
+            "LastMessageSendTs":timeNow,
+            "Time":DateTime.now().toString(),
+            "LastMessageSendBy":myId,
+          };
+          DatabaseMethods().updateLastMessageSend(widget.chatRoomId, lastMessageInfoMap);
+          if(sendMess){
+            messageId=null;
+          }
+        });
+        if(widget.contactUser!=""){
+          print(widget.contactUser);
+          print("send noti to ${widget.contactUser}");
+          NotificationDetail().sendNotificationToAnyDevice(widget.contactUser,"${widget.name}: $mess" , "Bạn có tin nhắn mới");
         }
-      });
+      }
     }
   }
   addImage(bool sendImage )async{
@@ -147,21 +215,38 @@ class _MessageState extends State<Message> {
         "ts":timeNow,
         "time":FieldValue.serverTimestamp(),
       };
-      DatabaseMethods().addMessage(widget.chatRoomId, messInfoMap).then((value){
-        Map<String,dynamic> lastMessageInfoMap={
-          "LastMessage":"Đã gửi 1 ảnh",
-          "LastMessageSendTs":timeNow,
-          "Time":DateTime.now().toString(),
-          "LastMessageSendBy":myId,
-        };
-        DatabaseMethods().updateLastMessageSend(widget.chatRoomId, lastMessageInfoMap);
-        if(sendImage){
-          _selectedImage=null;
-          setState(() {
-
-          });
+      if(widget.group){
+        DatabaseMethods().addMessage2(widget.chatRoomId, messInfoMap).then((value){
+          Map<String,dynamic> lastMessageInfoMap={
+            "LastMessage":"Đã gửi 1 ảnh",
+            "LastMessageSendTs":timeNow,
+            "Time":DateTime.now().toString(),
+            "LastMessageSendBy":myId,
+          };
+          DatabaseMethods().updateLastMessageSend2(widget.chatRoomId, lastMessageInfoMap);
+          if(sendImage){
+            _selectedImage=null;
+          }
+        });
+      }else{
+        DatabaseMethods().addMessage(widget.chatRoomId, messInfoMap).then((value){
+          Map<String,dynamic> lastMessageInfoMap={
+            "LastMessage":"Đã gửi 1 ảnh",
+            "LastMessageSendTs":timeNow,
+            "Time":DateTime.now().toString(),
+            "LastMessageSendBy":myId,
+          };
+          DatabaseMethods().updateLastMessageSend(widget.chatRoomId, lastMessageInfoMap);
+          if(sendImage){
+            _selectedImage=null;
+          }
+        });
+        if(widget.contactUser!=""){
+          print(widget.contactUser);
+          print("send noti to ${widget.contactUser}");
+          NotificationDetail().sendNotificationToAnyDevice(widget.contactUser,"${widget.name}: đã gửi 1 ảnh" , "Bạn có tin nhắn mới");
         }
-      });
+      }
     }
   }
 
@@ -175,76 +260,41 @@ class _MessageState extends State<Message> {
         "ts":timeNow,
         "time":FieldValue.serverTimestamp(),
       };
-      print(messInfoMap);
-      DatabaseMethods().addMessage(widget.chatRoomId, messInfoMap).then((value){
-        Map<String,dynamic> lastMessageInfoMap={
-          "LastMessage":"Đã gửi 1 đoạn ghi âm",
-          "LastMessageSendTs":timeNow,
-          "Time":DateTime.now().toString(),
-          "LastMessageSendBy":myId,
-        };
-        DatabaseMethods().updateLastMessageSend(widget.chatRoomId, lastMessageInfoMap);
-      });
+      if(widget.group){
+        DatabaseMethods().addMessage2(widget.chatRoomId, messInfoMap).then((value){
+          Map<String,dynamic> lastMessageInfoMap={
+            "LastMessage":"Đã gửi 1 đoạn ghi âm",
+            "LastMessageSendTs":timeNow,
+            "Time":DateTime.now().toString(),
+            "LastMessageSendBy":myId,
+          };
+          DatabaseMethods().updateLastMessageSend2(widget.chatRoomId, lastMessageInfoMap);
+        });
+      }else{
+        DatabaseMethods().addMessage(widget.chatRoomId, messInfoMap).then((value){
+          Map<String,dynamic> lastMessageInfoMap={
+            "LastMessage":"Đã gửi 1 đoạn ghi âm",
+            "LastMessageSendTs":timeNow,
+            "Time":DateTime.now().toString(),
+            "LastMessageSendBy":myId,
+          };
+          DatabaseMethods().updateLastMessageSend(widget.chatRoomId, lastMessageInfoMap);
+        });
+        if(widget.contactUser!=""){
+          print(widget.contactUser);
+          print("send noti to ${widget.contactUser}");
+          NotificationDetail().sendNotificationToAnyDevice(widget.contactUser,"${widget.name}: đã gửi 1 đoạn thoại" , "Bạn có tin nhắn mới");
+        }
+      }
     }
   }
-
-
-  Widget chatMessageTitle(String message ,String imageUrl, String audioUrl,bool sendByMe , String time){
-    return Row(
-      mainAxisAlignment: sendByMe? MainAxisAlignment.end:MainAxisAlignment.start,
-      children: [
-        Flexible(
-          child: Container(
-            padding: EdgeInsets.all(16),
-            margin: EdgeInsets.symmetric(horizontal: 16,vertical: 4),
-            decoration: BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(24),
-              bottomRight: sendByMe?Radius.circular(0):Radius.circular(24),topRight: Radius.circular(24),
-              bottomLeft: sendByMe ? Radius.circular(24):Radius.circular(0),),
-              color: sendByMe? Colors.blue.shade400.withOpacity(0.2):Colors.grey.shade50,
-            ),
-            child: Column(
-              crossAxisAlignment: sendByMe ?CrossAxisAlignment.end: CrossAxisAlignment.start,
-              children: [
-                if(message!="")
-                  Text(message, style: TextStyle(fontSize: 18,fontWeight: FontWeight.w500,color: Colors.black),),
-                if(imageUrl!="")
-                  Image(image: Image.network(imageUrl).image,height: 400,width: MediaQuery.of(context).size.width/2,),
-                if(audioUrl!="")
-                  Container(
-                    width: MediaQuery.of(context).size.width/2,
-                   child: Row(
-                     children: [
-                       IconButton(
-                           onPressed: ()async{
-                             // await player.setSourceUrl(audioUrl);
-                             //  print(player.setSourceUrl(audioUrl,mimeType: acc));
-                             await player.play(UrlSource(audioUrl));
-                             //duration= await player.getDuration();
-                           },
-                           icon: Icon(Icons.play_arrow)),
-                       Expanded(child: LinearProgressIndicator(
-                         value: 1,
-                       )),
-                       // Text(duration.toString()),
-                     ],
-                   ),
-                  ),
-                Text(time,style: TextStyle(color: Colors.black38),),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.cyan.shade100,
+      backgroundColor: themeColor,
       appBar: AppBar(
-        backgroundColor: Colors.cyan.shade100,
+        backgroundColor: themeColor,
         automaticallyImplyLeading: false,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -259,28 +309,33 @@ class _MessageState extends State<Message> {
                         Navigator.of(context).pop();
                       },
                       child: Icon(Icons.arrow_back_rounded, size: 30,)),
-                  CircleAvatar(
-                    backgroundImage: Image.network(widget.image).image,
+                  widget.image==""?CircleAvatar(
+                    backgroundColor: Colors.blue,
+                  ): CircleAvatar(
+                    backgroundImage:Image.network(widget.image).image,
                     radius: 20,
                   ),
                   Text(widget.name),
                 ],
               ),
             ),
-            Icon(Icons.info),
+            IconButton(
+                onPressed: (){
+                    if(widget.group){
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context)=>InfoChatroom(idChatRoom: widget.chatRoomId,)));
+                    }else{
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context)=>InfoMess(idChatRoom: widget.chatRoomId,)));
+                    }
+
+                },
+                icon: Icon(Icons.info)),
           ],
         ),
       ),
-
-
-
-
-
       body: Container(
         child: StreamBuilder<QuerySnapshot>(
           stream: messRoom ,
           builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
-            print(snapshot.hasData);
             if(snapshot.connectionState == ConnectionState.waiting){
               return Center(child: CircularProgressIndicator(),);
             }
@@ -288,6 +343,7 @@ class _MessageState extends State<Message> {
               return Center(child: Text("Các bạn hiện đã là bạn bè , hãy gửi lời nhắn cho nhau"),);
             }
             return ListView.builder(
+              padding: EdgeInsets.only(left: 10),
                 reverse: true,
                 itemCount:  snapshot.data!.size,
                 itemBuilder: (context , index){
@@ -310,74 +366,91 @@ class _MessageState extends State<Message> {
                     } catch (e) {
                       audio = ""; // gán giá trị mặc định nếu không tồn tại trường image
                     }
-                    return chatMessageTitle(mess,image, audio ,myId==snapshot.data!.docs[index]["sendBy"],snapshot.data!.docs[index]["ts"]);
+                    //return chatMessageTitle(mess,image, audio ,snapshot.data!.docs[index]["sendBy"],snapshot.data!.docs[index]["ts"]);
+                  return ChatMessageTitle(key: ValueKey(ds.id) ,theme: themeColor.value.toString() , group: widget.group,message: mess, imageUrl: image, audioUrl: audio, sendByMe: snapshot.data!.docs[index]["sendBy"], time: snapshot.data!.docs[index]["ts"]);
                 },
             );
           },
         ),
       ),
+      bottomNavigationBar: StreamBuilder(stream: statusStream, builder: (context , AsyncSnapshot<String> snapshot){
+          if(!snapshot.hasData){
+            return Text("Khong co data");
+          }
+          if(snapshot.data==""){
 
-
-
-
-
-      bottomNavigationBar: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.only(left: 10,right: 10),
-              margin: EdgeInsets.only(top: 10,left: 20,right: 20,bottom: MediaQuery.of(context).viewInsets.bottom+20,),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color:Colors.white
-              ),
+            return SingleChildScrollView(
               child: Column(
                 children: [
-                  _selectedImage!=null?Container(
-                    margin: EdgeInsets.only(top: 20),
-                    width: MediaQuery.of(context).size.width/1,
-                    child: Image(
-                      image: Image.file(_selectedImage!).image,
-                      fit: BoxFit.cover,
-                      width: MediaQuery.of(context).size.width/1,
-                      height: 400,
+                  Container(
+                    padding: EdgeInsets.only(left: 10,right: 10),
+                    margin: EdgeInsets.only(top: 10,left: 20,right: 20,bottom: MediaQuery.of(context).viewInsets.bottom+20,),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color:Colors.white
                     ),
-                  ):
-                  SizedBox(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(Icons.camera_alt_outlined,size: 30,),
-                     IconButton(
-                          onPressed: ()async{
-                              _pickImageGallery();
-                          },
-                          icon: Icon(Icons.photo_album_outlined,size: 30,)),
-                      GestureDetector(
-                        onLongPress: ()async{
-                          await startRecording();
-                        },
-                        onLongPressEnd: (longEnd)async{
-                          await stopRecording();
-                          await addAudio(_audioPath!);
-                        },
-                        child: IconButton(
-                            onPressed: (){},
-                            icon: Icon(Icons.mic_rounded,size: 30,)),
-                      ),
-                     Container(
-                              width: MediaQuery.of(context).size.width/2.6,
-                            margin: EdgeInsets.all(8),
-                            padding: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
+                    child: Column(
+                      children: [
+                        _selectedImage!=null?Container(
+                          margin: EdgeInsets.only(top: 20),
+                          width: MediaQuery.of(context).size.width/1,
+                          child: Image(
+                            image: Image.file(_selectedImage!).image,
+                            fit: BoxFit.cover,
+                            width: MediaQuery.of(context).size.width/1,
+                            height: 400,
+                          ),
+                        ):
+                        SizedBox(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            openKeyBroad==false? IconButton(
+                                padding: EdgeInsets.all(-4),
+                                onPressed: ()async{
+                                  await _pickImageCamera();
+                                },
+                                icon: Icon(Icons.camera_alt_outlined,size: 30,)):SizedBox(),
+                            openKeyBroad==false? IconButton(
+                                padding: EdgeInsets.all(-4),
+                                onPressed: ()async{
+                                  _pickImageGallery();
+                                },
+                                icon: Icon(Icons.photo_album_outlined,size: 30,)):SizedBox(),
+                            openKeyBroad==false? GestureDetector(
+                              onLongPress: ()async{
+                                await startRecording();
+                              },
+                              onLongPressEnd: (longEnd)async{
+                                await stopRecording();
+                                await addAudio(_audioPath!);
+                              },
+                              child: IconButton(
+                                  padding: EdgeInsets.all(-4),
+                                  onPressed: (){},
+                                  icon: Icon(Icons.mic_rounded,size: 30,)),
+                            ):SizedBox(),
+                            Container(
+                              width: openKeyBroad? MediaQuery.of(context).size.width/1.4:MediaQuery.of(context).size.width/2.6,
+                              margin: EdgeInsets.only(top: 8,bottom: 8),
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
                                 color: Colors.grey.shade200,
-                            ),
-                            child: TextField(
+                              ),
+                              child: TextField(
+                                onTapOutside: (e){
+                                  FocusScope.of(context).unfocus();
+                                  setState(() {
+                                    openKeyBroad=false;
+                                  });
+                                },
                                 onTap: (){
-                                    setState(() {
-                                      _emojiShowing=false;
-                                    });
+
+                                  setState(() {
+                                    openKeyBroad=true;
+                                    _emojiShowing=false;
+                                  });
                                 },
                                 scrollController: _scrollController,
                                 controller: messController,
@@ -393,74 +466,126 @@ class _MessageState extends State<Message> {
                                   }
                                 },
                                 decoration: InputDecoration(
-                                  helperMaxLines: 1,
-                                   // contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+                                    helperMaxLines: 1,
+                                    // contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
                                     border: InputBorder.none,
-                                  suffixIcon: IconButton(
-                                      onPressed: (){
-                                        setState(() {
-                                          _emojiShowing = !_emojiShowing;
-                                          if (_emojiShowing) {
-                                            FocusScope.of(context).unfocus(); // Ẩn bàn phím
-                                          }
-                                        });
-                                      },
-                                      icon: Icon(Icons.emoji_emotions_outlined,size: 30,)),
-                                  hintText: "Nhắn tin"
+                                    suffixIcon: IconButton(
+                                        onPressed: (){
+                                          setState(() {
+                                            _emojiShowing = !_emojiShowing;
+                                            if (_emojiShowing) {
+                                              FocusScope.of(context).unfocus(); // Ẩn bàn phím
+                                            }
+                                          });
+                                        },
+                                        icon: Icon(Icons.emoji_emotions_outlined,size: 30,)),
+                                    hintText: "Nhắn tin"
                                 ),
+                              ),
                             ),
-                          ),
-                      haveContent?IconButton(
-                        highlightColor: Colors.orangeAccent,
-                        onPressed: (){
-                          if(messController.text==""){
-                            addImage(true);
-                            print("Da gui hinh anh");
-                          }else{
-                            addMessage(true);
-                            print("Da gui tin nhan");
-                          }
-                          setState(() {
+                            haveContent?IconButton(
+                                highlightColor: Colors.orangeAccent,
+                                onPressed: (){
+                                  if(messController.text==""){
+                                    addImage(true);
+                                    print("Da gui hinh anh");
+                                  }else{
+                                    addMessage(true);
+                                    print("Da gui tin nhan");
+                                  }
+                                  setState(() {
 
-                          });
-                        },
-                        icon:  Icon(Icons.send_outlined,size: 30,)) :Icon(Icons.thumb_up,size: 30,),
-                    ],
+                                  });
+                                },
+                                icon: Icon(Icons.send_outlined,size: 30,)) :Icon(Icons.thumb_up,size: 30,),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Offstage(
+                    offstage: !_emojiShowing,
+                    child: EmojiPicker(
+                      onEmojiSelected: (a ,b){
+                        setState(() {
+                          haveContent=true;
+                        });
+                      },
+                      textEditingController: messController,
+                      scrollController: _scrollController,
+                      config: Config(
+                        bottomActionBarConfig: BottomActionBarConfig(showBackspaceButton: false ,showSearchViewButton: false),
+                        height: 300,
+                        checkPlatformCompatibility: true,
+                        emojiViewConfig: EmojiViewConfig(
+                          // Issue: https://github.com/flutter/flutter/issues/28894
+                          emojiSizeMax: 28 *
+                              (foundation.defaultTargetPlatform ==
+                                  TargetPlatform.iOS
+                                  ? 1.2
+                                  : 1.0),
+                        ),
+                        swapCategoryAndBottomBar: true,
+                        skinToneConfig: const SkinToneConfig(),
+                        categoryViewConfig: const CategoryViewConfig(),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-            Offstage(
-              offstage: !_emojiShowing,
-              child: EmojiPicker(
-                onEmojiSelected: (a ,b){
-                   setState(() {
-                     haveContent=true;
-                   });
-                },
-                textEditingController: messController,
-                scrollController: _scrollController,
-                config: Config(
-                  bottomActionBarConfig: BottomActionBarConfig(showBackspaceButton: false ,showSearchViewButton: false),
-                  height: 256,
-                  checkPlatformCompatibility: true,
-                  emojiViewConfig: EmojiViewConfig(
-                    // Issue: https://github.com/flutter/flutter/issues/28894
-                    emojiSizeMax: 28 *
-                        (foundation.defaultTargetPlatform ==
-                            TargetPlatform.iOS
-                            ? 1.2
-                            : 1.0),
-                  ),
-                  swapCategoryAndBottomBar: true,
-                  skinToneConfig: const SkinToneConfig(),
-                  categoryViewConfig: const CategoryViewConfig(),
+            );
+          }else{
+            if(snapshot.data==myId){
+              print("Id block :  ${snapshot.data}");
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
+                height: MediaQuery.of(context).size.height/11,
+                child: Column(
+                  children: [
+                    Text(
+                      "Hiện tại bạn đã chặn liên lạc từ người này!",style: TextStyle(
+                        color: Colors.grey,fontWeight: FontWeight.w600 , fontSize: 18
+                    ),
+                    ),
+                   TextButton(onPressed: ()async{
+                      Map<String , dynamic> info={
+                        "block":"",
+                      };
+                      await FirebaseFirestore.instance.collection("chatrooms").doc(widget.chatRoomId).update(info);
+                      setState(() {
+                        block="";
+                        statusStream = getStatus(widget.chatRoomId);
+                      });
+                    }, child: Text("Bỏ chặn")),
+                  ],
+                ),
+              );
+
+            }
+            if(snapshot.data!=myId){
+              print("Id be block :  ${snapshot.data}");
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                ),
+                height: MediaQuery.of(context).size.height/11,
+                child: Column(
+                  children: [
+                   Text(
+                      "Hiện tại bạn không thể liên lạc với người này!",style: TextStyle(
+                        color: Colors.grey,fontWeight: FontWeight.w600 , fontSize: 18
+                    ),
+                    ),
+                    TextButton(onPressed: (){}, child: Text("Tìm hiểu thêm"))
+                  ],
+                ),
+              );
+            }
+            return Text("Co data , co block");
+          }
+      })
     );
 
   }

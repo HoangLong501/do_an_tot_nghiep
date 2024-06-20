@@ -22,8 +22,8 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
   File? _selectedImage;
   bool typed=false;
   String idUser="" , username="" , newsFeedId="" , urlImage="";
-
-
+  int _selectedValue = 1;
+  String status="";
   Future _pickImageGallery()async{
     final returnImage = await ImagePicker().pickImage(source: ImageSource.gallery);
     setState(() {
@@ -56,13 +56,12 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
         "ts": timeNow,
         "newTimestamp":timestamp,
         "react": [],
-        "id_comment":idComment,
       };
       Map<String, dynamic> commentInfoMap = {
         "ID":idComment,
       };
       await DatabaseMethods().addNews(idUser, id, newsInfoMap);
-      await DatabaseMethods().initComment(idComment, commentInfoMap);
+      //await DatabaseMethods().initComment(idComment, commentInfoMap);
     }
   }
 
@@ -134,7 +133,7 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                               children: [
                                 CircleAvatar(
                                   backgroundImage: Image.network("https://www.dolldivine.com/rinmaru/cartoon-avatar-creator-thumbnail.jpg").image,
-                                  radius: 24,
+                                  radius: 30,
                                 ),
                                 SizedBox(width: 14,),
                                 Column(
@@ -143,19 +142,89 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                                     Text(username,style: TextStyle(fontSize: 18,fontWeight: FontWeight.w500),),
                                     Row(
                                       children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(4),
-                                            color: Colors.lightBlueAccent.shade100
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(2),
-                                            child: Row(
-                                              children: [
-                                                Icon(Icons.lock,size: 16,color: Colors.blue.shade600,),
-                                                Text("Chỉ mình tôi",style: TextStyle(color:Colors.blue.shade600, ),),
-                                                Icon(Icons.arrow_drop_down,size: 16,color: Colors.blue.shade600,),
-                                              ],
+                                        TextButton(
+                                          onPressed: (){
+                                            showDialog(context: context, builder: (context) {
+                                              return StatefulBuilder(
+                                                builder: (context, setState) {
+                                                  return AlertDialog(
+                                                    title: Text("Điều chỉnh trạng thái", style: TextStyle(fontSize: 20)),
+                                                    content: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        ListTile(
+                                                          title: const Text('Chỉ mình tôi'),
+                                                          leading: Radio(
+                                                            value: 1,
+                                                            groupValue: _selectedValue,
+                                                            onChanged: (int? value) {
+                                                              setState(() {
+                                                                _selectedValue = value!;
+                                                              });
+                                                              print(_selectedValue);
+                                                            },
+                                                          ),
+                                                        ),
+                                                        ListTile(
+                                                          title: const Text('Bạn bè'),
+                                                          leading: Radio(
+                                                            value: 2,
+                                                            groupValue: _selectedValue,
+                                                            onChanged: (int? value) {
+                                                              setState(() {
+                                                                _selectedValue = value!;
+                                                              });
+                                                              print(_selectedValue);
+                                                            },
+                                                          ),
+                                                        ),
+                                                        ListTile(
+                                                          title: const Text('Công khai'),
+                                                          leading: Radio(
+                                                            value: 3,
+                                                            groupValue: _selectedValue,
+                                                            onChanged: (int? value) {
+                                                              setState(() {
+                                                                _selectedValue = value!;
+                                                              });
+                                                              print(_selectedValue);
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    actions: [
+                                                      TextButton(onPressed: ()async{
+                                                        Navigator.of(context).pop();
+                                                        if(_selectedValue==1){
+
+                                                        }else if (_selectedValue==2){
+
+                                                        }else{
+
+                                                        }
+                                                        //print(_selectedValue);
+                                                      }, child: Text("Oke"))
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            });
+                                          },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(4),
+                                              color: Colors.lightBlueAccent.shade100
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(2),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.lock,size: 16,color: Colors.blue.shade600,),
+                                                  Text(_selectedValue==1?"Chỉ mình tôi":_selectedValue==2?"Bạn bè":"Công khai",style: TextStyle(color:Colors.blue.shade600, ),),
+                                                  Icon(Icons.arrow_drop_down,size: 16,color: Colors.blue.shade600,),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),

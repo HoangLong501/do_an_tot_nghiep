@@ -1,32 +1,35 @@
-import 'dart:ffi';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/commentDetail.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
-import 'package:flutter/gestures.dart';
 import 'package:intl/intl.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:random_string/random_string.dart';
 class Comment2 extends StatefulWidget {
- final String idComment , idNewsfeed , idPoster;
-  const Comment2({super.key ,required this.idComment,required this.idNewsfeed , required this.idPoster});
+ final String  idNewsfeed , idPoster;
+  const Comment2({super.key ,required this.idNewsfeed , required this.idPoster});
   @override
   State<Comment2> createState() => _CommentState();
 }
 class _CommentState extends State<Comment2> {
   TextEditingController contentController = TextEditingController();
+  TextEditingController replyController = TextEditingController();
   List react=[];
   int sumReact=0;
   String? idUserComment;
   Stream<QuerySnapshot>? streamComment;
-
+  String myName="", myImageAvatar="";
+  bool reply=false;
+  List<bool> showCustomWidget=[];
   onLoad()async{
-    print(widget.idNewsfeed);
-    streamComment = DatabaseMethods().getCommentStream(widget.idComment);
+    streamComment = DatabaseMethods().getCommentStream(widget.idNewsfeed);
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(widget.idPoster).collection("myNewsfeed").doc(widget.idNewsfeed).get();
     react=data.get("react") ;
     sumReact= react.length;
     idUserComment = await SharedPreferenceHelper().getIdUser();
-
+    DocumentSnapshot documentSnapshot1 = await FirebaseFirestore.instance.collection("user").doc(idUserComment).get();
+    myName = documentSnapshot1.get("Username");
+    myImageAvatar = documentSnapshot1.get("imageAvatar");
     setState(() {
 
     });
@@ -50,7 +53,7 @@ class _CommentState extends State<Comment2> {
     return FractionallySizedBox(
       heightFactor: 0.8,
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           automaticallyImplyLeading: false,
           title:  Row(
@@ -71,96 +74,200 @@ class _CommentState extends State<Comment2> {
             ],
           ),
         ),
-        body: SingleChildScrollView(
-          child:  Column(
+        body:  Column(
               children: [
-                Container(
-                  width: MediaQuery.of(context).size.width/1,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                  ),
-                  height: MediaQuery.of(context).size.height/1.3,
-                  child: Column(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(),
-                        height: 535,
-                        child: StreamBuilder(
-                          stream: streamComment,
-                          builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
-                            if(snapshot.connectionState == ConnectionState.waiting){
-                              return Center(child: CircularProgressIndicator());
-                            }
-                            if(!snapshot.hasData){
-                              return Center(child: Text("Chưa có comment"));
-                            }
-                            if (snapshot.hasData) {
-                              return SingleChildScrollView(
-                                child: Column(
-                                  children: snapshot.data!.docs.map((document){
-                                    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                                    return CommentDetail(key: ValueKey(document.id),idUser: data["id_user_comment"], content: data["content"], time: data["time"]);
-                                  }).toList(),
-                                ),
-                              );
-                            }else{
-                              return Center(child: Text(" Dòng 306 Invalid data format"));
-                            }
-
-                          },
-                        ),
-                      ),
-                    ],
+                Expanded(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width/1,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                    ),
+                    child:StreamBuilder(
+                            stream: streamComment,
+                            builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
+                              if(snapshot.connectionState == ConnectionState.waiting){
+                                return Center(child: CircularProgressIndicator());
+                              }
+                              if(!snapshot.hasData){
+                                return Center(child: Text("Chưa có comment"));
+                              }
+                              if (snapshot.hasData) {
+                                if (showCustomWidget.length != snapshot.data!.docs.length) {
+                                  showCustomWidget =
+                                  List<bool>.filled(snapshot.data!.docs.length, false);
+                                }
+                                return ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: snapshot.data!.size,
+                                      itemBuilder: (context ,index){
+                                        return Container(
+                                          width: MediaQuery.of(context).size.width/2,
+                                          margin: EdgeInsets.only(top: 10,bottom: 20,left: 20,right: 20),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade200,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child:Column(
+                                              children: [
+                                                CommentDetail(key: ValueKey(snapshot.data), idComment: snapshot.data!.docs[index]["id_comment"],idNews: widget.idNewsfeed ,idUser: snapshot.data!.docs[index]["id_user_comment"], content: snapshot.data!.docs[index]["content"], time: snapshot.data!.docs[index]["time"]),
+                                                Container(
+                                                  margin:EdgeInsets.only(left: 100 ,),
+                                                  child: Row(children: [
+                                                    TextButton(onPressed: (){},child: Text("thích",style: TextStyle(color: Colors.blue),)),
+                                                    TextButton(onPressed: (){
+                                                      setState(() {
+                                                        // Reset tất cả các phần tử về false
+                                                        for (int i = 0; i < showCustomWidget.length; i++) {
+                                                          showCustomWidget[i] = false;
+                                                        }
+                                                        // Chỉ bật phần tử được chọn
+                                                        showCustomWidget[index] = true;
+                                                      });
+                                                    },child: Text("Trả lời",style: TextStyle(color: Colors.blue),)),
+                                                  ],),
+                                                ),
+                                                if (showCustomWidget[index])
+                                                  Container(
+                                                    margin: EdgeInsets.only(top: 10,bottom: 10,left: 40),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.start,
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Container(
+                                                          margin: EdgeInsets.only(right: 10),
+                                                          child: myImageAvatar==""?CircleAvatar(
+                                                            backgroundColor: Colors.white30,
+                                                          ): CircleAvatar(
+                                                            radius: 24,
+                                                            // backgroundImage: Image.network(imageAvatar ,).image,),
+                                                            backgroundImage: Image.network(myImageAvatar,).image,),
+                                                        ),
+                                                        Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              Text(myName , style: TextStyle(fontSize: 16,fontWeight: FontWeight.w500),),
+                                                              Container(
+                                                                  width: MediaQuery.of(context).size.width/1.6,
+                                                                  padding: EdgeInsets.only(left: 10),
+                                                                  decoration: BoxDecoration(
+                                                                    color: Colors.grey.shade100,
+                                                                    borderRadius: BorderRadius.circular(20),
+                                                                  ),
+                                                                  child: TextField(
+                                                                    onTap: (){
+                                                                        setState(() {
+                                                                          reply=true;
+                                                                        });
+                                                                    },
+                                                                    onTapOutside: (e){
+                                                                      setState(() {
+                                                                        reply=false;
+                                                                      });
+                                                                    },
+                                                                    controller: replyController,
+                                                                    maxLines: null,
+                                                                    decoration: InputDecoration(
+                                                                      hintText: "Viết bình luận",
+                                                                      hintStyle: TextStyle(color: Colors.grey),
+                                                                      border: InputBorder.none,
+                                                                      suffixIcon: IconButton(onPressed: ()async{
+                                                                        DateTime now = DateTime.now();
+                                                                        String timeNow = DateFormat('h:mma').format(now);
+                                                                        String id = randomAlphaNumeric(10);
+                                                                        Timestamp timestamp = Timestamp.fromDate(now);
+                                                                        Map<String, dynamic> commentInfoMap = {
+                                                                          "id_comment": snapshot.data!.docs[index]["id_comment"],
+                                                                          "id_user_comment": idUserComment,
+                                                                          "content": replyController.text,
+                                                                          "timestamp":timestamp,
+                                                                          "time": timeNow,
+                                                                        };
+                                                                        await DatabaseMethods().addReplyCommentDetail(widget.idNewsfeed, snapshot.data!.docs[index]["id_comment"], commentInfoMap);
+                                                                        replyController.clear();
+                                                                        setState(() {
+                                                                          showCustomWidget[index] = false;
+                                                                        });
+                                                                      }, icon: Icon(Icons.send)),
+                                                                    ),
+                                                                  )),
+                                                            ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  )
+                                              ],
+                                            ),
+                                        );
+                                  });
+                              }else{
+                                return Center(child: Text(" Dòng 306 Invalid data format"));
+                              }
+                            },
+                          ),
                   ),
                 ),
+                Offstage()
               ],
-            ),
         ),
-        bottomNavigationBar: SingleChildScrollView(
+        bottomNavigationBar: !reply? Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: Container(
-            margin: EdgeInsets.only(top: 10,left: 20,right: 20,bottom: MediaQuery.of(context).viewInsets.bottom+20,
+            margin: EdgeInsets.only(
+              top: 10,
+              left: 20,
+              right: 20,
+              bottom: 20,
             ),
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Colors.grey.shade400.withOpacity(0.4)
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.grey.shade400.withOpacity(0.4),
             ),
             child: Container(
-              margin: EdgeInsets.only(left: 20 ),
-              child:  TextField(
-                  onTap: (){
-                    print("Tap vao input");
-                  },
-                  controller: contentController,
-                  decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: "Viết bình luận",
-                      suffixIcon: IconButton(
-                      onPressed: ()async {
-                        if(contentController.text=="" || contentController.text.isEmpty){
-                        }else{
-                          DateTime now = DateTime.now();
-                          String timeNow = DateFormat('h:mma').format(now);
-                          Map<String,dynamic> commentInfoMap={
-                            "id_user_comment":idUserComment,
-                            "content":contentController.text,
-                            "time":timeNow,
-                          };
-                          await DatabaseMethods().addCommentDetail(widget.idComment, commentInfoMap);
-                          print(commentInfoMap);
-                            contentController.clear();
-                        }
+              margin: EdgeInsets.only(left: 20),
+              child: TextField(
+                onTap: () {
+                  print("Tap vao input");
+                },
+                controller: contentController,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: "Viết bình luận",
+                  suffixIcon: IconButton(
+                    onPressed: () async {
+                      if (contentController.text == "" ||
+                          contentController.text.isEmpty) {
+                      } else {
+                        DateTime now = DateTime.now();
+                        String timeNow = DateFormat('h:mma').format(now);
+                        String id = randomAlphaNumeric(10);
+                        Timestamp timestamp = Timestamp.fromDate(now);
+                        Map<String, dynamic> commentInfoMap = {
+                          "id_comment":id,
+                          "id_user_comment": idUserComment,
+                          "content": contentController.text,
+                          "time": timeNow,
+                          "timestamp":timestamp
+                        };
 
-                        setState(() {
-
-                        });
-                      },
-                      icon: Icon(Icons.send),
+                        print(commentInfoMap);
+                        await DatabaseMethods()
+                            .addCommentDetail(widget.idNewsfeed,id, commentInfoMap);
+                        print(commentInfoMap);
+                        contentController.clear();
+                      }
+                      setState(() {
+                       // showCustomWidget.add(false);
+                      });
+                    },
+                    icon: Icon(Icons.send),
                   ),
                 ),
               ),
             ),
           ),
-      ),
+        ):SizedBox(),
       ),
     );
   }

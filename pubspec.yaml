@@ -65,7 +65,9 @@ dev_dependencies:
   flutter_sound: ^9.2.13
   permission_handler: ^11.3.1
   audioplayers: ^6.0.0
-
+  flutter_typeahead: ^5.2.0
+  video_player: ^2.8.6
+  flutter_colorpicker: ^1.1.0
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
