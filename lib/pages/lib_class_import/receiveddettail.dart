@@ -121,12 +121,14 @@ onLoad() async{
                                   DatabaseMethods().addFriends(widget.idReceived, idReceiveds, receivedInfoMap);
                                   DatabaseMethods().addFriends(idReceiveds,widget.idReceived , requestInfoMap);
                                   String idRoomChat = SharedPreferenceHelper().getChatRoomIdUserName(idReceiveds, widget.idReceived);
+                                  String theme = Colors.cyan.shade200.value.toString();
                                   Map<String , dynamic> chatRoomInfoMap={
                                     "LastMessage":"Các bạn hiện đã là bạn bè , hãy gửi lời nhắn cho nhau",
                                     "UserContact":widget.idReceived,
                                     "ID":idRoomChat,
                                     "Time":DateTime.now().toString(),
                                     "user":[idReceiveds,widget.idReceived],
+                                    "Theme":theme,
                                   };
                                   DatabaseMethods().createChatRoom(idRoomChat, chatRoomInfoMap);
                                  print("id nhấn vào:${widget.idReceived}");

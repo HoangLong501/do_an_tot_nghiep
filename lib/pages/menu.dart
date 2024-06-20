@@ -1,3 +1,5 @@
+import 'package:do_an_tot_nghiep/fan_page/create_new_page.dart';
+import 'package:do_an_tot_nghiep/fan_page/name_fanpage.dart';
 import 'package:do_an_tot_nghiep/pages/add_friend/friend.dart';
 import 'package:do_an_tot_nghiep/pages/add_friend/received.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
@@ -109,14 +111,19 @@ class _MenuState extends State<Menu> {
                     ],
                   ),
                   SizedBox(height: 20,),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(CupertinoIcons.plus_circle_fill,color: Colors.grey.shade700,size: 30,),
-                      Text("Tạo trang cá nhân hoặc Trang mới",
-                      style: TextStyle(fontSize: 20,color: Colors.grey.shade700),
-                      ),
-                    ],
+                  GestureDetector(
+                    onTap: (){
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context)=>CreateNewPage()));
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(CupertinoIcons.plus_circle_fill,color: Colors.grey.shade700,size: 30,),
+                        Text("Tạo trang cá nhân hoặc Trang mới",
+                        style: TextStyle(fontSize: 20,color: Colors.grey.shade700),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -168,21 +175,26 @@ class _MenuState extends State<Menu> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  width: MediaQuery.of(context).size.width/2.4,
-                  height: 100,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color:Colors.white
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 20,left:20 ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.flag,size: 30,color: Colors.orange,),
-                        Text("Trang",style: TextStyle(fontSize: 18,fontWeight: FontWeight.w700),)
-                      ],
+                GestureDetector(
+                  onTap: (){
+
+                  },
+                  child: Container(
+                    width: MediaQuery.of(context).size.width/2.4,
+                    height: 100,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color:Colors.white
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 20,left:20 ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.flag,size: 30,color: Colors.orange,),
+                          Text("Trang",style: TextStyle(fontSize: 18,fontWeight: FontWeight.w700),)
+                        ],
+                      ),
                     ),
                   ),
                 ),

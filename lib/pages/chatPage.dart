@@ -1,5 +1,6 @@
 import 'dart:async';
-
+import 'package:do_an_tot_nghiep/pages/group_chat.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:do_an_tot_nghiep/pages/chatroom.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
@@ -15,8 +16,10 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
 
-  Stream<QuerySnapshot>? listChatRoom;
+  Stream<QuerySnapshot>? listChatRoom , listGroupChat;
+  StreamSubscription? _currentStreamSubscription;
   String? id ;
+  bool swapChat =true;
   onLoad()async{
     id=await SharedPreferenceHelper().getIdUser();
     listChatRoom = DatabaseMethods().getChatRooms(id!);
@@ -29,9 +32,48 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     onLoad();
   }
+  @override
+  void dispose() {
+    _currentStreamSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    Widget loadStream;
+    loadStream = StreamBuilder<QuerySnapshot>(stream: listChatRoom,
+        builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
+          if(snapshot.hasData){
+            return Column(
+              children: snapshot.data!.docs.map((data){
+                String contact;
+                String nameGroup , nameSend;
+                try{
+                  contact =data.get("UserContact");
+                }
+                catch(e){
+                  contact="";
+                }
+                 try{
+                   nameGroup =data.get("NameGroup");
+                 }
+                 catch(e){
+                   nameGroup="";
+                 }
+                try{
+                  nameSend =data.get("userSent");
+                }
+                catch(e){
+                  nameSend="";
+                }
+                return ChatRoom(chatRoomId: data["ID"], lastMessage: data["LastMessage"], idUser: contact, time: data["Time"].toString(),nameGroup: nameGroup,nameSend: nameSend,);
+              }).toList(),
+            );
+          }else{
+            return Text("No data");
+          }
+        }
+    );
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -41,30 +83,17 @@ class _ChatPageState extends State<ChatPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                    decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(100)
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Icon(Icons.menu,size: 28,),
-                    ),
-                ),
-                SizedBox(width: 20,),
+                IconButton(
+                    onPressed: (){
+                        Navigator.of(context).pop();
+                    },
+                    icon: Icon(Icons.arrow_back_rounded,size: 30,)),
                 Text("Đoạn chat",style: TextStyle(fontSize: 26,fontWeight: FontWeight.w700),)
               ],
             ),
-            Container(
-              decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(100)
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Icon(Icons.mode_edit_outline_sharp,size: 28,),
-              ),
-            ),
+           IconButton(onPressed: (){
+             Navigator.of(context).push(MaterialPageRoute(builder: (context)=>GroupChat()));
+           }, icon: Icon(Icons.group_add_outlined,size: 30,))
           ],
         ),
       ),
@@ -101,20 +130,10 @@ class _ChatPageState extends State<ChatPage> {
                 ),
             ),
             //Stream để ở đây
-            StreamBuilder<QuerySnapshot>(
-                stream: listChatRoom,
-                builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
-                    if(snapshot.hasData){
-                      return Column(
-                        children: snapshot.data!.docs.map((data){
-                          return ChatRoom(chatRoomId: data["ID"], lastMessage: data["LastMessage"], idUser: data["UserContact"], time: data["Time"]);
-                        }).toList(),
-                      );
-                    }else{
-                      return Text("No data");
-                    }
-                      return Text("Failed access Firebase");
-                }
+
+          
+            Container(
+              child: loadStream,
             ),
           ],
         ),
@@ -124,22 +143,33 @@ class _ChatPageState extends State<ChatPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Column(
-              children: [
-                Icon(Icons.messenger_outline),
-                Text("Đoạn chat"),
-              ],
+            Container(
+              child: Column(
+                children: [
+                  GestureDetector(
+                      onTap:(){
+                        setState(() {
+                          swapChat =!swapChat;
+                          listChatRoom = DatabaseMethods().getChatRooms(id!);
+                        });
+                      },
+                      child: Icon(Icons.messenger_outline ,color: swapChat ? Colors.blue :Colors.black,)),
+                  Text("Đoạn chat" , style: TextStyle(color: swapChat ? Colors.blue :Colors.black,),),
+                ],
+              ),
             ),
             Column(
               children: [
-                Icon(Icons.people),
-                Text("Danh bạ"),
-              ],
-            ),
-            Column(
-              children: [
-                Icon(Icons.newspaper_outlined),
-                Text("Tin"),
+                GestureDetector(
+                    onTap: (){
+                      setState(() {
+                        swapChat =!swapChat;
+                        listChatRoom = DatabaseMethods().getGroupChatStream(id!);
+                        //print(listChatRoom!.isEmpty);
+                      });
+                    },
+                    child: Icon(Icons.people ,color: !swapChat ? Colors.blue :Colors.black,)),
+                Text("Nhóm" , style: TextStyle(color: !swapChat ? Colors.blue :Colors.black,),),
               ],
             ),
           ],

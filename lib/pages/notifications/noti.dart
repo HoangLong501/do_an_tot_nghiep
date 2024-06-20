@@ -1,14 +1,36 @@
 import 'dart:convert';
+import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class  NotificationDetail {
 
-  Future<void> sendAndroidNotification(
-      authorizedSupplierTokenId, body , tittle) async {
+  Future sendNotificationToAnyDevice(String idUserNeedTake , String body , String title)async{
+    List token=[];
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(idUserNeedTake).get();
+    token = data.get("tokens");
+    for (var element in token) {
+      await sendAndroidNotification(element, body, title);
+    }
+  }
+  Future sendNotificationToGroupChat(String idGroupChat, String body , String title)async{
+    String? myId;
+    myId = await SharedPreferenceHelper().getIdUser();
+    List users=[];
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("groupChat").doc(idGroupChat).get();
+    users = data.get("user");
+    users.remove(myId);
+    for (var user in users) {
+      print(user);
+        await sendNotificationToAnyDevice(user, body, title);
+    }
+  }
+
+  Future<void> sendAndroidNotification(authorizedSupplierTokenId, body , title) async {
     try {
       http.Response response = await http.post(
         Uri.parse("https://fcm.googleapis.com/fcm/send"),
@@ -20,7 +42,7 @@ class  NotificationDetail {
           <String, dynamic>{
             'notification': <String, dynamic>{
               'body': body,
-              'title': tittle,
+              'title': title,
             },
             'priority': 'high',
             'data': <String, dynamic>{
