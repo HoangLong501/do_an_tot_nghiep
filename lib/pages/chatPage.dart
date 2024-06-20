@@ -130,6 +130,8 @@ class _ChatPageState extends State<ChatPage> {
                 ),
             ),
             //Stream để ở đây
+
+          
             Container(
               child: loadStream,
             ),

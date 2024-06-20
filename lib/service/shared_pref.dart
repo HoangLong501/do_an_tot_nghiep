@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'dart:convert';
 class SharedPreferenceHelper{
   static String reload="0";
   static String userSinup="0";
@@ -10,6 +10,7 @@ class SharedPreferenceHelper{
   static String userPhoneKey ="USERPHONEKEY";
   static String userSex ="USERSEX";
   static String userBirthDate="USERBIRTHDATE";
+  static String userInfoListKey="SAVERPASS";
 
   Future<bool> saveBirthDate(String getBirthDate) async{
     SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -44,7 +45,11 @@ class SharedPreferenceHelper{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     return preferences.setString(userPhoneKey, getUserPhone);
   }
-
+  Future<bool> saveUserInfoListUser(List<Map<String, dynamic>> infoList) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String userInfoListJson = json.encode(infoList); // Chuyển đổi List thành chuỗi JSON
+    return preferences.setString(userInfoListKey, userInfoListJson);
+  }
   Future<String?> getUerBirthDate()async{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     return preferences.getString(userBirthDate);
@@ -76,6 +81,29 @@ class SharedPreferenceHelper{
   Future<String?> getUserPhone()async{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     return preferences.getString(userPhoneKey);
+  }
+  Future<List<Map<String, dynamic>>?> getUserInfoList() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? userInfoListJson = preferences.getString(userInfoListKey);
+    if (userInfoListJson != null) {
+      List<dynamic> userInfoListDynamic = json.decode(userInfoListJson);
+      List<Map<String, dynamic>> userInfoList = userInfoListDynamic.cast<Map<String, dynamic>>();
+      return userInfoList;
+    } else {
+      return null;
+    }
+  }
+  Future<bool> addUserInfo(Map<String, dynamic> newUserInfo) async {
+    List<Map<String, dynamic>>? userInfoList = await getUserInfoList();
+    if (userInfoList == null) {
+      userInfoList = [];
+    }
+    userInfoList.add(newUserInfo);
+    return await saveUserInfoListUser(userInfoList);
+  }
+  Future<void> deleteUserInfoList() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.remove(userInfoListKey);
   }
   String getChatRoomIdUserName(String a, String b) {
     if (a.compareTo(b) > 0) {
