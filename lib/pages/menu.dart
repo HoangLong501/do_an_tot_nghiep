@@ -1,6 +1,4 @@
 import 'package:do_an_tot_nghiep/fan_page/create_new_page.dart';
-import 'package:do_an_tot_nghiep/fan_page/name_fanpage.dart';
-import 'package:do_an_tot_nghiep/pages/add_friend/friend.dart';
 import 'package:do_an_tot_nghiep/pages/add_friend/received.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/profile.dart';
@@ -100,7 +98,8 @@ class _MenuState extends State<Menu> {
                       ),
                       GestureDetector(
                         onTap: (){
-                          showGridDialog(context,listUserLogin!);
+                          showUserLoginDialog(context,listUserLogin!);
+
                         },
                           child: Icon(
                             Icons.arrow_drop_down_circle_outlined,
@@ -430,151 +429,177 @@ class _MenuState extends State<Menu> {
     //@gmail.comawait SharedPreferenceHelper().saveUserInfoListUser([]);
     Navigator.push(context,MaterialPageRoute(builder: (context)=>Login()));
   }
-  void showGridDialog(BuildContext context, List<Map<String,dynamic>> list) {
+  void showUserLoginDialog(BuildContext context, List<Map<String, dynamic>> listLogin) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (BuildContext context) {
-        return SingleChildScrollView(
-          child: Container(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom
-            ),
-            height: MediaQuery.of(context).size.height/1.6,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  height: 50,
-                  margin: EdgeInsets.only(top: 20),
-                  child:Text(
-                    "Chuyển đổi tài khoản",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600
-                    ),
-                  ) ,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
-                Divider(color: Colors.grey.shade400,thickness: 1,),
-                Container(
-                  height: MediaQuery.of(context).size.height*0.4,
-                  child: ListView.builder(
-                    itemCount: list.length+1,
-                    itemBuilder: (context, index) {
-                      Map<String, dynamic>? userId;
-                      if(index==list.length){
-                       userId = list[index-1];
-                      }else{
-                        userId = list[index];
-                      }
-                      return Expanded(
-                          child: Column(
+                height: MediaQuery.of(context).size.height / 1.6,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: 50,
+                      margin: EdgeInsets.only(top: 20),
+                      child: Text(
+                        "Chuyển đổi tài khoản",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Divider(
+                      color: Colors.grey.shade400,
+                      thickness: 1,
+                    ),
+                    Container(
+                      height: MediaQuery.of(context).size.height * 0.4,
+                      child: ListView.builder(
+                        itemCount: listLogin.length + 1,
+                        itemBuilder: (context, index) {
+                          Map<String, dynamic>? userId;
+                          if (index == listLogin.length) {
+                            userId = listLogin[index - 1];
+                          } else {
+                            userId = listLogin[index];
+                          }
+                          return Column(
                             children: [
-                              SizedBox(height: 20,),
-                               if((index)==list.length)
-                                 Container(
-                                     child:  Row(
-                                       children: [
-                                         SizedBox(width: 20,),
-                                         Container(
-                                           height: 60,
-                                           width: 60,
-                                           decoration: BoxDecoration(
-                                               borderRadius: BorderRadius.circular(30),
-                                               color: Colors.grey.shade200
-                                           ),
-                                           child: IconButton(
-                                               onPressed: (){
-                                                 Navigator.push(context, MaterialPageRoute(builder: (context)=>Login()));
-                                               },
-                                               icon: Icon(Icons.add)
-
-                                           ),
-                                         ),
-                                         Container(
-                                           margin: EdgeInsets.only(left: 20),
-                                           child: Text(
-                                             "thêm tài khoản khác",
-                                             style: TextStyle(
-                                                 fontSize: 20
-                                             ),
-                                           ),
-                                         ),
-                                       ],
-                                     )
-                                 )else
-                               GestureDetector(
-                                  onTap: (){
+                              SizedBox(
+                                height: 20,
+                              ),
+                              if (index == listLogin.length)
+                                Container(
+                                  child: Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                      ),
+                                      Container(
+                                        height: 60,
+                                        width: 60,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(30),
+                                          color: Colors.grey.shade200,
+                                        ),
+                                        child: IconButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => Login(),
+                                              ),
+                                            );
+                                          },
+                                          icon: Icon(Icons.add),
+                                        ),
+                                      ),
+                                      Container(
+                                        margin: EdgeInsets.only(left: 20),
+                                        child: Text(
+                                          "thêm tài khoản khác",
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                GestureDetector(
+                                  onTap: () {
                                     userLogin(userId!["email"], userId["password"]);
                                   },
-                                child:  Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.only(left: 20),
-                                    child: CircleAvatar(
-                                      radius: 30,
-                                      backgroundImage: NetworkImage(userId!["avata"]),
-                                    ),
-                                  ),
-                                  Container(
-                                    margin: EdgeInsets.only(left: 20),
-                                    child: Text(
-                                      userId["name"],
-                                      style: TextStyle(
-                                        fontSize: 20
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.only(left: 20),
+                                        child: CircleAvatar(
+                                          radius: 30,
+                                          backgroundImage: NetworkImage(
+                                            userId!["avata"],
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  IconButton(
-                                      onPressed: (){
-
-                                  },
-                                      icon:Icon(
-                                        Icons.delete
+                                      Container(
+                                        margin: EdgeInsets.only(left: 20),
+                                        child: Text(
+                                          userId["name"],
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                      ),
+                                      Spacer(),
+                                      IconButton(
+                                        onPressed: () async {
+                                          bool confirmed = await showDeleteDialog(context);
+                                          if (confirmed) {
+                                            await SharedPreferenceHelper().deleteUserInfoList(userId!["id"]);
+                                            setState(() {
+                                              listLogin.remove(userId);
+                                            });
+                                          }
+                                        },
+                                        icon: Icon(Icons.delete),
                                       )
-                                  )
-                                ],
-                              )
-                            ),
+                                    ],
+                                  ),
+                                ),
                               Container(
                                 padding: EdgeInsets.only(left: 100),
-                                child: Divider(color: Colors.grey.shade300,thickness: 0.9,),
+                                child: Divider(
+                                  color: Colors.grey.shade300,
+                                  thickness: 0.9,
+                                ),
                               )
                             ],
-                          ),
-
-                      );
-
-                    },
-                  ),
-                ),
-
-                Spacer(),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.blue
-                  ),
-                  width: MediaQuery.of(context).size.width/1.2,
-                  child: TextButton(
-                    onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=>Register()));
-                    },
-                    child: Text(
-                      "Tạo tài khoảng mới",
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white
+                          );
+                        },
                       ),
-
                     ),
-                  ),
+                    Spacer(),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.blue,
+                      ),
+                      width: MediaQuery.of(context).size.width / 1.2,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Register(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Tạo tài khoản mới",
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    )
+                  ],
                 ),
-                SizedBox(height: 20,)
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -599,7 +624,6 @@ class _MenuState extends State<Menu> {
       await SharedPreferenceHelper().saveBirthDate(birthDate);
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
     } on FirebaseAuthException catch (e) {
-      print("aaaaaaaaaaaaaa${e.code}");
       if (e.code == 'invalid-email') {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -623,6 +647,42 @@ class _MenuState extends State<Menu> {
         );
       }
     }
+  }
+  Future<bool> showDeleteDialog(BuildContext context) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          title: Column(
+            children: [
+              Text('Thông báo'),
+              Divider(height: 0.1, color: Colors.grey.shade400),
+            ],
+          ),
+          content: Text(
+            'Bạn có muốn xoá khoản này không?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+            ),
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+            ),
+          ],
+        );
+      },
+    ) ?? false;
   }
 
 }

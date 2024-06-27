@@ -51,6 +51,7 @@ class _EditVideoState extends State<EditVideo> {
         "content":text,
         "urlvideo": videoUrl,
         "react":[],
+        "shared":[],
         "times":DateTime.now().millisecondsSinceEpoch
       };
       DatabaseMethods().addVideo("video_$idVideo", userInfoMap);

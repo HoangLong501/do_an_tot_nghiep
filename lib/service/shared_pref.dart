@@ -101,10 +101,6 @@ class SharedPreferenceHelper{
     userInfoList.add(newUserInfo);
     return await saveUserInfoListUser(userInfoList);
   }
-  Future<void> deleteUserInfoList() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    preferences.remove(userInfoListKey);
-  }
   String getChatRoomIdUserName(String a, String b) {
     if (a.compareTo(b) > 0) {
       return "$b\_$a";
@@ -112,6 +108,19 @@ class SharedPreferenceHelper{
       return "$a\_$b";
     }
   }
-
-
+  Future<void> deleteUserInfoList(String iduser) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String? userInfoListJson = preferences.getString(userInfoListKey);
+    if (userInfoListJson != null) {
+      List<dynamic> userInfoListDynamic = json.decode(userInfoListJson);
+      List<Map<String, dynamic>> userInfoList = userInfoListDynamic.cast<Map<String, dynamic>>();
+      userInfoList.removeWhere((element) => element['id'] == iduser);
+      if (userInfoList.isEmpty) {
+        preferences.remove(userInfoListKey);
+      } else {
+        String updatedUserInfoListJson = json.encode(userInfoList);
+        preferences.setString(userInfoListKey, updatedUserInfoListJson);
+      }
+    }
+  }
 }

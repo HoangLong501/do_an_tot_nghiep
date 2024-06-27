@@ -22,16 +22,16 @@ class _CommentState extends State<Comment2> {
   bool reply=false;
   List<bool> showCustomWidget=[];
   onLoad()async{
+    idUserComment = await SharedPreferenceHelper().getIdUser();
     streamComment = DatabaseMethods().getCommentStream(widget.idNewsfeed);
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(widget.idPoster).collection("myNewsfeed").doc(widget.idNewsfeed).get();
     react=data.get("react") ;
     sumReact= react.length;
-    idUserComment = await SharedPreferenceHelper().getIdUser();
+
     DocumentSnapshot documentSnapshot1 = await FirebaseFirestore.instance.collection("user").doc(idUserComment).get();
     myName = documentSnapshot1.get("Username");
     myImageAvatar = documentSnapshot1.get("imageAvatar");
     setState(() {
-
     });
   }
 

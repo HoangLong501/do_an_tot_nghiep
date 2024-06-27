@@ -3,7 +3,7 @@ import 'package:do_an_tot_nghiep/pages/lib_class_import/member_detail.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:flutter/widgets.dart';
 class MemberChat extends StatefulWidget {
   final String idChatRoom;
   const MemberChat({super.key , required this.idChatRoom});

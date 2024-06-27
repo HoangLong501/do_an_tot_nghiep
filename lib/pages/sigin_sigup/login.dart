@@ -5,8 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-
 import '../../service/database.dart';
 import '../../service/shared_pref.dart';
 class Login extends StatefulWidget {
@@ -195,8 +193,6 @@ class _LoginState extends State<Login> {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(email: userName, password: passWord);
       QuerySnapshot querySnapshot = await DatabaseMethods().getUserByEmail(userName);
-      print('Number of documents: ${querySnapshot.size}');
-      print(userName);
       birthDate = "${querySnapshot.docs[0]["Birthdate"]}";
       email = "${querySnapshot.docs[0]["E-mail"]}";
       id = "${querySnapshot.docs[0]["IdUser"]}";
@@ -210,7 +206,6 @@ class _LoginState extends State<Login> {
       await SharedPreferenceHelper().saveImageUser(image);
       await SharedPreferenceHelper().saveSex(sex);
       await SharedPreferenceHelper().saveBirthDate(birthDate);
-
       showGeneralDialog(
         barrierColor: Colors.black.withOpacity(0.5),
         transitionBuilder: (context, a1, a2, widget) {
@@ -281,9 +276,7 @@ class _LoginState extends State<Login> {
           return SizedBox.shrink();
         },
       );
-
     } on FirebaseAuthException catch (e) {
-      print("aaaaaaaaaaaaaa${e.code}");
       if (e.code == 'invalid-email') {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
