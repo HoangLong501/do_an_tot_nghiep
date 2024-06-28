@@ -222,25 +222,6 @@ class DatabaseMethods {
   }
 
 
-  // Future<List<Person>> getUserByName(String name) async {
-  //   QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-  //       .collection("user")
-  //       .where("Username", isEqualTo: name)
-  //       .get();
-  //   List<Person> userList = [];
-  //   querySnapshot.docs.forEach((document) {
-  //     Person user = Person(
-  //       id: document['IdUser'],
-  //       username: document['Username'],
-  //       email: document['E-mail'],
-  //       birthDate: document['Birthdate'],
-  //       phone: document['Phone'],
-  //       sex: document['Sex'],
-  //       image: document['imageAvatar'],
-  //     );
-  //     userList.add(user);
-  //   });
-
   Stream<QuerySnapshot> getUserByName(String name) {
     return FirebaseFirestore.instance
         .collection('users')
@@ -339,15 +320,14 @@ class DatabaseMethods {
         .set(messInfoMap);
   }
 
-  Future addMessage2(String chatRoomId,
-      Map<String, dynamic> messInfoMap) async {
+
+
+  Future addMessage2(String chatRoomId, Map<String, dynamic> messInfoMap) async {
     return FirebaseFirestore.instance.collection("groupChat").doc(chatRoomId)
         .collection("chats").doc()
         .set(messInfoMap);
   }
-
-  updateLastMessageSend(String chatRoomId,
-      Map<String, dynamic>lastMessageInfoMap) {
+ Future updateLastMessageSend(String chatRoomId, Map<String, dynamic>lastMessageInfoMap) {
     print(chatRoomId);
     return FirebaseFirestore.instance.collection("chatrooms")
         .doc(chatRoomId)
@@ -458,8 +438,7 @@ class DatabaseMethods {
         .doc(idVideo).set(infoMap);
   }
 
-  Future<DocumentReference?> addCommentDetail(String idNews, String idComment,
-      Map<String, dynamic> commentInfoMap) async {
+  Future<DocumentReference?> addCommentDetail(String idNews,String idComment,Map<String, dynamic> commentInfoMap)  async {
     try {
       // Sử dụng ID tùy chỉnh được cung cấp để thêm dữ liệu vào Firestore.
       DocumentReference docRef = FirebaseFirestore.instance.collection(
@@ -504,11 +483,10 @@ class DatabaseMethods {
   //     print("lỗi lấy story $e");
   //   }
   // }
-  Stream<QuerySnapshot> getAllStory(List<String> listFriends) {
+  Stream<QuerySnapshot> getAllStory() {
     return FirebaseFirestore.instance
         .collection('story')
-        .where('iduser', whereIn: listFriends)
-        .orderBy("times", descending: true)
+        .orderBy("times",descending: true)
         .snapshots();
   }
 
@@ -640,7 +618,7 @@ class DatabaseMethods {
     querySnapshot.docs.forEach((e) {
       friends.add(e.get("id"));
     });
-    friends.add(myId!);
+
     //print(friends);
     return friends;
   }
@@ -868,6 +846,7 @@ class DatabaseMethods {
         .doc(idUser).update(userInfoMap);
   }
 
+
   Stream<List> getMemberStream(String idChatRoom) async* {
     try {
       yield* FirebaseFirestore.instance
@@ -913,7 +892,43 @@ class DatabaseMethods {
       yield* Stream.empty();
     }
   }
+  Stream<QuerySnapshot>getWatchedStory(String idStory,String idUser)async*{
+    yield* FirebaseFirestore.instance.collection("story")
+        .doc(idStory).collection("reaction").where("iduser",isEqualTo: idUser).snapshots();
+  }
+  Stream<int> getReactVideo(String idvideo) async* {
+    try {
+      List temp = [];
+      yield* FirebaseFirestore.instance
+          .collection("video")
+          .doc(idvideo)
+          .snapshots()
+          .map((docSnapshot) {
+        if (docSnapshot.exists) {
+          temp = docSnapshot.data()?['react'];
+          // Nếu tài liệu tồn tại, trả về giá trị số lượng từ tài liệu
+          return temp.length;
+        } else {
+          // Nếu tài liệu không tồn tại, trả về 0
+          return 0;
+        }
+      });
+    } catch (error) {
+      print('Đã xảy ra lỗi khi lấy số lượng sản phẩm: $error');
+      // Trả về một Stream trống nếu có lỗi xảy ra
+      yield* Stream.empty();
+    }
+  }
+  Future<void> addNewFeed(String idfeed,Map<String,dynamic> infoMap){
+    return FirebaseFirestore.instance.collection("newsfeed")
+        .doc(idfeed).set(infoMap);
+  }
+  Future<void> updateVideo(String idvideo,Map<String,dynamic>infoMap){
+     return FirebaseFirestore.instance.collection("video")
+        .doc(idvideo).update(infoMap);
+  }
 }
+
 
 
 

@@ -17,7 +17,7 @@ class Story extends StatefulWidget {
 
 class _StoryState extends State<Story> {
   String image="https://firebasestorage.googleapis.com/v0/b/do-an-tot-nghiep-afd66.appspot.com/o/Bach_202405161625%2Fstory_image%2FCI89Bh590Y.jpg?alt=media&token=c91efcc6-5c57-4acb-9d6a-906ad364674a",
-      audio="",idUserStory="";
+      audio="",idUserStory="",video="";
   final AudioPlayer audioPlayer = AudioPlayer();
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
@@ -38,6 +38,7 @@ class _StoryState extends State<Story> {
       setState(() {
         image=querySnapshot.docs[0]["urlstory_image"];
         audio=querySnapshot.docs[0]["urlstory_audio"];
+        video=querySnapshot.docs[0]["urlstory_video"];
         idUserStory=querySnapshot.docs[0]["iduser"];
       });
     } catch(error) {
@@ -73,7 +74,7 @@ class _StoryState extends State<Story> {
   Future<void> onLoad() async {
     await getData();
     if (widget.type) {
-      videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(image));
+      videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(video));
       await videoPlayerController!.initialize();
       videoPlayerController!.play();
     }

@@ -5,8 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-
 import '../../service/database.dart';
 import '../../service/shared_pref.dart';
 class Login extends StatefulWidget {
@@ -61,8 +59,7 @@ class _LoginState extends State<Login> {
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
-        
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 SizedBox(height: 30),
                 Container(
@@ -99,7 +96,6 @@ class _LoginState extends State<Login> {
                 SizedBox(height: 20),
                 TextFormField(
                   validator: (value) {
-
                     if (value == null || value.isEmpty ) {
                       return 'Mật khẩu không được để trống!';
                     }
@@ -148,6 +144,60 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 SizedBox(height: 10),
+                Container(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: MediaQuery.of(context).size.width/3.7,
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,)),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Text("hoặc đăng nhập bằng",
+                        style: TextStyle(
+
+                        ),
+                        ),
+                      ),
+                      Container(
+                          width: MediaQuery.of(context).size.width/3.7,
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,)),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10,),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width/3),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 40,
+                        width: 40,
+                        child: GestureDetector(
+                          onTap: (){
+
+                          },
+                          child: Image.asset("assets/images/google.png"),
+                        ),
+                      ),
+                      SizedBox(width: 25,),
+                      Container(
+                        height: 40,
+                        width: 40,
+                        child: GestureDetector(
+                          onTap: (){
+
+                          },
+                          child: Image.asset("assets/images/apple.png"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 TextButton(
                   onPressed: () {
                     // Xử lý quên mật khẩu ở đây
@@ -159,8 +209,8 @@ class _LoginState extends State<Login> {
                   ),
                   ),
                 ),
-                SizedBox(height: 70),
-                SizedBox(
+                 SizedBox(height: MediaQuery.of(context).size.height/4,),
+                 Container(
                   height: 45,
                   width: double.infinity,
                   child: ElevatedButton(
@@ -195,8 +245,6 @@ class _LoginState extends State<Login> {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(email: userName, password: passWord);
       QuerySnapshot querySnapshot = await DatabaseMethods().getUserByEmail(userName);
-      print('Number of documents: ${querySnapshot.size}');
-      print(userName);
       birthDate = "${querySnapshot.docs[0]["Birthdate"]}";
       email = "${querySnapshot.docs[0]["E-mail"]}";
       id = "${querySnapshot.docs[0]["IdUser"]}";
@@ -210,7 +258,6 @@ class _LoginState extends State<Login> {
       await SharedPreferenceHelper().saveImageUser(image);
       await SharedPreferenceHelper().saveSex(sex);
       await SharedPreferenceHelper().saveBirthDate(birthDate);
-
       showGeneralDialog(
         barrierColor: Colors.black.withOpacity(0.5),
         transitionBuilder: (context, a1, a2, widget) {
@@ -281,9 +328,7 @@ class _LoginState extends State<Login> {
           return SizedBox.shrink();
         },
       );
-
     } on FirebaseAuthException catch (e) {
-      print("aaaaaaaaaaaaaa${e.code}");
       if (e.code == 'invalid-email') {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
