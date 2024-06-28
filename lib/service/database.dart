@@ -34,8 +34,6 @@ class DatabaseMethods {
       List temp = [];
       yield* FirebaseFirestore.instance
           .collection("newsfeed")
-          .doc(idUserOwn)
-          .collection("myNewsfeed")
           .doc(idNewsfeed)
           .snapshots()
           .map((docSnapshot) {
@@ -61,7 +59,7 @@ class DatabaseMethods {
       // Lấy thông tin của newsfeed cụ thể
       DocumentSnapshot newsfeedSnapshot = await FirebaseFirestore.instance
           .collection('newsfeed')
-          .doc(idUserOwn).collection("myNewsfeed").doc(newsfeedId)
+          .doc(newsfeedId)
           .get();
 
       // Kiểm tra xem newsfeed có tồn tại không
@@ -102,7 +100,7 @@ class DatabaseMethods {
       // Lấy thông tin của newsfeed cụ thể
       DocumentSnapshot newsfeedSnapshot = await FirebaseFirestore.instance
           .collection('newsfeed')
-          .doc(idUserOwn).collection("myNewsfeed").doc(newsfeedId)
+          .doc(newsfeedId)
           .get();
 
       // Kiểm tra xem newsfeed có tồn tại không
@@ -129,7 +127,7 @@ class DatabaseMethods {
         // Cập nhật trường 'react' của newsfeed với danh sách mới
         await FirebaseFirestore.instance
             .collection('newsfeed')
-            .doc(idUserOwn).collection("myNewsfeed").doc(newsfeedId)
+            .doc(newsfeedId)
             .update({'react': reactUsers});
         print('Cập nhật ${reactUsers.length}');
         print('Cập nhật react thành công cho newsfeed có ID: $newsfeedId');
@@ -142,7 +140,8 @@ class DatabaseMethods {
       print('Đã xảy ra lỗi khi cập nhật react cho newsfeed: $error');
     }
   }
-  Future<void> updateLikeVideo(String idVideo,String idUserLike) async {
+
+  Future<void> updateLikeVideo(String idVideo, String idUserLike) async {
     try {
       // Lấy thông tin của newsfeed cụ thể
       DocumentSnapshot newsfeedSnapshot = await FirebaseFirestore.instance
@@ -222,28 +221,9 @@ class DatabaseMethods {
         .collection("user").where("Phone", isEqualTo: phone).get();
   }
 
-  //
-  // Future<List<Person>> getUserByName(String name) async {
-  //   QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-  //       .collection("user")
-  //       .where("Username", isEqualTo: name)
-  //       .get();
-  //   List<Person> userList = [];
-  //   querySnapshot.docs.forEach((document) {
-  //     Person user = Person(
-  //       id: document['IdUser'],
-  //       username: document['Username'],
-  //       email: document['E-mail'],
-  //       birthDate: document['Birthdate'],
-  //       phone: document['Phone'],
-  //       sex: document['Sex'],
-  //       image: document['imageAvatar'],
-  //     );
-  //     userList.add(user);
-  //   });
 
-  Stream<QuerySnapshot> getUserByName(String name)  {
-    return  FirebaseFirestore.instance
+  Stream<QuerySnapshot> getUserByName(String name) {
+    return FirebaseFirestore.instance
         .collection('users')
         .where('name', isGreaterThanOrEqualTo: name)
         .where('name', isLessThanOrEqualTo: name + '\uf8ff')
@@ -338,8 +318,8 @@ class DatabaseMethods {
     return FirebaseFirestore.instance.collection("chatrooms").doc(chatRoomId)
         .collection("chats").doc()
         .set(messInfoMap);
-
   }
+
 
 
   Future addMessage2(String chatRoomId, Map<String, dynamic> messInfoMap) async {
@@ -353,6 +333,7 @@ class DatabaseMethods {
         .doc(chatRoomId)
         .update(lastMessageInfoMap);
   }
+
   updateLastMessageSend2(String chatRoomId,
       Map<String, dynamic>lastMessageInfoMap) {
     print(chatRoomId);
@@ -366,7 +347,7 @@ class DatabaseMethods {
     try {
       // Sử dụng ID tùy chỉnh được cung cấp để thêm dữ liệu vào Firestore.
       DocumentReference docRef = FirebaseFirestore.instance.collection(
-          "newsfeed").doc(idUser).collection("myNewsfeed").doc(idNewsfeed);
+          "newsfeed").doc(idNewsfeed);
       await docRef.set(newsfeedInfoMap);
       print('Đã thêm tin tức thành công ');
       // Trả về DocumentReference của tài liệu đã thêm.
@@ -416,6 +397,7 @@ class DatabaseMethods {
       print("lỗi info: $error");
     });
   }
+
   // Future<void> addStory(String idUser,String idStory, Map<String, dynamic> userInfoMap) {
   //   return FirebaseFirestore.instance.collection("story").doc(idUser).collection("newstory").doc(idStory)
   //       .set(userInfoMap)
@@ -426,9 +408,11 @@ class DatabaseMethods {
   //     print("lỗi thêm story: $error");
   //   });
   // }
-  Future<void>addStory(String idStory, Map<String,dynamic> userIdMap){
-    return FirebaseFirestore.instance.collection("story").doc(idStory).set(userIdMap);
-}
+  Future<void> addStory(String idStory, Map<String, dynamic> userIdMap) {
+    return FirebaseFirestore.instance.collection("story").doc(idStory).set(
+        userIdMap);
+  }
+
   Future<QuerySnapshot> search(String username) async {
     return await FirebaseFirestore.instance.collection("user").where(
         "SearchKey", isEqualTo: username).get();
@@ -441,14 +425,15 @@ class DatabaseMethods {
         .set(userInfoMap);
   }
 
-  Future addComment(String idNewsfeed, String userComment, Map<String, dynamic> userInfoMap) async {
+  Future addComment(String idNewsfeed, String userComment,
+      Map<String, dynamic> userInfoMap) async {
     return await FirebaseFirestore.instance
         .collection("comment").doc(idNewsfeed).collection("commentDetail").doc(
         userComment)
         .set(userInfoMap);
   }
 
-  Future<void> addVideo(String idVideo,Map<String,dynamic> infoMap){
+  Future<void> addVideo(String idVideo, Map<String, dynamic> infoMap) {
     return FirebaseFirestore.instance.collection("video")
         .doc(idVideo).set(infoMap);
   }
@@ -468,12 +453,17 @@ class DatabaseMethods {
       return null;
     }
   }
-  Future<DocumentReference?> addReplyCommentDetail(String idNews,String idComment,
+
+  Future<DocumentReference?> addReplyCommentDetail(String idNews,
+      String idComment,
       Map<String, dynamic> commentInfoMap) async {
     try {
       // Sử dụng ID tùy chỉnh được cung cấp để thêm dữ liệu vào Firestore.
       DocumentReference docRef = FirebaseFirestore.instance.collection(
-          "comment").doc(idNews).collection("userComment").doc(idComment).collection("reply").doc();
+          "comment").doc(idNews).collection("userComment")
+          .doc(idComment)
+          .collection("reply")
+          .doc();
       await docRef.set(commentInfoMap);
       print('Đã thêm comment thành công ');
       // Trả về DocumentReference của tài liệu đã thêm.
@@ -499,19 +489,25 @@ class DatabaseMethods {
         .orderBy("times",descending: true)
         .snapshots();
   }
-  Future<void> addReaction(String idStory,String idreacsion,Map<String,dynamic>infoMap){
+
+  Future<void> addReaction(String idStory, String idreacsion,
+      Map<String, dynamic>infoMap) {
     return FirebaseFirestore.instance.collection("story")
         .doc(idStory).collection("reaction").doc(idreacsion).set(infoMap);
   }
-  Future<void> updateReaction(String idStory,String idreacsion,Map<String,dynamic>infoMap){
+
+  Future<void> updateReaction(String idStory, String idreacsion,
+      Map<String, dynamic>infoMap) {
     return FirebaseFirestore.instance.collection("story")
         .doc(idStory).collection("reaction").doc(idreacsion).update(infoMap);
   }
-  Future<QuerySnapshot>getStoryById(String id){
+
+  Future<QuerySnapshot> getStoryById(String id) {
     return FirebaseFirestore.instance.collection("story")
-        .where("idstory",isEqualTo: id).get();
+        .where("idstory", isEqualTo: id).get();
   }
-  Future<QuerySnapshot>getSeeStory(String idStory){
+
+  Future<QuerySnapshot> getSeeStory(String idStory) {
     return FirebaseFirestore.instance.collection("story")
         .doc(idStory).collection("reaction").get();
   }
@@ -522,18 +518,19 @@ class DatabaseMethods {
           .collection("comment").doc(idComment).collection("userComment")
           .snapshots();
     } catch (error) {
-
       print('Đã xảy ra lỗi khi lấy comment tổng : $error');
     }
   }
-  Stream<QuerySnapshot> getReplyCommentStream(String news, String idComment) async* {
+
+  Stream<QuerySnapshot> getReplyCommentStream(String news,
+      String idComment) async* {
     try {
       yield* FirebaseFirestore.instance
-          .collection("comment").doc(news).collection("userComment").doc(idComment).collection("reply")
-          .orderBy("time" , descending: true)
+          .collection("comment").doc(news).collection("userComment").doc(
+          idComment).collection("reply")
+          .orderBy("time", descending: true)
           .snapshots();
     } catch (error) {
-
       print('Đã xảy ra lỗi khi lấy comment tổng : $error');
     }
   }
@@ -558,10 +555,10 @@ class DatabaseMethods {
     }
   }
 
-Future<QuerySnapshot> getAllVideo()async{
+  Future<QuerySnapshot> getAllVideo() async {
     return await FirebaseFirestore.instance.collection("video")
         .orderBy("times", descending: true).get();
-}
+  }
 
   Future<QuerySnapshot> getUserInfoById(String idUser) async {
     return await FirebaseFirestore.instance.collection("userinfo")
@@ -571,7 +568,29 @@ Future<QuerySnapshot> getAllVideo()async{
   Stream<QuerySnapshot> getMyNews(String idUser) async* {
     try {
       yield* FirebaseFirestore.instance
-          .collection("newsfeed").doc(idUser).collection("myNewsfeed")
+          .collection("newsfeed").where("viewers" , arrayContains: idUser)
+          .orderBy("newTimestamp", descending: true)
+          .snapshots();
+    } catch (error) {
+      print('Đã xảy ra lỗi khi lấy danh sách tin tức: $error');
+    }
+  }
+  Stream<QuerySnapshot> getOnlyMyNews(String idUser) async* {
+    try {
+      yield* FirebaseFirestore.instance
+          .collection("newsfeed").where("UserID" , isEqualTo: idUser)
+          .orderBy("newTimestamp", descending: true)
+          .snapshots();
+    } catch (error) {
+      print('Đã xảy ra lỗi khi lấy danh sách tin tức: $error');
+    }
+  }
+  Stream<QuerySnapshot> getMyNewsProfile(String idUser , String myId) async* {
+    try {
+      print("Id: $idUser");
+      yield* FirebaseFirestore.instance
+          .collection("newsfeed").where("UserID" , isEqualTo: idUser)
+          .where("viewers" , arrayContains: myId)
           .orderBy("newTimestamp", descending: true)
           .snapshots();
     } catch (error) {
@@ -590,27 +609,30 @@ Future<QuerySnapshot> getAllVideo()async{
   }
 
   Future<List<String>> getFriends(String userId) async {
-
     String? myId;
     myId = await SharedPreferenceHelper().getIdUser();
     List<String> friends = [];
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(
         "relationship").
     doc(userId).collection("friend").where("status", isEqualTo: "friend").get();
-
     querySnapshot.docs.forEach((e) {
       friends.add(e.get("id"));
     });
 
     //print(friends);
-
     return friends;
   }
+
+
+
+
   Future<List<String>> getReceivered(String userId) async {
     List<String> receivered = [];
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(
         "relationship").
-    doc(userId).collection("friend").where("status", isEqualTo: "pending").get();
+    doc(userId).collection("friend")
+        .where("status", isEqualTo: "pending")
+        .get();
 
     querySnapshot.docs.forEach((e) {
       receivered.add(e.get("id"));
@@ -618,14 +640,16 @@ Future<QuerySnapshot> getAllVideo()async{
     print(receivered);
     return receivered;
   }
-  // Stream<DocumentSnapshot> getWatched(String idUser, String idStory) async* {
-  //   yield* FirebaseFirestore.instance
-  //       .collection("idstory") // Hoặc collection chứa stories của bạn
-  //       .doc(idStory)
-  //       .collection('reaction')
-  //       .doc(idUser)
-  //       .snapshots();
-  // }
+
+  Stream<DocumentSnapshot> getWatched(String idUser, String idStory) async* {
+    yield* FirebaseFirestore.instance
+        .collection("idstory") // Hoặc collection chứa stories của bạn
+        .doc(idStory)
+        .collection('reaction')
+        .doc(idUser)
+        .snapshots();
+  }
+
   Stream<QuerySnapshot> getFriend(String idUser) async* {
     try {
       yield* FirebaseFirestore.instance
@@ -675,6 +699,7 @@ Future<QuerySnapshot> getAllVideo()async{
         .where('id', isEqualTo: userId)
         .snapshots();
   }
+
   Stream<QuerySnapshot> getUserByIdStream(String userId) {
     return FirebaseFirestore.instance
         .collection('users')
@@ -778,7 +803,8 @@ Future<QuerySnapshot> getAllVideo()async{
 
   Future<List<String>?> getStickers() async {
     List<String> listUrl = [];
-    final response = await http.get(Uri.parse("https://api.mojilala.com/v1/stickers/search?q=cat&api_key=dc6zaTOxFJmzC"));
+    final response = await http.get(Uri.parse(
+        "https://api.mojilala.com/v1/stickers/search?q=cat&api_key=dc6zaTOxFJmzC"));
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
       final List<dynamic> stickerData = responseData["data"];
@@ -791,27 +817,30 @@ Future<QuerySnapshot> getAllVideo()async{
       return listUrl;
     }
   }
+
   Future<List<Map<String, dynamic>>?> getMusic(String music) async {
     List<Map<String, dynamic>> musicList = [];
-    final response =await http.get(Uri.parse("https://api.deezer.com/search?q=$music"));
-  if(response.statusCode==200){
-    final Map<String,dynamic> responseData = jsonDecode(response.body);
-    final List<dynamic> musicData=responseData["data"];
-    for(var music in musicData){
-     final String title = music["title"];
-     final String url=music["preview"];
-     final String name= music["artist"]["name"];
-     final String  picture= music["artist"]["picture"];
-     musicList.add({
-       'title': title,
-       'url': url,
-       'name': name,
-       'picture': picture,
-     });
+    final response = await http.get(
+        Uri.parse("https://api.deezer.com/search?q=$music"));
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      final List<dynamic> musicData = responseData["data"];
+      for (var music in musicData) {
+        final String title = music["title"];
+        final String url = music["preview"];
+        final String name = music["artist"]["name"];
+        final String picture = music["artist"]["picture"];
+        musicList.add({
+          'title': title,
+          'url': url,
+          'name': name,
+          'picture': picture,
+        });
+      }
+      return musicList;
     }
-    return musicList;
   }
-  }
+
   Future<void> updateUser(String idUser, Map<String, dynamic> userInfoMap) {
     return FirebaseFirestore.instance.collection("user")
         .doc(idUser).update(userInfoMap);
@@ -827,7 +856,8 @@ Future<QuerySnapshot> getAllVideo()async{
           .map((docSnapshot) {
         if (docSnapshot.exists) {
           // Nếu tài liệu tồn tại, trả về giá trị số lượng từ tài liệu
-          return docSnapshot.data()?['user'] ?? []; // Trả về 0 nếu không tìm thấy 'QUANTITY'
+          return docSnapshot.data()?['user'] ??
+              []; // Trả về 0 nếu không tìm thấy 'QUANTITY'
         } else {
           // Nếu tài liệu không tồn tại, trả về 0
           return [];
@@ -839,6 +869,7 @@ Future<QuerySnapshot> getAllVideo()async{
       yield* Stream.empty();
     }
   }
+
   Stream<List> getAdminStream(String idChatRoom) async* {
     try {
       yield* FirebaseFirestore.instance
@@ -848,7 +879,8 @@ Future<QuerySnapshot> getAllVideo()async{
           .map((docSnapshot) {
         if (docSnapshot.exists) {
           // Nếu tài liệu tồn tại, trả về giá trị số lượng từ tài liệu
-          return docSnapshot.data()?['admin'] ?? []; // Trả về 0 nếu không tìm thấy 'QUANTITY'
+          return docSnapshot.data()?['admin'] ??
+              []; // Trả về 0 nếu không tìm thấy 'QUANTITY'
         } else {
           // Nếu tài liệu không tồn tại, trả về 0
           return [];

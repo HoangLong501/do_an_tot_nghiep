@@ -22,6 +22,7 @@ import 'package:do_an_tot_nghiep/pages/profile_friend.dart';
 import 'package:do_an_tot_nghiep/pages/reels_fanpage.dart';
 import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/share.dart';
+import 'package:do_an_tot_nghiep/pages/search1.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/profile.dart';
@@ -80,7 +81,6 @@ class MyApp extends StatelessWidget {
       //home: MemberChat(idChatRoom: "dYn626pQ53"),
       home: Login(),
       //home: AddMemberGroupChat(idChatRoom: "dYn626pQ53"),
-
     );
   }
 }

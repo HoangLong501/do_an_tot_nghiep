@@ -23,12 +23,10 @@ class _HintDetailState extends State<HintDetail> {
     try {
       QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(
           widget.id);
-      print(querySnapshot.docs[0].data());
       username = querySnapshot.docs[0]["Username"];
       image = querySnapshot.docs[0]["imageAvatar"];
       id = querySnapshot.docs[0]["IdUser"];
       tokens = List<String>.from(querySnapshot.docs[0]["tokens"]);
-      print(image);
     }catch(error){
       print("lỗi lấy thông tin người dùng");
     }

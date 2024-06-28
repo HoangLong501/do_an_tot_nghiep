@@ -41,6 +41,7 @@ class _MessageState extends State<Message> {
   String avatar="" , nameSend="" , block="";
   Stream<String>? statusStream;
   Color themeColor = Colors.cyan.shade200;
+  bool _isHovering = false;
   Stream<String> getStatus(String idChatRoom)async*{
     try{
       yield* FirebaseFirestore.instance
@@ -138,6 +139,16 @@ class _MessageState extends State<Message> {
       themeColor = Colors.cyan.shade200;
     }
     statusStream = getStatus(widget.chatRoomId);
+    
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection("chatrooms")
+        .doc(widget.chatRoomId).collection("chats").where("sendBy" , isNotEqualTo: myId).orderBy("time" ,descending: true).limit(1).get();
+    for(var value in querySnapshot.docs){
+        print(value["message"]);
+        Map<String , dynamic> data ={
+          "seen":true,
+        };
+        value.reference.update(data);
+    }
     setState(() {
 
     });
@@ -167,6 +178,7 @@ class _MessageState extends State<Message> {
         "sendBy":myId,
         "ts":timeNow,
         "time":FieldValue.serverTimestamp(),
+        "seen":false,
       };
       if(widget.group){
         DatabaseMethods().addMessage2(widget.chatRoomId, messInfoMap).then((value){
@@ -332,45 +344,64 @@ class _MessageState extends State<Message> {
           ],
         ),
       ),
-      body: Container(
-        child: StreamBuilder<QuerySnapshot>(
-          stream: messRoom ,
-          builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
-            if(snapshot.connectionState == ConnectionState.waiting){
-              return Center(child: CircularProgressIndicator(),);
-            }
-            if(!snapshot.hasData){
-              return Center(child: Text("Các bạn hiện đã là bạn bè , hãy gửi lời nhắn cho nhau"),);
-            }
-            return ListView.builder(
-              padding: EdgeInsets.only(left: 10),
-                reverse: true,
-                itemCount:  snapshot.data!.size,
-                itemBuilder: (context , index){
-                    DocumentSnapshot ds=snapshot.data!.docs[index];
-                    String image;
-                    String mess;
-                    String audio;
-                    try {
-                      image = ds.get("image");
-                    } catch (e) {
-                      image = ""; // gán giá trị mặc định nếu không tồn tại trường image
-                    }
-                    try {
-                      mess=ds.get("message");
-                    } catch (e) {
-                      mess = ""; // gán giá trị mặc định nếu không tồn tại trường image
-                    }
-                    try {
-                      audio=ds.get("audio");
-                    } catch (e) {
-                      audio = ""; // gán giá trị mặc định nếu không tồn tại trường image
-                    }
-                    //return chatMessageTitle(mess,image, audio ,snapshot.data!.docs[index]["sendBy"],snapshot.data!.docs[index]["ts"]);
-                  return ChatMessageTitle(key: ValueKey(ds.id) ,theme: themeColor.value.toString() , group: widget.group,message: mess, imageUrl: image, audioUrl: audio, sendByMe: snapshot.data!.docs[index]["sendBy"], time: snapshot.data!.docs[index]["ts"]);
-                },
-            );
-          },
+      body: MouseRegion(
+        onEnter: (event) {
+          setState(() {
+            _isHovering = true;
+          });
+          print(_isHovering);
+        },
+        onExit: (event) {
+          setState(() {
+            _isHovering = false;
+          });
+          print(_isHovering);
+        },
+        child: Container(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: messRoom ,
+            builder: (context , AsyncSnapshot<QuerySnapshot> snapshot){
+              if(snapshot.connectionState == ConnectionState.waiting){
+                return Center(child: CircularProgressIndicator(),);
+              }
+              if(!snapshot.hasData){
+                return Center(child: Text("Các bạn hiện đã là bạn bè , hãy gửi lời nhắn cho nhau"),);
+              }
+              return ListView.builder(
+                padding: EdgeInsets.only(left: 10),
+                  reverse: true,
+                  itemCount:  snapshot.data!.size,
+                  itemBuilder: (context , index){
+                      DocumentSnapshot ds=snapshot.data!.docs[index];
+                      String image;
+                      String mess;
+                      String audio;
+                      bool seen;
+                      try {
+                        seen = ds.get("seen");
+                      } catch (e) {
+                        seen = true; // gán giá trị mặc định nếu không tồn tại trường image
+                      }
+                      try {
+                        image = ds.get("image");
+                      } catch (e) {
+                        image = ""; // gán giá trị mặc định nếu không tồn tại trường image
+                      }
+                      try {
+                        mess=ds.get("message");
+                      } catch (e) {
+                        mess = ""; // gán giá trị mặc định nếu không tồn tại trường image
+                      }
+                      try {
+                        audio=ds.get("audio");
+                      } catch (e) {
+                        audio = ""; // gán giá trị mặc định nếu không tồn tại trường image
+                      }
+                    return ChatMessageTitle(key: ValueKey(ds.id) ,seen: seen ,theme: themeColor.value.toString() , group: widget.group,message: mess, imageUrl: image, audioUrl: audio, sendByMe: snapshot.data!.docs[index]["sendBy"], time: snapshot.data!.docs[index]["ts"]);
+                  },
+              );
+            },
+          ),
         ),
       ),
       bottomNavigationBar: StreamBuilder(stream: statusStream, builder: (context , AsyncSnapshot<String> snapshot){

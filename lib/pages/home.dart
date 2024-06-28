@@ -15,6 +15,8 @@ import 'lib_class_import/newsfeed_detail.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 class Home extends StatefulWidget {
   const Home({super.key});
   @override
@@ -34,17 +36,7 @@ class _HomeState extends State<Home> {
   String? idUserDevice;
   Map<String, int> currentStoryIndex = {};
 
-  Future<void> setupInteractedMessage() async {
-    RemoteMessage? initialMessage =
-    await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null) {
-      _handleMessage(initialMessage);
-    }
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
-  }
-  void _handleMessage(RemoteMessage message) {
-    print("User nhan vao noti");
-  }
+
   Future<void> saveTokenToDatabase(String token ) async {
     // Assume user is logged in for this example
     await FirebaseFirestore.instance
@@ -60,31 +52,22 @@ class _HomeState extends State<Home> {
     await saveTokenToDatabase(token!);
     // Any time the token refreshes, store this in the database too.
     FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
-   // print("Token : $token");
   }
-
-  controlScroll(){
-    _controller.addListener(() {
-      if (_controller.position.userScrollDirection == ScrollDirection.reverse) {
-        isScrollDown=true;
-        setState(() {
-
-        });
-      } else if (_controller.position.userScrollDirection == ScrollDirection.forward) {
-        isScrollDown=false;
-        setState(() {
-
-        });
-      }
-    });
+}
+  Future<List<DocumentSnapshot>> fetchPosts() async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('newsfeed')
+        .where('viewers', arrayContains: idUserDevice)
+        .get();
+    List<DocumentSnapshot> posts = querySnapshot.docs;
+    // Sắp xếp bài viết theo thời gian
+    posts.sort((a, b) => (b['newTimestamp']).compareTo(a['newTimestamp']));
+    return posts;
   }
   onLoad()async{
     idUserDevice = await SharedPreferenceHelper().getIdUser();
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
     listFriends=await DatabaseMethods().getFriends(idUserDevice!);
-    //List<String> listReceiver=await DatabaseMethods().getReceivered(idUserDevice!);
     await setupToken();
-    controlScroll();
     setState(() {});
   }
   @override
@@ -133,7 +116,7 @@ class _HomeState extends State<Home> {
                   padding: EdgeInsets.only(left: 8,right: 8),
                   child: GestureDetector(
                       onTap: (){
-                       // Navigator.push(context, MaterialPageRoute(builder: (context)=>Search()));
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Search()));
                       },
                       child: Icon(Icons.search_outlined,size: 30,)),
                 ),
@@ -308,6 +291,38 @@ class _HomeState extends State<Home> {
                 );
               },
             ),
+            FutureBuilder<List<DocumentSnapshot>>(
+              future: fetchPosts(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.data == null || snapshot.data!.isEmpty) {
+                  return Text("không có bài viết nào");
+                }
+                List<DocumentSnapshot> allPosts = snapshot.data!;
+                return ListView.builder(
+                  controller: _controller,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),  // Avoid nested scrolling
+                  itemCount: allPosts.length,
+                  itemBuilder: (context, index) {
+                    var data = allPosts[index];
+                    return WidgetNewsfeed(
+                      idUser: data["UserID"] ?? "",
+                      date: data["newTimestamp"].toDate() ?? DateTime.now(),
+                      id: data["ID"] ?? "",
+                      username: data["userName"] ?? "",
+                      content: data["content"] ?? "",
+                      time: data["ts"] ?? "",
+                      image: data["image"] ?? "",
+                    );
+                  },
+                );
+              },
+            )
+
           ],
         ),
       ),
@@ -321,15 +336,13 @@ class _HomeState extends State<Home> {
                 children: [
                   InkWell(
                     onTap: () {
-                      setState(() {
-                        picked = 0;
-                      });
+
                     },
                     splashColor: Colors.blueAccent.withOpacity(0.2), // Màu sắc của hiệu ứng splash
                     borderRadius: BorderRadius.circular(25), // Bo tròn viền của hiệu ứng splash
                     child: Icon(
                       Icons.home_outlined,
-                      color: picked == 0 ? Colors.blueAccent : Colors.grey,
+                      color:  Colors.blueAccent ,
                     ),
                   ),
                 ],
@@ -340,11 +353,11 @@ class _HomeState extends State<Home> {
                 GestureDetector(
                     onTap: (){
 
-                    Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
+                    //Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
 
                     },
                     child: Icon(Icons.ondemand_video ,
-                      color: picked==1? Colors.blueAccent:Colors.grey,
+                      color:Colors.grey,
                     )),
               ],
             ),
@@ -353,12 +366,10 @@ class _HomeState extends State<Home> {
                 GestureDetector(
                     onTap: (){
                       print("press ---TREND-- Bottom Appbar");
-                      setState(() {
-                        picked = 2;
-                      });
+
                     },
                     child: Icon(Icons.people ,
-                      color: picked==2? Colors.blueAccent:Colors.grey,
+                      color:Colors.grey,
                     )),
               ],
             ),
@@ -367,12 +378,12 @@ class _HomeState extends State<Home> {
                 GestureDetector(
                     onTap: (){
                       print("press ---TREND-- Bottom Appbar");
-                      setState(() {
-                        picked = 3;
-                      });
+                      // setState(() {
+                      //
+                      // });
                     },
                     child: Icon(Icons.notifications_none_outlined ,
-                      color: picked==3? Colors.blueAccent:Colors.grey,
+                      color: Colors.grey,
                     )),
               ],
             ),
