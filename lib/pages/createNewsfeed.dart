@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:do_an_tot_nghiep/pages/notifications/noti.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,6 +25,12 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
   String idUser="" , username="" , newsFeedId="" , urlImage="";
   int _selectedValue = 1;
   String status="";
+  List viewers =[] , custom=[];
+   Map<String, bool> _selectedViewer = {};
+
+  Future<List> getSelectedKeys()async{
+    return  _selectedViewer.entries.where((entry) => entry.value).map((entry) => entry.key).toList();
+  }
   Future _pickImageGallery()async{
     final returnImage = await ImagePicker().pickImage(source: ImageSource.gallery);
     setState(() {
@@ -47,6 +54,27 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
       String idComment=randomAlphaNumeric(16);
       Timestamp timestamp = Timestamp.fromDate(now);
       String timeNow = DateFormat('h:mma').format(now);
+      List followers=[];
+      if(_selectedValue==1){
+        viewers.add(idUser);
+      }else if(_selectedValue==2){
+        viewers =await DatabaseMethods().getFriends(idUser);
+      }else if(_selectedValue==4){
+        custom.add(idUser);
+        viewers = custom;
+      }else{
+        List friends = await DatabaseMethods().getFriends(idUser);
+
+        try{
+          DocumentSnapshot data = await FirebaseFirestore.instance.collection("relationship")
+              .doc(idUser).collection("follower").doc(idUser).get();
+          followers = data.get("data");
+        }catch(e){
+          followers=[];
+        }
+        viewers = [...friends, ...followers];
+      }
+      print(viewers);
       Map<String, dynamic> newsInfoMap = {
         "ID":id,
         "UserID":idUser,
@@ -56,12 +84,21 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
         "ts": timeNow,
         "newTimestamp":timestamp,
         "react": [],
+        "viewers":viewers,
+
       };
       Map<String, dynamic> commentInfoMap = {
         "ID":idComment,
       };
       await DatabaseMethods().addNews(idUser, id, newsInfoMap);
-      //await DatabaseMethods().initComment(idComment, commentInfoMap);
+      await DatabaseMethods().initComment(idComment, commentInfoMap);
+      for(var follower in followers){
+        NotificationDetail().sendNotificationToAnyDevice(follower,
+            "$username vừa đăng một tin mới",
+            "Bạn có thông báo mới");
+      }
+
+
     }
   }
 
@@ -69,6 +106,11 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
   onLoad()async{
       username=(await SharedPreferenceHelper().getUserName())!;
       idUser =(await SharedPreferenceHelper().getIdUser())!;
+      List followers=[];
+        DocumentSnapshot data = await FirebaseFirestore.instance.collection("relationship")
+            .doc(idUser).collection("follower").doc(idUser).get();
+        followers = data.get("data");
+        print(followers);
       print(idUser);
       setState(() {
 
@@ -145,6 +187,7 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                                         TextButton(
                                           onPressed: (){
                                             showDialog(context: context, builder: (context) {
+                                              int tempValue = _selectedValue;
                                               return StatefulBuilder(
                                                 builder: (context, setState) {
                                                   return AlertDialog(
@@ -156,12 +199,12 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                                                           title: const Text('Chỉ mình tôi'),
                                                           leading: Radio(
                                                             value: 1,
-                                                            groupValue: _selectedValue,
+                                                            groupValue: tempValue,
                                                             onChanged: (int? value) {
                                                               setState(() {
-                                                                _selectedValue = value!;
+                                                                tempValue = value!;
                                                               });
-                                                              print(_selectedValue);
+                                                              print(tempValue);
                                                             },
                                                           ),
                                                         ),
@@ -169,12 +212,12 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                                                           title: const Text('Bạn bè'),
                                                           leading: Radio(
                                                             value: 2,
-                                                            groupValue: _selectedValue,
+                                                            groupValue: tempValue,
                                                             onChanged: (int? value) {
                                                               setState(() {
-                                                                _selectedValue = value!;
+                                                                tempValue = value!;
                                                               });
-                                                              print(_selectedValue);
+                                                              print(tempValue);
                                                             },
                                                           ),
                                                         ),
@@ -182,33 +225,68 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                                                           title: const Text('Công khai'),
                                                           leading: Radio(
                                                             value: 3,
-                                                            groupValue: _selectedValue,
+                                                            groupValue: tempValue,
                                                             onChanged: (int? value) {
                                                               setState(() {
-                                                                _selectedValue = value!;
+                                                                tempValue = value!;
                                                               });
-                                                              print(_selectedValue);
+                                                              print(tempValue);
+                                                            },
+                                                          ),
+                                                        ),
+                                                        ListTile(
+                                                          title: const Text('Tùy chỉnh'),
+                                                          leading: Radio(
+                                                            value: 4,
+                                                            groupValue: tempValue,
+                                                            onChanged: (int? value) {
+                                                              setState(() {
+                                                                tempValue = value!;
+                                                              });
+                                                              print(tempValue);
                                                             },
                                                           ),
                                                         ),
                                                       ],
                                                     ),
                                                     actions: [
-                                                      TextButton(onPressed: ()async{
-                                                        Navigator.of(context).pop();
-                                                        if(_selectedValue==1){
+                                                      TextButton(
+                                                        onPressed: () async {
+                                                          if (tempValue == 4) {
+                                                            List friends = await DatabaseMethods().getFriends(idUser);
+                                                            Map<String, bool>? selectedViewer = await showGeneralDialog<Map<String, bool>>(
+                                                              context: context,
+                                                              barrierDismissible: true,
+                                                              barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                                                              transitionDuration: const Duration(milliseconds: 600),
+                                                              pageBuilder: (BuildContext buildContext, Animation animation, Animation secondaryAnimation) {
+                                                                return ViewerDialog(friends: friends);
+                                                              },
+                                                            );
+                                                            if (selectedViewer != null) {
+                                                              // Xử lý giá trị selectedViewer
+                                                              _selectedViewer = selectedViewer;
+                                                              custom =await getSelectedKeys();
+                                                              print(custom);
+                                                            }
+                                                            Navigator.of(context).pop(tempValue);
+                                                          } else {
+                                                            Navigator.of(context).pop(tempValue);
+                                                          }
+                                                        },
+                                                        child: Text('OK'),
+                                                      ),
 
-                                                        }else if (_selectedValue==2){
-
-                                                        }else{
-
-                                                        }
-                                                        //print(_selectedValue);
-                                                      }, child: Text("Oke"))
                                                     ],
                                                   );
                                                 },
                                               );
+                                            },).then((value){
+                                              if (value != null) {
+                                                setState(() {
+                                                  _selectedValue = value;
+                                                });
+                                              }
                                             });
                                           },
                                           child: Container(
@@ -221,7 +299,7 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                                               child: Row(
                                                 children: [
                                                   Icon(Icons.lock,size: 16,color: Colors.blue.shade600,),
-                                                  Text(_selectedValue==1?"Chỉ mình tôi":_selectedValue==2?"Bạn bè":"Công khai",style: TextStyle(color:Colors.blue.shade600, ),),
+                                                  Text(_selectedValue==1?"Chỉ mình tôi":_selectedValue==2?"Bạn bè":_selectedValue==4?"Tùy chỉnh":"Công khai",style: TextStyle(color:Colors.blue.shade600, ),),
                                                   Icon(Icons.arrow_drop_down,size: 16,color: Colors.blue.shade600,),
                                                 ],
                                               ),
@@ -364,3 +442,95 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
 
   }
 }
+class ViewerDialog extends StatefulWidget {
+  final List friends;
+  ViewerDialog({required this.friends});
+
+  @override
+  _ViewerDialogState createState() => _ViewerDialogState();
+}
+
+class _ViewerDialogState extends State<ViewerDialog> {
+  Map<String, bool> selectedViewer = {};
+  Future<Map<String, dynamic>> fetchFriendData(String id) async {
+    // Giả sử bạn sử dụng Firestore
+    DocumentSnapshot doc = await FirebaseFirestore.instance.collection('user').doc(id).get();
+    return doc.data() as Map<String, dynamic>;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    for (var item in widget.friends) {
+      selectedViewer[item] = false;
+    }
+  }
+
+  void _closeDialog() {
+    Navigator.of(context).pop(selectedViewer);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Center(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+          ),
+          width: MediaQuery.of(context).size.width - 40,
+          height: MediaQuery.of(context).size.height - 200,
+          padding: EdgeInsets.all(20),
+          child: Column(
+            children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height / 1.5,
+                child: ListView(
+                  children: widget.friends.map((id) {
+                    return FutureBuilder<Map<String, dynamic>>(
+                      future: fetchFriendData(id),
+                      builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(child: Text("Error: ${snapshot.error}"));
+                        } else if (!snapshot.hasData || snapshot.data == null) {
+                          return Center(child: Text("No data found"));
+                        } else {
+                          String image = snapshot.data!['imageAvatar'];
+                          String name = snapshot.data!['Username'];
+                          return CheckboxListTile(
+                            title: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundImage: Image.network(image).image,
+                                  radius: 30,
+                                ),
+                                SizedBox(width: 20),
+                                Text(name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                              ],
+                            ),
+                            value: selectedViewer[id] ?? false,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                selectedViewer[id] = value!;
+                              });
+                            },
+                          );
+                        }
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              TextButton(
+                onPressed: _closeDialog,
+                child: Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+

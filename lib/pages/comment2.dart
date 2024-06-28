@@ -23,7 +23,7 @@ class _CommentState extends State<Comment2> {
   List<bool> showCustomWidget=[];
   onLoad()async{
     streamComment = DatabaseMethods().getCommentStream(widget.idNewsfeed);
-    DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(widget.idPoster).collection("myNewsfeed").doc(widget.idNewsfeed).get();
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(widget.idNewsfeed).get();
     react=data.get("react") ;
     sumReact= react.length;
     idUserComment = await SharedPreferenceHelper().getIdUser();

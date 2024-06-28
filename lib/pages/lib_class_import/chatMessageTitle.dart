@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:audioplayers/audioplayers.dart';
 class ChatMessageTitle extends StatefulWidget {
-  final bool group;
+  final bool group , seen;
   final String message,imageUrl,audioUrl,sendByMe,time , theme;
   const ChatMessageTitle({super.key,
       required this.message,
@@ -13,6 +13,7 @@ class ChatMessageTitle extends StatefulWidget {
       required this.time,
       required this.group,
       required this.theme,
+       this.seen=false,
   });
 
   @override
@@ -59,7 +60,7 @@ class _ChatMessageTitleState extends State<ChatMessageTitle> {
         ):SizedBox(),
         Flexible(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:who?CrossAxisAlignment.end: CrossAxisAlignment.start,
             children: [
               widget.group ? !who ? Container(
                   margin: EdgeInsets.only(left: 20),
@@ -104,6 +105,9 @@ class _ChatMessageTitleState extends State<ChatMessageTitle> {
                   ],
                 ),
               ),
+              who? !widget.seen? Container(
+                  margin: EdgeInsets.only(right: 16,bottom: 10),
+                  child: Text("Đã gửi")):SizedBox() : SizedBox(),
             ],
           ),
         ),

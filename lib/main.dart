@@ -21,6 +21,7 @@ import 'package:do_an_tot_nghiep/pages/option_profile.dart';
 import 'package:do_an_tot_nghiep/pages/profile_friend.dart';
 import 'package:do_an_tot_nghiep/pages/reels_fanpage.dart';
 import 'package:do_an_tot_nghiep/pages/search.dart';
+import 'package:do_an_tot_nghiep/pages/search1.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/profile.dart';
@@ -62,24 +63,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         useMaterial3: true,
       ),
-     // home: Profile(idProfileUser: "Ly Ly_202405091941",),
-      //home: CreateNewsFeed()
-      //home: ProfileFriend(idProfileUser:"Ly Ly_202405091941",)
-
-     // home: Story(idStory: "story_202406141056",type: true,idUser: "Bach_202405161625",),
-      //home: Profile(idProfileUser: "haonguyen16022002"),
-
-     // home: EditVideo(idFanpage:"Bach_202405161625" ,),
-      //home: EditStory(idUser: "haonguyen16022002"),
-      // home: test(idUser: "haonguyen16022002",),
-      // home: TestStoryPage(title: 'test',),
-
-      //home: Login(),
-      //home: Profile(idProfileUser: "haonguyen16022002"),
-      //home: MemberChat(idChatRoom: "dYn626pQ53"),
-      home: Home(),
-      //home: AddMemberGroupChat(idChatRoom: "dYn626pQ53"),
-
+      home: Login(),
     );
   }
 }

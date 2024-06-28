@@ -21,75 +21,24 @@ class _ProfileState extends State<Profile> {
   Stream<QuerySnapshot>? myNewsfeedStream;
   String name="",image="",background="",relationship="",born="",address="",since="";
   bool myProfile=true;
-  int indexFriend=0;
-  StreamSubscription<QuerySnapshot>? getListFriend;
+  int quantityFriend=0;
+  List friends=[] , temp=[];
 
-  getDataUser()async{
-    if(widget.idProfileUser!=await SharedPreferenceHelper().getIdUser()){
-      myProfile=false;
-    }
-    DatabaseMethods().getIdUserDetail(widget.idProfileUser).listen((QuerySnapshot snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        name = snapshot.docs[0]["Username"];
-        image = snapshot.docs[0]["imageAvatar"];
-      } else {
-        print('Không tìm thấy người dùng với id: ${widget.idProfileUser}');
-      }
-    });
-  }
-  getDataUser1()async{
-    QuerySnapshot snapshot = await DatabaseMethods().getUserById(widget.idProfileUser);
-    if (snapshot.docs.isNotEmpty) {
-      setState(() {
-        name = snapshot.docs[0]["Username"];
-        image = snapshot.docs[0]["imageAvatar"];
-      });
-      } else {
-        print('Không tìm thấy người dùng với id: ${widget.idProfileUser}');
-      }
-  }
-  getUserInfo1() async {
-    QuerySnapshot snapshot=await DatabaseMethods().getUserInfoById(widget.idProfileUser) ;
-      if (snapshot.docs.isNotEmpty) {
-        setState(() {
-        relationship = snapshot.docs[0]["relationship"];
-        born = snapshot.docs[0]["born"];
-        address = snapshot.docs[0]["address"];
-        since = snapshot.docs[0]["since"];
-        background = snapshot.docs[0]["imageBackground"];
-        });
-      } else {
-        print('Không tìm thấy dữ liệu cho người dùng với ID: ${widget.idProfileUser}');
-      }
 
-  }
-  getUserInfo() async {
-    if(widget.idProfileUser!=await SharedPreferenceHelper().getIdUser()){
-      myProfile=false;
-    }
-     DatabaseMethods().getUserInfoByIdStream(widget.idProfileUser).listen((QuerySnapshot snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        relationship = snapshot.docs[0]["relationship"];
-        born = snapshot.docs[0]["born"];
-        address = snapshot.docs[0]["address"];
-        since = snapshot.docs[0]["since"];
-        background = snapshot.docs[0]["imageBackground"];
-      } else {
-        print('Không tìm thấy dữ liệu cho người dùng với ID: ${widget.idProfileUser}');
-      }
-    });
-  }
   onLoad()async{
-    await getDataUser1();
-    await getUserInfo1();
-    getDataUser();
-    getUserInfo();
-    getListFriend= DatabaseMethods().getFriend(widget.idProfileUser)
-    .listen((snapshot) {
-        indexFriend=snapshot.docs.length;
-    });
-    myNewsfeedStream = DatabaseMethods().getMyNews(widget.idProfileUser);
-    setState(() async {
+    friends = await DatabaseMethods().getFriends(widget.idProfileUser);
+    friends.remove(widget.idProfileUser);
+    quantityFriend = friends.length;
+    if(friends.length>6){
+      temp=friends.sublist(0,6);
+    }else{
+      temp=friends;
+    }
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(widget.idProfileUser).get();
+    name = data.get("Username");
+    image = data.get("imageAvatar");
+    myNewsfeedStream = DatabaseMethods().getOnlyMyNews(widget.idProfileUser);
+    setState(() {
 
     });
   }
@@ -144,7 +93,7 @@ class _ProfileState extends State<Profile> {
                         Text(name ,style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
                         Row(
                           children: [
-                            Text("$indexFriend" ,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w500),),
+                            Text("$quantityFriend" ,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w500),),
                             Text("  bạn bè" ,style: TextStyle(fontSize: 16,color: Colors.grey.shade600),),
                           ],
                         ),
@@ -279,50 +228,19 @@ class _ProfileState extends State<Profile> {
                 ],
               ),
             ),
-            Padding(
+            Container(
               padding:EdgeInsets.only(left: 20,right: 20),
-              child: Wrap(
-                children: [
-                  Container(
-                    padding:EdgeInsets.only(bottom: 10,right: 8),
-                    child: Column(
-                      children: [
-                        Image(image: Image.network("https://static-cse.canva.com/blob/1468006/1600w-0U5NB7wvTkA.jpg").image,
-                          fit: BoxFit.fill,
-                          height: 110,
-                          width: 110,
-                        ),
-                        Text("Name friend",style: TextStyle(fontSize: 17,fontWeight: FontWeight.w600),),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding:EdgeInsets.only(bottom: 10,right: 8),
-                    child: Column(
-                      children: [
-                        Image(image: Image.network("https://static-cse.canva.com/blob/1468006/1600w-0U5NB7wvTkA.jpg").image,
-                          fit: BoxFit.fill,
-                          height: 110,
-                          width: 110,
-                        ),
-                        Text("Name friend",style: TextStyle(fontSize: 17,fontWeight: FontWeight.w600),),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding:EdgeInsets.only(bottom: 10,right: 8),
-                    child: Column(
-                      children: [
-                        Image(image: Image.network("https://static-cse.canva.com/blob/1468006/1600w-0U5NB7wvTkA.jpg").image,
-                          fit: BoxFit.fill,
-                          height: 110,
-                          width: 110,
-                        ),
-                        Text("Name friend",style: TextStyle(fontSize: 17,fontWeight: FontWeight.w600),),
-                      ],
-                    ),
-                  ),
-                ],
+              height: 300,
+              child: GridView.builder(
+                physics: NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 20,// Số lượng cột
+                ),
+                itemBuilder: (BuildContext context, int index) {
+                  return FriendDetail(id: temp[index]);
+                },
+                itemCount: temp.length, // Tổng số item trong grid
               ),
             ),
             Container(
@@ -381,4 +299,50 @@ class _ProfileState extends State<Profile> {
     );
   }
 }
+
+class FriendDetail extends StatefulWidget {
+  final String id;
+  const FriendDetail({super.key , required this.id});
+
+  @override
+  State<FriendDetail> createState() => _FriendDetailState();
+}
+
+class _FriendDetailState extends State<FriendDetail> {
+  String name="",image="";
+
+  onLoad()async{
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(widget.id).get();
+    name=data.get("Username");
+    image = data.get("imageAvatar");
+    setState(() {
+
+    });
+  }
+  @override
+  void initState() {
+    super.initState();
+    onLoad();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding:EdgeInsets.only(bottom: 10,right: 8),
+      child: Column(
+        children: [
+          Expanded(
+            child: Image(image: Image.network(image).image,
+              fit: BoxFit.fitHeight,
+            ),
+          ),
+          Text(name,style: TextStyle(fontSize: 17,fontWeight: FontWeight.w600),),
+        ],
+      ),
+    );
+
+  }
+
+
+}
+
 

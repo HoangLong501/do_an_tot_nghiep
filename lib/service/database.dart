@@ -34,8 +34,6 @@ class DatabaseMethods {
       List temp = [];
       yield* FirebaseFirestore.instance
           .collection("newsfeed")
-          .doc(idUserOwn)
-          .collection("myNewsfeed")
           .doc(idNewsfeed)
           .snapshots()
           .map((docSnapshot) {
@@ -61,7 +59,7 @@ class DatabaseMethods {
       // Lấy thông tin của newsfeed cụ thể
       DocumentSnapshot newsfeedSnapshot = await FirebaseFirestore.instance
           .collection('newsfeed')
-          .doc(idUserOwn).collection("myNewsfeed").doc(newsfeedId)
+          .doc(newsfeedId)
           .get();
 
       // Kiểm tra xem newsfeed có tồn tại không
@@ -102,7 +100,7 @@ class DatabaseMethods {
       // Lấy thông tin của newsfeed cụ thể
       DocumentSnapshot newsfeedSnapshot = await FirebaseFirestore.instance
           .collection('newsfeed')
-          .doc(idUserOwn).collection("myNewsfeed").doc(newsfeedId)
+          .doc(newsfeedId)
           .get();
 
       // Kiểm tra xem newsfeed có tồn tại không
@@ -129,7 +127,7 @@ class DatabaseMethods {
         // Cập nhật trường 'react' của newsfeed với danh sách mới
         await FirebaseFirestore.instance
             .collection('newsfeed')
-            .doc(idUserOwn).collection("myNewsfeed").doc(newsfeedId)
+            .doc(newsfeedId)
             .update({'react': reactUsers});
         print('Cập nhật ${reactUsers.length}');
         print('Cập nhật react thành công cho newsfeed có ID: $newsfeedId');
@@ -369,7 +367,7 @@ class DatabaseMethods {
     try {
       // Sử dụng ID tùy chỉnh được cung cấp để thêm dữ liệu vào Firestore.
       DocumentReference docRef = FirebaseFirestore.instance.collection(
-          "newsfeed").doc(idUser).collection("myNewsfeed").doc(idNewsfeed);
+          "newsfeed").doc(idNewsfeed);
       await docRef.set(newsfeedInfoMap);
       print('Đã thêm tin tức thành công ');
       // Trả về DocumentReference của tài liệu đã thêm.
@@ -592,7 +590,29 @@ class DatabaseMethods {
   Stream<QuerySnapshot> getMyNews(String idUser) async* {
     try {
       yield* FirebaseFirestore.instance
-          .collection("newsfeed").doc(idUser).collection("myNewsfeed")
+          .collection("newsfeed").where("viewers" , arrayContains: idUser)
+          .orderBy("newTimestamp", descending: true)
+          .snapshots();
+    } catch (error) {
+      print('Đã xảy ra lỗi khi lấy danh sách tin tức: $error');
+    }
+  }
+  Stream<QuerySnapshot> getOnlyMyNews(String idUser) async* {
+    try {
+      yield* FirebaseFirestore.instance
+          .collection("newsfeed").where("UserID" , isEqualTo: idUser)
+          .orderBy("newTimestamp", descending: true)
+          .snapshots();
+    } catch (error) {
+      print('Đã xảy ra lỗi khi lấy danh sách tin tức: $error');
+    }
+  }
+  Stream<QuerySnapshot> getMyNewsProfile(String idUser , String myId) async* {
+    try {
+      print("Id: $idUser");
+      yield* FirebaseFirestore.instance
+          .collection("newsfeed").where("UserID" , isEqualTo: idUser)
+          .where("viewers" , arrayContains: myId)
           .orderBy("newTimestamp", descending: true)
           .snapshots();
     } catch (error) {
@@ -617,15 +637,16 @@ class DatabaseMethods {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection(
         "relationship").
     doc(userId).collection("friend").where("status", isEqualTo: "friend").get();
-
     querySnapshot.docs.forEach((e) {
       friends.add(e.get("id"));
     });
     friends.add(myId!);
     //print(friends);
-
     return friends;
   }
+
+
+
 
   Future<List<String>> getReceivered(String userId) async {
     List<String> receivered = [];
