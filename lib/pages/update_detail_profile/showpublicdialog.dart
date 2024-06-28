@@ -25,6 +25,7 @@ Future<List<String>> showPublicDialog(BuildContext context) async {
   ValueNotifier<List<String>> selectedFriendsNotifier = ValueNotifier([]);
   String? idUser = await SharedPreferenceHelper().getIdUser();
   List<String> listView = await DatabaseMethods().getFriends(idUser!);
+  listView.add(idUser);
 
   List<String>? result = await showModalBottomSheet<List<String>>(
     context: context,

@@ -432,7 +432,7 @@ class _HomeState extends State<Home> {
           String idUserStory=liststoryDoc[newIndex]["iduser"];
           int time = DateTime.now().millisecondsSinceEpoch;
           int retime = liststoryDoc[newIndex]['times'];
-
+          print("aaaaaaaaaaaaaaa${idUserStory}");
           if (time - retime < 86400000) {
             return Container(
               height: 200,

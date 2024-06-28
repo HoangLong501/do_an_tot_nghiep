@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
       //home: Login(),
       //home: Profile(idProfileUser: "haonguyen16022002"),
       //home: MemberChat(idChatRoom: "dYn626pQ53"),
-      home: Home(),
+      home: Login(),
       //home: AddMemberGroupChat(idChatRoom: "dYn626pQ53"),
 
     );

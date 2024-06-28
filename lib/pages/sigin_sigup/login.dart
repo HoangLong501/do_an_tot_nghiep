@@ -59,8 +59,7 @@ class _LoginState extends State<Login> {
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
-        
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 SizedBox(height: 30),
                 Container(
@@ -97,7 +96,6 @@ class _LoginState extends State<Login> {
                 SizedBox(height: 20),
                 TextFormField(
                   validator: (value) {
-
                     if (value == null || value.isEmpty ) {
                       return 'Mật khẩu không được để trống!';
                     }
@@ -146,6 +144,60 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 SizedBox(height: 10),
+                Container(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: MediaQuery.of(context).size.width/3.7,
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,)),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Text("hoặc đăng nhập bằng",
+                        style: TextStyle(
+
+                        ),
+                        ),
+                      ),
+                      Container(
+                          width: MediaQuery.of(context).size.width/3.7,
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,)),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10,),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width/3),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 40,
+                        width: 40,
+                        child: GestureDetector(
+                          onTap: (){
+
+                          },
+                          child: Image.asset("assets/images/google.png"),
+                        ),
+                      ),
+                      SizedBox(width: 25,),
+                      Container(
+                        height: 40,
+                        width: 40,
+                        child: GestureDetector(
+                          onTap: (){
+
+                          },
+                          child: Image.asset("assets/images/apple.png"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 TextButton(
                   onPressed: () {
                     // Xử lý quên mật khẩu ở đây
@@ -157,8 +209,8 @@ class _LoginState extends State<Login> {
                   ),
                   ),
                 ),
-                SizedBox(height: 70),
-                SizedBox(
+                 SizedBox(height: MediaQuery.of(context).size.height/4,),
+                 Container(
                   height: 45,
                   width: double.infinity,
                   child: ElevatedButton(
