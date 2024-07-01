@@ -88,10 +88,10 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
 
       };
       Map<String, dynamic> commentInfoMap = {
-        "ID":idComment,
+        "ID":id,
       };
-      await DatabaseMethods().addNews(idUser, id, newsInfoMap);
-      await DatabaseMethods().initComment(idComment, commentInfoMap);
+      await DatabaseMethods().addNews( id, newsInfoMap);
+      await DatabaseMethods().initComment(id, commentInfoMap);
       for(var follower in followers){
         NotificationDetail().sendNotificationToAnyDevice(follower,
             "$username vừa đăng một tin mới",

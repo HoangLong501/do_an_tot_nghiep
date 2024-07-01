@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../pages/lib_class_import/user.dart';
 
@@ -132,7 +133,6 @@ class DatabaseMethods {
         print('Cập nhật ${reactUsers.length}');
         print('Cập nhật react thành công cho newsfeed có ID: $newsfeedId');
       } else {
-        // Nếu newsfeed không tồn tại
         print('Newsfeed với ID: $newsfeedId không tồn tại');
       }
     } catch (error) {
@@ -342,7 +342,7 @@ class DatabaseMethods {
         .update(lastMessageInfoMap);
   }
 
-  Future<DocumentReference?> addNews(String idUser, String idNewsfeed,
+  Future<DocumentReference?> addNews( String idNewsfeed,
       Map<String, dynamic> newsfeedInfoMap) async {
     try {
       // Sử dụng ID tùy chỉnh được cung cấp để thêm dữ liệu vào Firestore.
