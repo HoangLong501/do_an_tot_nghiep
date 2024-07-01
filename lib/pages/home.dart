@@ -1,6 +1,8 @@
 import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
+import 'package:do_an_tot_nghiep/pages/search.dart';
+import 'package:do_an_tot_nghiep/pages/search1.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/edit_story.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/story.dart';
 import 'package:do_an_tot_nghiep/pages/video.dart';
@@ -17,6 +19,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart';
 class Home extends StatefulWidget {
   const Home({super.key});
   @override
@@ -30,7 +35,7 @@ class _HomeState extends State<Home> {
   bool isScrollDown =false,type=false;
   String? username, idUser;
   int picked = 0;
-  List itemCount=[];
+  List itemCount=[] , tempCount=[];
   Future<List<String>>? listNewFeed;
   List<String> listFriends=[];
   String? idUserDevice;
@@ -53,17 +58,95 @@ class _HomeState extends State<Home> {
     // Any time the token refreshes, store this in the database too.
     FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
   }
-}
+
   Future<List<DocumentSnapshot>> fetchPosts() async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('newsfeed')
-        .where('viewers', arrayContains: idUserDevice)
-        .get();
-    List<DocumentSnapshot> posts = querySnapshot.docs;
+    // Tạo query để lấy bài viết có 'viewers' chứa idUserDevice
+    Query queryWithViewers = FirebaseFirestore.instance
+        .collection('newsfeed')
+        .where('viewers', arrayContains: idUserDevice);
+
+    // Tạo query để lấy bài viết có 'viewers' là mảng rỗng
+    Query queryWithoutViewers = FirebaseFirestore.instance
+        .collection('newsfeed')
+        .where('viewers', isEqualTo: []);
+
+    // Thực hiện cả hai query
+    QuerySnapshot querySnapshotWithViewers = await queryWithViewers.get();
+    QuerySnapshot querySnapshotWithoutViewers = await queryWithoutViewers.get();
+
+    // Kết hợp kết quả của cả hai query
+    List<DocumentSnapshot> posts = [
+      ...querySnapshotWithViewers.docs,
+      ...querySnapshotWithoutViewers.docs
+    ];
+
     // Sắp xếp bài viết theo thời gian
     posts.sort((a, b) => (b['newTimestamp']).compareTo(a['newTimestamp']));
+
     return posts;
   }
+  Future<List> fetchNewsData(int limit) async {
+     String apiUrl = 'https://newsdata.io/api/1/latest';
+     String apiKey = 'pub_476043f65cc75e6a86d6fd5393ec70a10adea';
+    List articles = [];
+     String language = 'vi';
+    int fetchedItems = 0;
+    String? nextPage;
+
+    do {
+      final String url = (nextPage == null)
+          ? '$apiUrl?apikey=$apiKey&language=$language'
+          : '$apiUrl?apikey=$apiKey&language=$language&page=$nextPage';
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final utf8Body = utf8.decode(response.bodyBytes);
+        final data = jsonDecode(utf8Body);
+        List results = data['results'];
+
+        if (results.isEmpty) {
+          break;
+        }
+
+        articles.addAll(results);
+        fetchedItems += results.length;
+        nextPage = data['nextPage'];
+      } else {
+        print('Failed to load news data');
+        break;
+      }
+    } while (nextPage != null && fetchedItems < limit);
+
+    return articles.take(limit).toList();
+  }
+
+
+
   onLoad()async{
+    // tempCount = await fetchNewsData(5);
+    // for(var item in tempCount){
+    //   DateTime now = DateTime.now();
+    //   Timestamp timestamp = Timestamp.fromDate(now);
+    //   String timeNow = DateFormat('h:mma').format(now);
+    //   print(item["article_id"]);
+    //   Map<String, dynamic> newsInfoMap = {
+    //     "ID":item["article_id"],
+    //     "UserID":"admin",
+    //     "userName": "Tin tức",
+    //     "content": item["description"],
+    //     "image": item["image_url"],
+    //     "ts": timeNow,
+    //     "newTimestamp":timestamp,
+    //     "react": [],
+    //     "viewers":[],
+    //   };
+    //   Map<String, dynamic> commentInfoMap = {
+    //     "ID":item["article_id"],
+    //   };
+    //   await DatabaseMethods().addNews(item["article_id"], newsInfoMap);
+    //   await DatabaseMethods().initComment(item["article_id"], commentInfoMap);
+    // }
     idUserDevice = await SharedPreferenceHelper().getIdUser();
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
     listFriends=await DatabaseMethods().getFriends(idUserDevice!);
@@ -235,62 +318,7 @@ class _HomeState extends State<Home> {
                 },
               ),
             ),
-            FutureBuilder<List<String>>(
-              future: listNewFeed,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return CircularProgressIndicator();
-                } else if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                } else if (snapshot.data == null || snapshot.data!.isEmpty) {
-                  return Text("không có bài viết nào");
-                }
-                List<String> friendIds = snapshot.data!;
-                List<Stream<QuerySnapshot>> friendNewsfeedStreams = friendIds.map((friendId) {
-                  return FirebaseFirestore.instance
-                      .collection('newsfeed')
-                      .doc(friendId)
-                      .collection('myNewsfeed')
-                      .orderBy('newTimestamp', descending: true)
-                      .snapshots();
-                }).toList();
-                return StreamBuilder(
-                  stream: CombineLatestStream.list(friendNewsfeedStreams),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator());
-                    } else if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    } else if (snapshot.data == null || snapshot.data!.isEmpty) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-                    List<DocumentSnapshot> allPosts = [];
-                    for (var querySnapshot in snapshot.data!) {
-                      allPosts.addAll(querySnapshot.docs);
-                    }
-                    allPosts.sort((a, b) => (b['newTimestamp'] as Timestamp).compareTo(a['newTimestamp'] as Timestamp));
-                    return ListView.builder(
-                      controller: _controller,
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(), // Avoid nested scrolling
-                      itemCount: allPosts.length,
-                      itemBuilder: (context, index) {
-                        var data = allPosts[index];
-                        return WidgetNewsfeed(
-                          idUser: data["UserID"] ?? "",
-                          date: data["newTimestamp"].toDate() ?? DateTime.now(),
-                          id: data["ID"] ?? "",
-                          username: data["userName"] ?? "",
-                          content: data["content"] ?? "",
-                          time: data["ts"] ?? "",
-                          image: data["image"] ?? "",
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            ),
+
             FutureBuilder<List<DocumentSnapshot>>(
               future: fetchPosts(),
               builder: (context, snapshot) {
@@ -322,7 +350,6 @@ class _HomeState extends State<Home> {
                 );
               },
             )
-
           ],
         ),
       ),
@@ -353,7 +380,7 @@ class _HomeState extends State<Home> {
                 GestureDetector(
                     onTap: (){
 
-                    //Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
+                    Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
 
                     },
                     child: Icon(Icons.ondemand_video ,

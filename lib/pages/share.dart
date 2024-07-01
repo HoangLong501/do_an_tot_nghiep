@@ -13,7 +13,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 class Share extends StatefulWidget {
   final String idsource,image;
 
-  const Share({super.key,required this.idsource,required this.image});
+  const Share({super.key,  this.idsource="", this.image=""});
 
   @override
   State<Share> createState() => _ShareState();
@@ -107,7 +107,6 @@ class _ShareState extends State<Share> {
                                  List<String> listView= await showPublicDialog(context);
                                setState(() {
                                  listViews=listView;
-                                 print("aaaaaaaaaaaaaaaaaaaaa$listViews");
                                });
                                 },
                                 child: Row(
@@ -258,7 +257,6 @@ class _ShareState extends State<Share> {
                   ],
                 ),
               ),
-
             ],
           ),
         ),

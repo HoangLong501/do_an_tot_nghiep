@@ -94,7 +94,9 @@ class _Search1State extends State<Search1> {
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            IconButton(onPressed: (){}, icon: Icon(Icons.arrow_back)),
+            IconButton(onPressed: (){
+              Navigator.of(context).pop();
+            }, icon: Icon(Icons.arrow_back)),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.grey.shade300,
