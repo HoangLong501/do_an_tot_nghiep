@@ -199,7 +199,7 @@ class _HomeState extends State<Home> {
                   padding: EdgeInsets.only(left: 8,right: 8),
                   child: GestureDetector(
                       onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Search()));
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Search1()));
                       },
                       child: Icon(Icons.search_outlined,size: 30,)),
                 ),

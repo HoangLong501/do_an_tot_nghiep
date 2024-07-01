@@ -23,7 +23,7 @@ class CreatePassWord extends StatefulWidget {
 }
 
 class _CreatePassWordState extends State<CreatePassWord> {
-  List<Person> listUser=[];
+  List listUser=[];
   bool _obscureText = true;
   String passWord ="",rePassWord="",date="";
   RegExp passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$');
@@ -207,6 +207,34 @@ onLoad()async{
         )
     );
   }
+  List<String> generateSearchKeys(String fullName) {
+    List<String> names = fullName.split(" ");
+    Set<String> searchKeys = {};
+
+    // Tạo các tổ hợp con của mỗi từ
+    for (String name in names) {
+      for (int i = 0; i < name.length; i++) {
+        for (int j = i + 1; j <= name.length; j++) {
+          searchKeys.add(name.substring(i, j).toUpperCase());
+        }
+      }
+    }
+
+    // Tạo các tổ hợp con của các cụm từ
+    for (int i = 0; i < names.length; i++) {
+      String combinedName = "";
+      for (int j = i; j < names.length; j++) {
+        combinedName = (combinedName.isEmpty ? names[j] : "$combinedName ${names[j]}");
+        for (int k = 0; k < combinedName.length; k++) {
+          for (int l = k + 1; l <= combinedName.length; l++) {
+            searchKeys.add(combinedName.substring(k, l).toUpperCase());
+          }
+        }
+      }
+    }
+
+    return searchKeys.toList();
+  }
   Future<void> _SignUpState() async {
     String userName = "",
         birthDate = "",
@@ -232,17 +260,15 @@ onLoad()async{
         if (resual == 2) {
           //print("vao if");
           try {
-            print(email);
-            print(passWord);
+        List<String> searchKey=generateSearchKeys(userName);
             UserCredential userCredential = await FirebaseAuth.instance
                 .createUserWithEmailAndPassword(
                 email: email, password: passWord);
             String id = generateID(email);
-
             Map<String, dynamic> userInfoMap = {
               "IdUser": id,
               "Username": userName,
-              "SearchKey":widget.name,
+              "SearchKey":searchKey,
               "E-mail": email,
               "Sex": sex,
               "Birthdate": birthDate,
@@ -251,7 +277,6 @@ onLoad()async{
               "News": [],
               "Search":[]
             };
-            print("UserInfoMap before adding: $userInfoMap");
             DatabaseMethods().addUserDetail(id, userInfoMap);
             // Map<String, dynamic> relaInfoMap = {
             //   "ID":id,

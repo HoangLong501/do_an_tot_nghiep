@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/register.dart';
@@ -7,6 +8,10 @@ import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../service/database.dart';
 import '../../service/shared_pref.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mailer/smtp_server.dart';
+import 'package:mailer/mailer.dart';
+
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -18,6 +23,8 @@ class _LoginState extends State<Login> {
   bool _obscureText = true;
   TextEditingController userNameConTroller = TextEditingController();
   TextEditingController passWordConTroller = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
   Color facebookBlue = const Color(0xFF1877F2);
   final _formKey = GlobalKey<FormState>();
   String userName="", passWord="";
@@ -128,7 +135,6 @@ class _LoginState extends State<Login> {
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         userName = userNameConTroller.text;
-                        print(userName);
                         passWord = passWordConTroller.text;
                         _userLogin();
                       }
@@ -143,58 +149,17 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
-                Container(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: MediaQuery.of(context).size.width/3.7,
-                          child: Divider(
-                            color: Colors.black,
-                            thickness: 1,)),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Text("hoặc đăng nhập bằng",
-                        style: TextStyle(
-
-                        ),
-                        ),
-                      ),
-                      Container(
-                          width: MediaQuery.of(context).size.width/3.7,
-                          child: Divider(
-                            color: Colors.black,
-                            thickness: 1,)),
-                    ],
-                  ),
-                ),
                 SizedBox(height: 10,),
                 Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width/3),
                   child: Row(
                     children: [
-                      Container(
-                        height: 40,
-                        width: 40,
-                        child: GestureDetector(
-                          onTap: (){
-
-                          },
-                          child: Image.asset("assets/images/google.png"),
-                        ),
-                      ),
-                      SizedBox(width: 25,),
-                      Container(
-                        height: 40,
-                        width: 40,
-                        child: GestureDetector(
-                          onTap: (){
-
-                          },
-                          child: Image.asset("assets/images/apple.png"),
-                        ),
-                      ),
+                    Text("Đăng nhập bằng google "),
+                  TextButton(
+                      onPressed: (){
+                        print("đã nhấn vaào google");
+                        signInWithGoogle();
+                      },
+                      child: Text("Sign in"))
                     ],
                   ),
                 ),
@@ -222,7 +187,6 @@ class _LoginState extends State<Login> {
                       );
                     },
                     style: ButtonStyle(
-        
                       side: MaterialStateProperty.all<BorderSide>(BorderSide(color: Colors.deepPurpleAccent.shade200)), // Màu viền
                       ),
                     child: Text('tạo tài khoản mới',
@@ -241,6 +205,7 @@ class _LoginState extends State<Login> {
       )
     );
   }
+
   Future<void> _userLogin() async {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(email: userName, password: passWord);
@@ -353,6 +318,129 @@ class _LoginState extends State<Login> {
       }
     }
   }
+  String generateID(String email) {
+    return email.replaceAll("@gmail.com", "");
+  }
+  List<String> generateSearchKeys(String fullName) {
+    List<String> names = fullName.split(" ");
+    Set<String> searchKeys = {};
 
+    // Tạo các tổ hợp con của mỗi từ
+    for (String name in names) {
+      for (int i = 0; i < name.length; i++) {
+        for (int j = i + 1; j <= name.length; j++) {
+          searchKeys.add(name.substring(i, j).toUpperCase());
+        }
+      }
+    }
+
+    // Tạo các tổ hợp con của các cụm từ
+    for (int i = 0; i < names.length; i++) {
+      String combinedName = "";
+      for (int j = i; j < names.length; j++) {
+        combinedName = (combinedName.isEmpty ? names[j] : "$combinedName ${names[j]}");
+        for (int k = 0; k < combinedName.length; k++) {
+          for (int l = k + 1; l <= combinedName.length; l++) {
+            searchKeys.add(combinedName.substring(k, l).toUpperCase());
+          }
+        }
+      }
+    }
+
+    return searchKeys.toList();
+  }
+  Future<bool> signInWithGoogle() async {
+    try {
+      await googleSignIn.signOut();
+      // Yêu cầu người dùng chọn tài khoản Google
+      GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        // Người dùng chọn huỷ đăng nhập
+        print('Đăng nhập bị huỷ bỏ.');
+        return false;
+      }
+      GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      String email = googleUser.email ?? '';
+      String name = googleUser.displayName??'';
+      String avata=googleUser.photoUrl??'https://i.ibb.co/jzk0j6j/image.png';
+     String id= generateID(email);
+     List<String> searchKey=generateSearchKeys(name);
+      AuthCredential credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+        accessToken: googleAuth.accessToken,
+      );
+
+      // Đăng nhập vào Firebase với credential
+      UserCredential userCredential = await _auth.signInWithCredential(credential);
+      User? user = userCredential.user;
+      if (user != null) {
+        QuerySnapshot userExist=await DatabaseMethods().getUserById(id);
+        if(userExist.docs.isEmpty){
+          String date ="Ngày ${DateTime.now().day} Tháng ${DateTime.now().month} Năm ${DateTime.now().year}";
+          List listUser= await DatabaseMethods().getUserLimit10();
+          Map<String, dynamic> userInfoMap = {
+            "IdUser": id,
+            "Username": name,
+            "SearchKey":searchKey,
+            "E-mail": email,
+            "Sex": "",
+            "Birthdate": "",
+            "Phone": "",
+            "imageAvatar": avata,
+            "News": [],
+            "Search":[]
+          };
+          Map<String,dynamic> userInfoMap1={
+            "id":id,
+            "relationship":"",
+            "born":"",
+            "address":"",
+            "since": date,
+            "imageBackground":"https://i.ibb.co/9WYddvb/image.png"
+          };
+          for(int i=0;i<listUser.length;i++){
+            if(listUser[i].id==id){
+              continue;
+            }
+            Map<String , dynamic> statusInfoMap={
+              "id":listUser[i].id,
+              "check":0
+            };
+            await DatabaseMethods().addHints(id, listUser[i].id, statusInfoMap);
+          }
+
+          DatabaseMethods().addUserInfo(id, userInfoMap1);
+          DatabaseMethods().addUserDetail(id, userInfoMap);
+        }
+        QuerySnapshot querySnapshot = await DatabaseMethods().getUserByEmail(email);
+        birthDate = "${querySnapshot.docs[0]["Birthdate"]}";
+        id = "${querySnapshot.docs[0]["IdUser"]}";
+        phone = "${querySnapshot.docs[0]["Phone"]}";
+        sex = "${querySnapshot.docs[0]["Sex"]}";
+        username = "${querySnapshot.docs[0]["Username"]}";
+        image = "${querySnapshot.docs[0]["imageAvatar"]}";
+        await SharedPreferenceHelper().saveUserName(username);
+        await SharedPreferenceHelper().saveIdUser(id);
+        await SharedPreferenceHelper().saveUserPhone(phone);
+        await SharedPreferenceHelper().saveImageUser(image);
+        await SharedPreferenceHelper().saveSex(sex);
+        await SharedPreferenceHelper().saveBirthDate(birthDate);
+        Navigator.push(context,MaterialPageRoute(builder: (context)=>Home()));
+        print('Đăng nhập với tài khoản: ${user.displayName}');
+        return true;
+      } else {
+        // Đăng nhập thất bại
+        print('Đăng nhập thất bại.');
+        return false;
+      }
+    } catch (e) {
+      // Xử lý các lỗi khi đăng nhập
+      print('Lỗi đăng nhập với Google: $e');
+      return false;
+    }
+  }
 }
+
+
+
 
