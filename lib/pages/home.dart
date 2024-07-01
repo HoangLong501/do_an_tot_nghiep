@@ -1,6 +1,7 @@
 import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
+import 'package:do_an_tot_nghiep/pages/search1.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/edit_story.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/story.dart';
 import 'package:do_an_tot_nghiep/pages/video.dart';
@@ -53,7 +54,7 @@ class _HomeState extends State<Home> {
     // Any time the token refreshes, store this in the database too.
     FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
   }
-}
+
   Future<List<DocumentSnapshot>> fetchPosts() async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('newsfeed')
         .where('viewers', arrayContains: idUserDevice)
@@ -116,7 +117,7 @@ class _HomeState extends State<Home> {
                   padding: EdgeInsets.only(left: 8,right: 8),
                   child: GestureDetector(
                       onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Search()));
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Search1()));
                       },
                       child: Icon(Icons.search_outlined,size: 30,)),
                 ),
@@ -353,7 +354,7 @@ class _HomeState extends State<Home> {
                 GestureDetector(
                     onTap: (){
 
-                    //Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
+                    Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
 
                     },
                     child: Icon(Icons.ondemand_video ,
