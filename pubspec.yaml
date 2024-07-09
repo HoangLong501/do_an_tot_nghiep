@@ -78,7 +78,7 @@ dev_dependencies:
   sign_in_with_apple: ^6.1.1
   flutter_email_sender: ^6.0.3
   mailer: ^6.1.0
-  analytics: ^11.1.0
+  firebase_analytics: ^11.1.0
 
 
 # For information on the generic Dart part of this file, see the

@@ -4,6 +4,7 @@ import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/profile.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/register.dart';
+import 'package:do_an_tot_nghiep/pages/video.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
@@ -246,7 +247,11 @@ class _MenuState extends State<Menu> {
                     ),
                   ),
                 ),
-                Container(
+                 GestureDetector(
+                  onTap: () {
+                    Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
+                  },
+               child: Container(
                   margin: EdgeInsets.only(left: 20),
                   width: MediaQuery.of(context).size.width/2.4,
                   height: 100,
@@ -254,14 +259,15 @@ class _MenuState extends State<Menu> {
                       borderRadius: BorderRadius.circular(10),
                       color:Colors.white
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 20,left:20 ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.ondemand_video,size: 30,color: Colors.greenAccent,),
-                        Text("Video",style: TextStyle(fontSize: 18,fontWeight: FontWeight.w700),)
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 20,left:20 ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.ondemand_video,size: 30,color: Colors.greenAccent,),
+                          Text("Video",style: TextStyle(fontSize: 18,fontWeight: FontWeight.w700),)
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -362,7 +368,7 @@ class _MenuState extends State<Menu> {
               children: [
                 GestureDetector(
                     onTap: (){
-                      print("press ---TREND-- Bottom Appbar");
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>Video()));
                       setState(() {
 
                       });

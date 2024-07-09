@@ -33,7 +33,7 @@ class _HomeState extends State<Home> {
   Stream<QuerySnapshot>? listStory;
   final ScrollController _controller = ScrollController();
   bool isScrollDown =false,type=false;
-  String? username, idUser;
+  String? username, idUser,imagemyuser;
   int picked = 0;
   List itemCount=[] , tempCount=[];
   Future<List<String>>? listNewFeed;
@@ -148,6 +148,7 @@ class _HomeState extends State<Home> {
     //   await DatabaseMethods().initComment(item["article_id"], commentInfoMap);
     // }
     idUserDevice = await SharedPreferenceHelper().getIdUser();
+    imagemyuser = await SharedPreferenceHelper().getImageUser();
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
     listFriends=await DatabaseMethods().getFriends(idUserDevice!);
     await setupToken();
@@ -229,7 +230,8 @@ class _HomeState extends State<Home> {
        child: Column(
           children: [
             Container(
-              padding: EdgeInsets.only(top: 8, left: 8, right: 8),
+              color: Colors.grey.shade100,
+              padding: EdgeInsets.only( left: 8, right: 8),
               height: 240,
               child: StreamBuilder<QuerySnapshot>(
                 stream: DatabaseMethods().getAllStory(),
@@ -379,12 +381,13 @@ class _HomeState extends State<Home> {
               children: [
                 GestureDetector(
                     onTap: (){
-
+                      setState(() {
+                        picked = 1;
+                      });
                     Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
-
                     },
                     child: Icon(Icons.ondemand_video ,
-                      color:Colors.grey,
+                      color: picked == 1 ? Colors.blueAccent : Colors.grey,
                     )),
               ],
             ),
@@ -445,20 +448,33 @@ class _HomeState extends State<Home> {
       itemBuilder: (context, index) {
         if (index == 0) {
           // Đây là mục "Thêm mới"
-          return Container(
-            height: 200,
-            width: 160,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.grey.shade200,
-            ),
-            child: GestureDetector(
-              onTap: (){
-                Navigator.push(context,MaterialPageRoute(builder: (context)=>EditStory(idUser: idUserDevice!)));
-              },
-              child: Center(
-                child: Icon(Icons.add),
+          return GestureDetector(
+            onTap: (){
+              Navigator.push(context,MaterialPageRoute(builder: (context)=>EditStory(idUser: idUserDevice!)));
+            },
+            child: Container(
+              margin: EdgeInsets.only(top: 10,bottom: 10,right: 10),
+              height: 200,
+              width: 160,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
               ),
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: Image(
+                        image: Image.network(imagemyuser!).image,
+                        fit: BoxFit.fill,
+                      )
+                      ),
+                      Positioned(child:Center(
+                        child: Icon(Icons.add),
+                      ),
+                      ),
+                    ],
+                  ),
+                ),
             ),
           );
 
@@ -470,9 +486,9 @@ class _HomeState extends State<Home> {
           String idUserStory=liststoryDoc[newIndex]["iduser"];
           int time = DateTime.now().millisecondsSinceEpoch;
           int retime = liststoryDoc[newIndex]['times'];
-          print("aaaaaaaaaaaaaaa${idUserStory}");
           if (time - retime < 86400000) {
             return Container(
+              margin: EdgeInsets.only(bottom: 10,top: 10,right: 10),
               height: 200,
               width: 160,
               decoration: BoxDecoration(

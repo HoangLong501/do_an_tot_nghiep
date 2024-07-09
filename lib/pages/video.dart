@@ -24,16 +24,16 @@ class Video extends StatefulWidget {
 }
 
 class _VideoState extends State<Video> {
-   QuerySnapshot? listvideo;
+  QuerySnapshot? listvideo;
   VideoPlayerController? currentController;
-  String? currentPlayingUrl,idMyUser;
+  String? currentPlayingUrl, idMyUser;
   Map<String, VideoPlayerController> videoControllers = {};
-  List<Map<String,dynamic>> listUser=[];
-  bool  isScrollDown =false;
-   final ScrollController _controller = ScrollController();
-   int picked = 0;
-   List<bool> clicked = [];
-   String imageVideo="";
+  List<Map<String, dynamic>> listUser = [];
+  bool isScrollDown = false;
+  final ScrollController _controller = ScrollController();
+  int picked = 0;
+  List<bool> clicked = [];
+  String imageVideo = "";
 
   Future<void> initializeVideoControllers() async {
     for (var doc in listvideo!.docs) {
@@ -44,6 +44,7 @@ class _VideoState extends State<Video> {
       videoControllers[videoUrl] = controller;
     }
   }
+
   Future<void> playVideo(String urlVideo) async {
     if (currentController != null) {
       currentController!.pause();
@@ -54,67 +55,86 @@ class _VideoState extends State<Video> {
       currentPlayingUrl = urlVideo;
     });
   }
-   controlScroll(){
-     _controller.addListener(() {
-       if (_controller.position.userScrollDirection == ScrollDirection.reverse) {
-         isScrollDown=true;
-         setState(() {
 
-         });
-       } else if (_controller.position.userScrollDirection == ScrollDirection.forward) {
-         isScrollDown=false;
-         setState(() {
-
-         });
-       }
-     });
-   }
-  Future<void> getUser(QuerySnapshot list)async{
-    for(int i=0;i<list.docs.length;i++){
-      var idUser=list!.docs[i].data() as Map<String, dynamic>;
-      QuerySnapshot querySnapshot=await DatabaseMethods().getUserById(idUser['idfanpage']);
-     Map<String,dynamic>infoMap={
-       "idUserposter":querySnapshot.docs[0]['IdUser'],
-       "idvideo":idUser["idvideo"],
-       "username":querySnapshot.docs[0]['Username'],
-       "userimage":querySnapshot.docs[0]['imageAvatar']
-     };
-    listUser.add(infoMap);
+  void togglePlayPause(String urlVideo) {
+    if (currentPlayingUrl == urlVideo) {
+      if (currentController!.value.isPlaying) {
+        currentController!.pause();
+      } else {
+        currentController!.play();
+      }
+      setState(() {});
+    } else {
+      playVideo(urlVideo);
     }
   }
-   Future<void> CutFromVideo(String videoPath) async {
-     FlutterFFmpeg flutterFFmpeg = FlutterFFmpeg();
-     try {
-       // Đường dẫn lưu ảnh trích xuất từ khung hình tại giây thứ 1
-       Directory tempDir = await getTemporaryDirectory();
-       String framePath = '${tempDir.path}/frame_at_1s.jpg';
 
-       // Trích xuất khung hình tại giây thứ 1
-       final extractFrameArgs = [
-         '-i', videoPath,
-         '-ss', '1',
-         '-vframes', '1',
-         framePath
-       ];
+  controlScroll() {
+    _controller.addListener(() {
+      if (_controller.position.userScrollDirection == ScrollDirection.reverse) {
+        isScrollDown = true;
+        setState(() {});
+      } else if (_controller.position.userScrollDirection == ScrollDirection.forward) {
+        isScrollDown = false;
+        setState(() {});
+      }
+    });
+  }
 
-       await flutterFFmpeg.executeWithArguments(extractFrameArgs);
+  Future<void> getUser(QuerySnapshot list) async {
+    for (int i = 0; i < list.docs.length; i++) {
+      var idUser = list.docs[i].data() as Map<String, dynamic>;
+      QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(idUser['idfanpage']);
+      Map<String, dynamic> infoMap = {
+        "idUserposter": querySnapshot.docs[0]['IdUser'],
+        "idvideo": idUser["idvideo"],
+        "username": querySnapshot.docs[0]['Username'],
+        "userimage": querySnapshot.docs[0]['imageAvatar']
+      };
+      listUser.add(infoMap);
+    }
+  }
 
-       // Lưu đường dẫn ảnh vào biến imageStory
-       File frameFile = File(framePath);
-       imageVideo = frameFile.path;
+  Future<void> CutFromVideo(String videoPath) async {
+    FlutterFFmpeg flutterFFmpeg = FlutterFFmpeg();
+    try {
+      // Đường dẫn lưu ảnh trích xuất từ khung hình tại giây thứ 1
+      Directory tempDir = await getTemporaryDirectory();
+      String framePath = '${tempDir.path}/frame_at_1s.jpg';
 
-     } catch (e) {
-       print('Error: $e');
-     }
-   }
+      // Trích xuất khung hình tại giây thứ 1
+      final extractFrameArgs = [
+        '-i', videoPath,
+        '-ss', '1',
+        '-vframes', '1',
+        framePath
+      ];
 
-   Future<void> onLoad() async {
+      await flutterFFmpeg.executeWithArguments(extractFrameArgs);
+
+      // Lưu đường dẫn ảnh vào biến imageStory
+      File frameFile = File(framePath);
+      imageVideo = frameFile.path;
+
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  Future<void> onLoad() async {
     listvideo = await DatabaseMethods().getAllVideo();
-    idMyUser=await SharedPreferenceHelper().getIdUser();
+    idMyUser = await SharedPreferenceHelper().getIdUser();
     if (listvideo != null && listvideo!.docs.isNotEmpty) {
       await getUser(listvideo!);
       clicked = List.generate(listvideo!.docs.length, (index) => false);
       await initializeVideoControllers();
+      for (int i = 0; i < listvideo!.docs.length; i++) {
+        var videoData = listvideo!.docs[i].data() as Map<String, dynamic>;
+        List<dynamic> listReact = videoData['react'];
+        if (listReact.contains(idMyUser)) {
+          clicked[i] = true;
+        }
+      }
       setState(() {});
       var firstVideoData = listvideo!.docs[0].data() as Map<String, dynamic>;
       currentPlayingUrl = firstVideoData['urlvideo'];
@@ -190,11 +210,11 @@ class _VideoState extends State<Video> {
           ],
         ),
       ),
-      body: ( listUser==[]||listvideo ==null)
-            ? Center(
+      body: (listUser.isEmpty || listvideo == null)
+          ? Center(
         child: CircularProgressIndicator(),
-    )
-          :  SingleChildScrollView(
+      )
+          : SingleChildScrollView(
         child: Container(
           width: MediaQuery.of(context).size.width,
           child: ListView.builder(
@@ -205,167 +225,176 @@ class _VideoState extends State<Video> {
               var videoData = listvideo!.docs[index].data() as Map<String, dynamic>;
               String videoUrl = videoData['urlvideo'];
               String videoContent = videoData['content'];
-              List<dynamic>listReact=videoData['react'];
-              Map<String,dynamic> user=listUser[index];
-              String idvideo=videoData['idvideo'];
-              if(listReact.contains(idMyUser)){
-                clicked[index]=true;
-              }
+              Map<String, dynamic> user = listUser[index];
+              String idvideo = videoData['idvideo'];
+
               return VisibilityDetector(
                 key: Key(index.toString()),
                 onVisibilityChanged: (info) {
                   handleVisibilityChange(info, videoUrl);
                 },
-                child: Container(
-                  height: MediaQuery.of(context).size.height / 1.4,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Divider(color: Colors.grey.shade400, thickness: 5),
-                      Row(
-                        children: [
-                          SizedBox(width: 20),
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundImage: NetworkImage(user['userimage']),
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            user['username'],
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                          )
-                        ],
-                      ),
-                      Container(
-                        padding: EdgeInsets.only(left: 20, top: 10),
-                        alignment: Alignment.topLeft,
-                        height: 60,
-                        child: Text(
-                          videoContent,
-                          style: TextStyle(fontSize: 18),
-                        ),
-                      ),
-                      Container(
-                        height: MediaQuery.of(context).size.height / 2,
-                        child: videoControllers.containsKey(videoUrl) &&
-                            videoControllers[videoUrl]!.value.isInitialized
-                            ? AspectRatio(
-                          aspectRatio: 16 / 9,
-                          child: VideoPlayer(videoControllers[videoUrl]!),
-                        )
-                            : Container(),
-                      ),
-                      Row(
-                        children: [
-                          StreamBuilder(
-                            stream:DatabaseMethods().getReactVideo(idvideo) ,
-                            builder:(BuildContext context, AsyncSnapshot<int> snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return CircularProgressIndicator(); // Hiển thị indicator khi đang tải dữ liệu
-                              } else if (snapshot.hasError) {
-                                return SizedBox();// Hiển thị thông báo lỗi nếu có lỗi xảy ra
-                              } else {
-                                if(snapshot.hasData){
-                                  return Container(
-                                    padding: EdgeInsets.only(left: 20),
-                                    child: Text(
-                                      "${snapshot.data}",
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.blue
-                                      ),
-                                    ),
-                                  );
-                                }else{
-                                  return Container(
-                                    padding: EdgeInsets.only(left: 20),
-                                    child: Text(
-                                      "${snapshot.data}",
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.blue
-                                      ),
-                                    ),
-                                  );
-                                }
-                                // Hiển thị số lượng sản phẩm từ snapshot
-                              }
-                            },
-                          ),
-                          SizedBox(width: 5,),
-                          Text("lượt thích"),
-                        ],
-                      ),
-
-                      Padding(
-                        padding: EdgeInsets.only(left: 20 , right: 20,top: 5),
-                        child:
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: GestureDetector(
+                  onTap: () {
+                    togglePlayPause(videoUrl);
+                  },
+                  child: Container(
+                    height: MediaQuery.of(context).size.height / 1.4,
+                    child: Stack(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            GestureDetector(
-                              onTap: ()async{
-                                await DatabaseMethods().updateLikeVideo(user['idvideo'],idMyUser! );
-                                setState(()  {
-                                  if(clicked[index]==true){
-                                    clicked[index]=false;
-                                  }else {
-                                    clicked[index]=true;
-                                  }
-                                });
-                              },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Icon(Icons.thumb_up_alt_outlined ,color: clicked[index] ? Colors.blue :Colors.grey.shade600,),
-                                  SizedBox(width: 6,),
-                                  Text("Thích" , style: TextStyle(color:clicked[index] ? Colors.blue : Colors.grey.shade600,fontSize: 18),),
-                                ],
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: (){
-                                showMaterialModalBottomSheet(
-                                    context: context, builder: (context)=>Comment2( idPoster:user['idUserposter'] ,idNewsfeed: user['idvideo'] ,));
-                              },
-                              child: Container(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Icon(Icons.comment_bank_outlined ,color: Colors.grey.shade600,),
-                                    SizedBox(width: 6,),
-                                    Text("Bình luận" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
-                                  ],
-                                ),
-                              ),
-                            ),
+                            Divider(color: Colors.grey.shade400, thickness: 5),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(Icons.chat_bubble_outline ,color: Colors.grey.shade600,),
-                                SizedBox(width: 6,),
-                                Text("Gửi" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
+                                SizedBox(width: 20),
+                                CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: NetworkImage(user['userimage']),
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  user['username'],
+                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                                )
                               ],
                             ),
-                            GestureDetector(
-                              onTap: () async {
-                               await CutFromVideo(videoUrl);
-                                showMaterialModalBottomSheet(
-                                    context: context, builder: (context)=>Share(idsource: idvideo,image: imageVideo,));
-                              },
+                            Container(
+                              padding: EdgeInsets.only(left: 20, top: 10),
+                              alignment: Alignment.topLeft,
+                              height: 60,
+                              child: Text(
+                                videoContent,
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ),
+                            Container(
+                              height: MediaQuery.of(context).size.height / 2,
+                              child: videoControllers.containsKey(videoUrl) &&
+                                  videoControllers[videoUrl]!.value.isInitialized
+                                  ? AspectRatio(
+                                aspectRatio: 16 / 9,
+                                child: VideoPlayer(videoControllers[videoUrl]!),
+                              )
+                                  : Container(),
+                            ),
+                            Row(
+                              children: [
+                                StreamBuilder(
+                                  stream: DatabaseMethods().getReactVideo(idvideo),
+                                  builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                      return Container(
+                                        padding: EdgeInsets.only(left: 20),
+                                        child: Text(
+                                          "${snapshot.data}",
+                                          style: TextStyle(fontSize: 16, color: Colors.blue),
+                                        ),
+                                      );
+                                    } else if (snapshot.hasError) {
+                                      return SizedBox();
+                                    } else {
+                                      return Container(
+                                        padding: EdgeInsets.only(left: 20),
+                                        child: Text(
+                                          "${snapshot.data}",
+                                          style: TextStyle(fontSize: 16, color: Colors.blue),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                                SizedBox(width: 5),
+                                Text("lượt thích"),
+                              ],
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20, right: 20, top: 5),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Icon(Icons.turn_slight_right_outlined ,color: Colors.grey.shade600,),
-                                  SizedBox(width: 6,),
-                                  Text("Chia sẻ" , style: TextStyle(color: Colors.grey.shade600,fontSize: 18),),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      await DatabaseMethods().updateLikeVideo(user['idvideo'], idMyUser!);
+                                      setState(() {
+                                        clicked[index] = !clicked[index];
+                                      });
+                                    },
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Icon(
+                                          Icons.thumb_up_alt_outlined,
+                                          color: clicked[index] ? Colors.blue : Colors.grey.shade600,
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          "Thích",
+                                          style: TextStyle(
+                                            color: clicked[index] ? Colors.blue : Colors.grey.shade600,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      showMaterialModalBottomSheet(
+                                        context: context,
+                                        builder: (context) =>
+                                            Comment2(idPoster: user['idUserposter'], idNewsfeed: user['idvideo']),
+                                      );
+                                    },
+                                    child: Container(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Icon(Icons.comment_bank_outlined, color: Colors.grey.shade600),
+                                          SizedBox(width: 6),
+                                          Text(
+                                            "Bình luận",
+                                            style: TextStyle(color: Colors.grey.shade600, fontSize: 18),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      await CutFromVideo(videoUrl);
+                                      showMaterialModalBottomSheet(
+                                        context: context,
+                                        builder: (context) => Share(idsource: idvideo, image: imageVideo),
+                                      );
+                                    },
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Icon(Icons.turn_slight_right_outlined, color: Colors.grey.shade600),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          "Chia sẻ",
+                                          style: TextStyle(color: Colors.grey.shade600, fontSize: 18),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        if (currentPlayingUrl == videoUrl && !currentController!.value.isPlaying)
+                          Center(
+                            child: Icon(
+                              Icons.play_circle_outline,
+                              size: 64,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -373,7 +402,8 @@ class _VideoState extends State<Video> {
           ),
         ),
       ),
-      bottomNavigationBar: isScrollDown==false? BottomAppBar(
+      bottomNavigationBar: isScrollDown == false
+          ? BottomAppBar(
         height: 50,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -386,13 +416,13 @@ class _VideoState extends State<Video> {
                       setState(() {
                         picked = 0;
                       });
-                      Navigator.push(context,MaterialPageRoute(builder: (context)=>Home()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => Home()));
                     },
-                    splashColor: Colors.blueAccent.withOpacity(0.2), // Màu sắc của hiệu ứng splash
-                    borderRadius: BorderRadius.circular(25), // Bo tròn viền của hiệu ứng splash
+                    splashColor: Colors.blueAccent.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(25),
                     child: Icon(
                       Icons.home_outlined,
-                      color: picked == 0 ? Colors.blueAccent : Colors.grey,
+                      color:  Colors.grey,
                     ),
                   ),
                 ],
@@ -401,65 +431,72 @@ class _VideoState extends State<Video> {
             Column(
               children: [
                 GestureDetector(
-                    onTap: (){
+                  onTap: () {
+                    setState(() {
                       picked = 1;
-                    },
-                    child: Icon(Icons.ondemand_video ,
-                      color: picked==1? Colors.blueAccent:Colors.grey,
-                    )),
+                    });
+                  },
+                  child: Icon(
+                      Icons.ondemand_video,
+                      color: Colors.blueAccent
+                  ),
+                ),
               ],
             ),
             Column(
               children: [
                 GestureDetector(
-                    onTap: (){
-                      print("press ---TREND-- Bottom Appbar");
-                      setState(() {
-                        picked = 2;
-                      });
-                    },
-                    child: Icon(Icons.people ,
-                      color: picked==2? Colors.blueAccent:Colors.grey,
-                    )),
+                  onTap: () {
+                    setState(() {
+                      picked = 2;
+                    });
+                  },
+                  child: Icon(
+                    Icons.people,
+                    color: picked == 2 ? Colors.blueAccent : Colors.grey,
+                  ),
+                ),
               ],
             ),
             Column(
               children: [
                 GestureDetector(
-                    onTap: (){
-                      print("press ---TREND-- Bottom Appbar");
-                      setState(() {
-                        picked = 3;
-                      });
-                    },
-                    child: Icon(Icons.notifications_none_outlined ,
-                      color: picked==3? Colors.blueAccent:Colors.grey,
-                    )),
+                  onTap: () {
+                    setState(() {
+                      picked = 3;
+                    });
+                  },
+                  child: Icon(
+                    Icons.notifications_none_outlined,
+                    color: picked == 3 ? Colors.blueAccent : Colors.grey,
+                  ),
+                ),
               ],
             ),
             Column(
               children: [
                 GestureDetector(
-                    onTap: (){
-                      print("press ---TREND-- Bottom Appbar");
-                      Navigator.push(
-                        context,
-                        PageTransition(
-                          duration: Duration(milliseconds: 400),
-                          type: PageTransitionType.rightToLeftWithFade,
-                          child: Menu(),
-                        ),
-                      );
-                    },
-                    child: Icon(Icons.menu ,
-                      color: Colors.grey,
-                    )),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      PageTransition(
+                        duration: Duration(milliseconds: 400),
+                        type: PageTransitionType.rightToLeftWithFade,
+                        child: Menu(),
+                      ),
+                    );
+                  },
+                  child: Icon(
+                    Icons.menu,
+                    color: Colors.grey,
+                  ),
+                ),
               ],
             ),
           ],
         ),
-      ):SizedBox(),
-
+      )
+          : SizedBox(),
     );
   }
 }
