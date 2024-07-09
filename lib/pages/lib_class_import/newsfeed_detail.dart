@@ -1,5 +1,6 @@
 import 'package:do_an_tot_nghiep/pages/comment.dart';
 import 'package:do_an_tot_nghiep/pages/comment2.dart';
+import 'package:do_an_tot_nghiep/pages/lib_class_import/menu_newsfeed.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
@@ -62,15 +63,20 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
       shared=true;
       idNewsFeedShare = snapshot.docs[0]["ID"];
       DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(idNewsFeedShare).get();
-      idUserShare = data.get("UserID");
-      nameShare = data.get("userName");
-      contentShare = data.get("content");
-      imageShare = data.get("image");
-      _dateShare = data.get("newTimestamp").toDate();
-      dateShare ="${_dateShare.day} \/ ${_dateShare.month} \/ ${_dateShare.year}";
-      timeShare = data.get("ts");
-      DocumentSnapshot dataUserShare = await FirebaseFirestore.instance.collection("user").doc(idUserShare).get();
-      imageUserShare = dataUserShare.get("imageAvatar");
+      if(data.exists){
+        idUserShare = data.get("UserID");
+        nameShare = data.get("userName");
+        contentShare = data.get("content");
+        imageShare = data.get("image");
+        _dateShare = data.get("newTimestamp").toDate();
+        dateShare ="${_dateShare.day} \/ ${_dateShare.month} \/ ${_dateShare.year}";
+        timeShare = data.get("ts");
+        DocumentSnapshot dataUserShare = await FirebaseFirestore.instance.collection("user").doc(idUserShare).get();
+        imageUserShare = dataUserShare.get("imageAvatar");
+      }else{
+        idUserShare="";
+      }
+
 
     }
 
@@ -111,21 +117,24 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.username,style: TextStyle(fontSize: 18,fontWeight: FontWeight.w600),),
-                        Text(widget.time,style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
+                        Row(
+                          children: [
+                            Text(widget.time,style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
+                            SizedBox(width: 10,),
+                            Text(date??"",style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
+                          ],
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    child: Icon(Icons.linear_scale_outlined,size: 20,color: Colors.grey,),
-                  ),
-                  Text(date??"",style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
-                ],
+              TextButton(
+                    onPressed: (){
+                      showMaterialModalBottomSheet(
+                          context: context, builder: (context)=>MenuNewsfeed(idNewsfeed: widget.id,));
+                    },
+                    child: Icon(CupertinoIcons.ellipsis,size: 20,color: Colors.grey,),
               ),
             ],
           ),
@@ -147,7 +156,7 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                     color: Colors.grey.shade200,
                     border: Border.all(width: 0.4)
                   ),
-                  child: Column(
+                  child: idUserShare!="" ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
@@ -183,8 +192,14 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                         padding: EdgeInsets.only(left: 20,right: 20 , top: 20 , bottom: 20),
                         child: Text(contentShare ,style: TextStyle(fontSize: 18 ,color: Colors.grey.shade600),),
                       ),
+                      imageShare!=""? Image(image: Image.network(imageShare).image,
+                        fit: BoxFit.cover,
+                        width: MediaQuery.of(context).size.width/1,
+                      ):SizedBox(),
                     ],
-                  ),
+                  ):SizedBox(
+                      height: 100,
+                      child: Center(child: Text("Bài viết hiện không khả dụng"),)),
                 ),
                 StreamBuilder<int>(
                   stream: totalReact,
@@ -305,21 +320,24 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.username,style: TextStyle(fontSize: 18,fontWeight: FontWeight.w600),),
-                        Text(widget.time,style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
+                        Row(
+                          children: [
+                            Text(widget.time,style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
+                            SizedBox(width: 10,),
+                            Text(date??"",style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
+                          ],
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    child: Icon(Icons.linear_scale_outlined,size: 20,color: Colors.grey,),
-                  ),
-                  Text(date??"",style: TextStyle(fontSize: 12,color:Colors.grey.shade600 ),),
-                ],
+              TextButton(
+                    onPressed: (){
+                      showMaterialModalBottomSheet(
+                          context: context, builder: (context)=>MenuNewsfeed(idNewsfeed: widget.id,));
+                    },
+                    child: Icon(CupertinoIcons.ellipsis,size: 20,color: Colors.grey,),
               ),
             ],
           ),

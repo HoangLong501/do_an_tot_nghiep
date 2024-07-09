@@ -9,6 +9,7 @@ import 'package:do_an_tot_nghiep/pages/info_chatroom.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/allhintdetail.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/edit_profile_detail.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/hintdetail.dart';
+import 'package:do_an_tot_nghiep/pages/lib_class_import/itemProvider.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/test.dart';
 import 'package:do_an_tot_nghiep/pages/member_chat.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
@@ -39,18 +40,27 @@ import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_relationship
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_sex.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_username.dart';
 import 'package:do_an_tot_nghiep/pages/video.dart';
+import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';import 'package:go_router/go_router.dart';
-
+import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   VisibilityDetectorController.instance.updateInterval = Duration.zero;
   await  Firebase.initializeApp( options: DefaultFirebaseOptions.currentPlatform, );
-  runApp(const MyApp());
+  String? id = await SharedPreferenceHelper().getIdUser();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ItemProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

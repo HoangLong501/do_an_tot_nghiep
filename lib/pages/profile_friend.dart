@@ -11,7 +11,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'notifications/noti.dart';
 
 
@@ -30,6 +30,7 @@ class _ProfileState extends State<ProfileFriend> {
   int check=0;
   List follower =[] , follow=[] , friends=[] , temp=[];
   int quantityFriend=0;
+  bool followed = true;
 
   upCheck() async {
      QuerySnapshot listFriend= await FirebaseFirestore.instance
@@ -40,6 +41,21 @@ class _ProfileState extends State<ProfileFriend> {
       if(doc[i]["id"]==widget.idProfileUser){
         check=2;
       }
+    }
+  }
+  getStatusFollow()async{
+    List tempFollow=[];
+    DocumentSnapshot dataFollow = await FirebaseFirestore.instance.collection("user").doc(myId)
+        .collection("advance").doc(myId).get();
+    try{
+      tempFollow = dataFollow.get("unfollow");
+    }catch(e){
+      tempFollow = [];
+    }
+    if(tempFollow.isEmpty){
+      followed = true;
+    }else{
+      followed = !tempFollow.contains(widget.idProfileUser);
     }
   }
   onLoad()async{
@@ -57,7 +73,6 @@ class _ProfileState extends State<ProfileFriend> {
     myNewsfeedStream = DatabaseMethods().getMyNewsProfile(widget.idProfileUser , myId);
     check=await DatabaseMethods().getCkheckHint(myId, widget.idProfileUser) ;
     await upCheck();
-
     friends = await DatabaseMethods().getFriends(widget.idProfileUser);
     friends.remove(myId);
     quantityFriend = friends.length;
@@ -66,6 +81,7 @@ class _ProfileState extends State<ProfileFriend> {
     }else{
       temp=friends;
     }
+    await getStatusFollow();
     setState(() {
     });
   }
@@ -187,33 +203,107 @@ class _ProfileState extends State<ProfileFriend> {
                           ),
                     ),
                     )else if(check==2)
-                   Container(
-                     margin: EdgeInsets.only(top: 10,left: 20),
-                     width: MediaQuery.of(context).size.width/2.7,
-                     height: 40,
-                     decoration: BoxDecoration(
-                       color: Colors.grey.shade300,
-                       borderRadius: BorderRadius.circular(8),
-                     ),
-                     child:
-                     GestureDetector(
-                       onTap: (){
-                       },
-                       child:  Row(
-                         children: [
-                           Container(
-                               margin: EdgeInsets.only(left: 30,right: 10),
-                               child:Icon(CupertinoIcons.person_2_alt,
-                                 color: Colors.black,
-                               )
-                           ),
-                           Center(
-                               child: Text("Bạn bè",
-                                 style: TextStyle(fontSize: 16,color: Colors.black),
-                               )
-                           ),
-                         ],
+                   GestureDetector(
+                     onTap: (){
+                       print("press");
+                       showMaterialModalBottomSheet(
+                           context: context, builder: (context)=>Container(
+                         height: MediaQuery.of(context).size.height/3.4,
+                         child: Column(
+                           children: [
+                             TextButton(onPressed: ()async{
+                               if(followed){
+
+                               }else{
+                                 List temp=[];
+                                 DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(myId)
+                                     .collection("advance").doc(myId).get();
+                                 temp = data.get("unfollow");
+                                 temp.remove(widget.idProfileUser);
+                                 Map<String ,dynamic> dataInfo ={
+                                   "unfollow":temp,
+                                 };
+                                 await FirebaseFirestore.instance.collection("user").doc(myId)
+                                     .collection("advance").doc(myId).update(dataInfo);
+                                 print("theo dõi");
+                                 setState(() {
+                                   followed =true;
+                                 });
+                               }
+                               Navigator.of(context).pop();
+                             }, child: Row(
+                               children: [
+                                 Text("Theo dõi"),
+                                 followed? Icon(Icons.check):SizedBox(),
+                               ],
+                             )),
+                             TextButton(onPressed: ()async{
+                               if(!followed){
+
+                               }else{
+                                 List temp=[];
+                                 DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(myId)
+                                 .collection("advance").doc(myId).get();
+                                 if(data.exists){
+                                   try{
+                                     temp = data.get("unfollow");
+                                   }catch(e){
+                                     temp=[];
+                                   }
+                                   temp.add(widget.idProfileUser);
+                                   Map<String ,dynamic> dataInfo ={
+                                     "unfollow":temp,
+                                   };
+                                   await FirebaseFirestore.instance.collection("user").doc(myId)
+                                       .collection("advance").doc(myId).update(dataInfo);
+                                 }else{
+                                   temp.add(widget.idProfileUser);
+                                   Map<String ,dynamic> data ={
+                                     "unfollow":temp,
+                                   };
+                                   await FirebaseFirestore.instance.collection("user").doc(myId)
+                                       .collection("advance").doc(myId).set(data);
+                                 }
+                                 print("Bỏ theo dõi");
+                                 setState(() {
+                                   followed =false;
+                                 });
+                               }
+                               Navigator.of(context).pop();
+                             }, child: Row(
+                               children: [
+                                 Text("Bỏ theo dõi"),
+                                 !followed? Icon(Icons.check):SizedBox(),
+                               ],
+                             )),
+                           ],
+                         ),
+                       ));
+                     },
+                     child: Container(
+                       margin: EdgeInsets.only(top: 10,left: 20),
+                       width: MediaQuery.of(context).size.width/2.7,
+                       height: 40,
+                       decoration: BoxDecoration(
+                         color: Colors.grey.shade300,
+                         borderRadius: BorderRadius.circular(8),
                        ),
+                       child:
+                       Row(
+                           children: [
+                             Container(
+                                 margin: EdgeInsets.only(left: 30,right: 10),
+                                 child:Icon(CupertinoIcons.person_2_alt,
+                                   color: Colors.black,
+                                 )
+                             ),
+                             Center(
+                                 child: Text("Bạn bè",
+                                   style: TextStyle(fontSize: 16,color: Colors.black),
+                                 )
+                             ),
+                           ],
+                         ),
                      ),
                    ) else
                       Container(
@@ -292,7 +382,7 @@ class _ProfileState extends State<ProfileFriend> {
                     ),
                   ],
                 ),
-                TextButton(
+                check!=2?TextButton(
                   onPressed: ()async{
                       if(follower.contains(myId)){
                         setState(() {
@@ -322,7 +412,7 @@ class _ProfileState extends State<ProfileFriend> {
                       // print(widget.idProfileUser);
                       // print(myId);
                   },
-                  child: check!=2? Container(
+                  child:  Container(
                     margin: EdgeInsets.only(top: 10,left: 10),
                     width: MediaQuery.of(context).size.width/1.6,
                     height: 40,
@@ -336,8 +426,8 @@ class _ProfileState extends State<ProfileFriend> {
                       "Hủy theo dõi":"Theo dõi",
 
                       style: TextStyle(fontSize: 16,color: Colors.black),)),
-                  ):SizedBox(),
-                ),
+                  ),
+                ):SizedBox(),
 
               ],
             ),

@@ -12,16 +12,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
+import 'lib_class_import/itemProvider.dart';
 import 'lib_class_import/newsfeed_detail.dart';
-import 'package:page_transition/page_transition.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 class Home extends StatefulWidget {
   const Home({super.key});
   @override
@@ -31,7 +31,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   Stream? myNewsfeedStream;
   Stream<QuerySnapshot>? listStory;
-  final ScrollController _controller = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   bool isScrollDown =false,type=false;
   String? username, idUser;
   int picked = 0;
@@ -40,7 +40,10 @@ class _HomeState extends State<Home> {
   List<String> listFriends=[];
   String? idUserDevice;
   Map<String, int> currentStoryIndex = {};
-
+  bool isLoading = false;
+  bool hasMore = true;
+  DocumentSnapshot? lastDocument;
+  List<DocumentSnapshot> posts = [];
 
   Future<void> saveTokenToDatabase(String token ) async {
     // Assume user is logged in for this example
@@ -59,108 +62,166 @@ class _HomeState extends State<Home> {
     FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
   }
 
-  Future<List<DocumentSnapshot>> fetchPosts() async {
-    // Tạo query để lấy bài viết có 'viewers' chứa idUserDevice
-    Query queryWithViewers = FirebaseFirestore.instance
-        .collection('newsfeed')
-        .where('viewers', arrayContains: idUserDevice);
-
-    // Tạo query để lấy bài viết có 'viewers' là mảng rỗng
-    Query queryWithoutViewers = FirebaseFirestore.instance
-        .collection('newsfeed')
-        .where('viewers', isEqualTo: []);
-
-    // Thực hiện cả hai query
-    QuerySnapshot querySnapshotWithViewers = await queryWithViewers.get();
-    QuerySnapshot querySnapshotWithoutViewers = await queryWithoutViewers.get();
-
-    // Kết hợp kết quả của cả hai query
-    List<DocumentSnapshot> posts = [
-      ...querySnapshotWithViewers.docs,
-      ...querySnapshotWithoutViewers.docs
-    ];
-
-    // Sắp xếp bài viết theo thời gian
-    posts.sort((a, b) => (b['newTimestamp']).compareTo(a['newTimestamp']));
-
-    return posts;
-  }
-  Future<List> fetchNewsData(int limit) async {
-     String apiUrl = 'https://newsdata.io/api/1/latest';
-     String apiKey = 'pub_476043f65cc75e6a86d6fd5393ec70a10adea';
-    List articles = [];
-     String language = 'vi';
-    int fetchedItems = 0;
-    String? nextPage;
-
-    do {
-      final String url = (nextPage == null)
-          ? '$apiUrl?apikey=$apiKey&language=$language'
-          : '$apiUrl?apikey=$apiKey&language=$language&page=$nextPage';
-
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final utf8Body = utf8.decode(response.bodyBytes);
-        final data = jsonDecode(utf8Body);
-        List results = data['results'];
-
-        if (results.isEmpty) {
-          break;
-        }
-
-        articles.addAll(results);
-        fetchedItems += results.length;
-        nextPage = data['nextPage'];
-      } else {
-        print('Failed to load news data');
-        break;
-      }
-    } while (nextPage != null && fetchedItems < limit);
-
-    return articles.take(limit).toList();
-  }
-
-
-
+  // Future<List<DocumentSnapshot>> fetchPosts() async {
+  //   // Tạo query để lấy bài viết có 'viewers' chứa idUserDevice
+  //   Query queryWithViewers = FirebaseFirestore.instance
+  //       .collection('newsfeed')
+  //       .where('viewers', arrayContains: idUserDevice);
+  //
+  //   // Tạo query để lấy bài viết có 'viewers' là mảng rỗng
+  //   Query queryWithoutViewers = FirebaseFirestore.instance
+  //       .collection('newsfeed')
+  //       .where('viewers', isEqualTo: []);
+  //
+  //   // Thực hiện cả hai query
+  //   QuerySnapshot querySnapshotWithViewers = await queryWithViewers.get();
+  //   QuerySnapshot querySnapshotWithoutViewers = await queryWithoutViewers.get();
+  //
+  //   // Kết hợp kết quả của cả hai query
+  //   List<DocumentSnapshot> posts = [
+  //     ...querySnapshotWithViewers.docs,
+  //     ...querySnapshotWithoutViewers.docs
+  //   ];
+  //
+  //   // Sắp xếp bài viết theo thời gian
+  //   posts.sort((a, b) => (b['newTimestamp']).compareTo(a['newTimestamp']));
+  //
+  //   return posts;
+  // }
+  // Future<void> fetchPosts() async {
+  //   print("Start fetching posts...");
+  //   if (isLoading) return;
+  //   setState(() => isLoading = true);
+  //
+  //   // Tạo query để lấy bài viết có 'viewers' chứa idUserDevice
+  //   Query queryWithViewers = FirebaseFirestore.instance
+  //       .collection('newsfeed')
+  //       .where('viewers', arrayContains: idUserDevice)
+  //       .orderBy('newTimestamp', descending: true)
+  //       .limit(5);
+  //
+  //   // Tạo query để lấy bài viết có 'viewers' là mảng rỗng
+  //   Query queryWithoutViewers = FirebaseFirestore.instance
+  //       .collection('newsfeed')
+  //       .where('viewers', isEqualTo: [])
+  //       .orderBy('newTimestamp', descending: true)
+  //       .limit(5);
+  //
+  //   // Thực hiện cả hai query
+  //   QuerySnapshot querySnapshotWithViewers = await queryWithViewers.get();
+  //   QuerySnapshot querySnapshotWithoutViewers = await queryWithoutViewers.get();
+  //   print("newsfeed : ${querySnapshotWithViewers.size}");
+  //   print("news : ${querySnapshotWithoutViewers.size}");
+  //   // Kết hợp kết quả của cả hai query
+  //   List<DocumentSnapshot> combinedPosts = [
+  //     ...querySnapshotWithViewers.docs,
+  //     ...querySnapshotWithoutViewers.docs
+  //   ];
+  //
+  //   // Sắp xếp bài viết theo thời gian
+  //   combinedPosts.sort((a, b) => (b['newTimestamp']).compareTo(a['newTimestamp']));
+  //
+  //   // Gán kết quả cho biến posts
+  //   posts = combinedPosts;
+  //
+  //   // Cập nhật lastDocument để phân trang
+  //   if (combinedPosts.isNotEmpty) {
+  //     lastDocument = combinedPosts.last;
+  //   }
+  //
+  //   setState(() {
+  //     isLoading = false;
+  //     hasMore = combinedPosts.length == 10; // Điều kiện hasMore nếu cần
+  //   });
+  //
+  //   print("Fetch posts completed. Total posts: ${posts.length}");
+  // }
+  // Future<void> fetchMorePosts() async {
+  //   if (isLoading || !hasMore) return;
+  //   setState(() => isLoading = true);
+  //
+  //   print("Fetching more posts...");
+  //
+  //   // Tạo query để lấy thêm bài viết có 'viewers' chứa idUserDevice
+  //   Query queryWithViewers = FirebaseFirestore.instance
+  //       .collection('newsfeed')
+  //       .where('viewers', arrayContains: idUserDevice)
+  //       .orderBy('newTimestamp', descending: true)
+  //       .startAfterDocument(lastDocument!)
+  //       .limit(5);
+  //
+  //   // Tạo query để lấy thêm bài viết có 'viewers' là mảng rỗng
+  //   Query queryWithoutViewers = FirebaseFirestore.instance
+  //       .collection('newsfeed')
+  //       .where('viewers', isEqualTo: [])
+  //       .orderBy('newTimestamp', descending: true)
+  //       .startAfterDocument(lastDocument!)
+  //       .limit(5);
+  //
+  //   // Thực hiện cả hai query
+  //   QuerySnapshot querySnapshotWithViewers = await queryWithViewers.get();
+  //   QuerySnapshot querySnapshotWithoutViewers = await queryWithoutViewers.get();
+  //
+  //   // Kết hợp kết quả của cả hai query
+  //   List<DocumentSnapshot> combinedPosts = [
+  //     ...querySnapshotWithViewers.docs,
+  //     ...querySnapshotWithoutViewers.docs
+  //   ];
+  //
+  //   // Sắp xếp bài viết theo thời gian
+  //   combinedPosts.sort((a, b) =>
+  //       (b['newTimestamp']).compareTo(a['newTimestamp']));
+  //
+  //   // Gán kết quả cho biến posts
+  //   posts.addAll(combinedPosts);
+  //
+  //   // Cập nhật lastDocument để phân trang
+  //   if (combinedPosts.isNotEmpty) {
+  //     lastDocument = combinedPosts.last;
+  //   }
+  //
+  //   setState(() {
+  //     isLoading = false;
+  //     hasMore = combinedPosts.length == 10; // Điều kiện hasMore nếu cần
+  //   });
+  //   print("Fetch more posts completed. Total posts: ${posts.length}");
+  // }
+  //   void onScroll() {
+  //   if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent&& hasMore) {
+  //     print('Loading more posts');
+  //     itemProvider.fetchMorePosts();
+  //   }
+  // }
   onLoad()async{
-    // tempCount = await fetchNewsData(5);
-    // for(var item in tempCount){
-    //   DateTime now = DateTime.now();
-    //   Timestamp timestamp = Timestamp.fromDate(now);
-    //   String timeNow = DateFormat('h:mma').format(now);
-    //   print(item["article_id"]);
-    //   Map<String, dynamic> newsInfoMap = {
-    //     "ID":item["article_id"],
-    //     "UserID":"admin",
-    //     "userName": "Tin tức",
-    //     "content": item["description"],
-    //     "image": item["image_url"],
-    //     "ts": timeNow,
-    //     "newTimestamp":timestamp,
-    //     "react": [],
-    //     "viewers":[],
-    //   };
-    //   Map<String, dynamic> commentInfoMap = {
-    //     "ID":item["article_id"],
-    //   };
-    //   await DatabaseMethods().addNews(item["article_id"], newsInfoMap);
-    //   await DatabaseMethods().initComment(item["article_id"], commentInfoMap);
-    // }
     idUserDevice = await SharedPreferenceHelper().getIdUser();
+
+
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
     listFriends=await DatabaseMethods().getFriends(idUserDevice!);
     await setupToken();
+    //_scrollController.addListener(onScroll);
+    // await fetchPosts();
     setState(() {});
   }
+
   @override
   void initState() {
     super.initState();
+    final itemProvider = Provider.of<ItemProvider>(context, listen: false);
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ItemProvider>(context, listen: false).fetchPosts();
+    });
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent && itemProvider.hasMore) {
+        itemProvider.fetchMorePosts();
+      }
+    });
     onLoad();
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -225,131 +286,147 @@ class _HomeState extends State<Home> {
       ),
       backgroundColor: Colors.white,
       body:SingleChildScrollView(
-        // controller: _controller,
+        controller: _scrollController,
        child: Column(
           children: [
-            Container(
-              padding: EdgeInsets.only(top: 8, left: 8, right: 8),
-              height: 240,
-              child: StreamBuilder<QuerySnapshot>(
-                stream: DatabaseMethods().getAllStory(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return Center(child: CircularProgressIndicator(),);
-                  } else if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  } else if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
-                    return GestureDetector(
-                        onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => EditStory(idUser:idUserDevice! )));
-                        },
-                      child: Container(
-                        padding: EdgeInsets.only(right: MediaQuery.of(context).size.width / 2),
-                        height: 200,
-                        child: SizedBox(
-                          width: 160.0,
-                          height: 200,
-                          child: Card(
-                            child: Center(
-                              child: Icon(Icons.add),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                  List<DocumentSnapshot> allStories = snapshot.data!.docs;
-                  List<DocumentSnapshot> userStories=[];
+            // Container(
+            //   padding: EdgeInsets.only(top: 8, left: 8, right: 8),
+            //   height: 240,
+            //   child: StreamBuilder<QuerySnapshot>(
+            //     stream: DatabaseMethods().getAllStory(),
+            //     builder: (context, snapshot) {
+            //       if (!snapshot.hasData) {
+            //         return Center(child: CircularProgressIndicator(),);
+            //       } else if (snapshot.connectionState == ConnectionState.waiting) {
+            //         return CircularProgressIndicator();
+            //       } else if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
+            //         return GestureDetector(
+            //             onTap: () {
+            //               Navigator.push(context, MaterialPageRoute(builder: (context) => EditStory(idUser:idUserDevice! )));
+            //             },
+            //           child: Container(
+            //             padding: EdgeInsets.only(right: MediaQuery.of(context).size.width / 2),
+            //             height: 200,
+            //             child: SizedBox(
+            //               width: 160.0,
+            //               height: 200,
+            //               child: Card(
+            //                 child: Center(
+            //                   child: Icon(Icons.add),
+            //                 ),
+            //               ),
+            //             ),
+            //           ),
+            //         );
+            //       }
+            //       List<DocumentSnapshot> allStories = snapshot.data!.docs;
+            //       List<DocumentSnapshot> userStories=[];
+            //
+            //       // Phân loại story theo iduser
+            //       for (var doc in allStories) {
+            //         List<dynamic> status = doc['status'];
+            //         if (status.isEmpty) {
+            //           userStories.add(doc);
+            //         } else if (status.contains(idUserDevice)) {
+            //           userStories.add(doc);
+            //         }
+            //       }
+            //       // Xây dựng danh sách Stream từ list userStories
+            //       List<Stream<QuerySnapshot>> streams = [
+            //         for (var story in userStories)
+            //           DatabaseMethods().getWatchedStory(story.id, idUserDevice!)
+            //       ];
+            //       // Sử dụng Future.wait để chờ lấy tất cả dữ liệu từ các Stream
+            //       return FutureBuilder(
+            //         future: Future.wait(streams.map((stream) => stream.first)),
+            //         builder: (context, AsyncSnapshot<List<QuerySnapshot>> snapshots) {
+            //           if (snapshots.connectionState == ConnectionState.waiting) {
+            //             return CircularProgressIndicator();
+            //           } else if (snapshots.hasError) {
+            //             return Text('Lỗi: ${snapshots.error}');
+            //           }
+            //           List<DocumentSnapshot> listWatched = [];
+            //           List<DocumentSnapshot> listWatch = [];
+            //           // Xử lý dữ liệu sau khi đã có kết quả từ các Stream
+            //           for (int i = 0; i < snapshots.data!.length; i++) {
+            //             bool watched = snapshots.data![i].docs.isNotEmpty && snapshots.data![i].docs.first['watched'];
+            //             if (watched) {
+            //               listWatched.add(userStories[i]);
+            //             } else {
+            //               listWatch.add(userStories[i]);
+            //             }
+            //           }
+            //           listWatch.addAll(listWatched); // Đưa các story đã xem xuống cuối danh sách
+            //           // for(var wacht in listWatch){
+            //           //   print("aaaaaaaaaaaa${wacht.data()}");
+            //           // }
+            //           listWatch.sort((a, b) {
+            //             String idA = a['iduser'];
+            //             String idB = b['iduser'];
+            //
+            //             if (idA == idUserDevice && idB != idUserDevice) {
+            //               return -1; // Đưa phần tử có iduser là idUserDevice lên trước
+            //             } else if (idA != idUserDevice && idB == idUserDevice) {
+            //               return 1; // Đưa phần tử có iduser khác idUserDevice xuống sau
+            //             } else {
+            //               return 0; // Giữ nguyên thứ tự của các phần tử khác
+            //             }
+            //           });
+            //
+            //           return buildStoryCard(listWatch); // Hiển thị danh sách story đã được sắp xếp
+            //         },
+            //       );
+            //     },
+            //   ),
+            // ),
 
-                  // Phân loại story theo iduser
-                  for (var doc in allStories) {
-                    List<dynamic> status = doc['status'];
-                    if (status.isEmpty) {
-                      userStories.add(doc);
-                    } else if (status.contains(idUserDevice)) {
-                      userStories.add(doc);
-                    }
-                  }
-                  // Xây dựng danh sách Stream từ list userStories
-                  List<Stream<QuerySnapshot>> streams = [
-                    for (var story in userStories)
-                      DatabaseMethods().getWatchedStory(story.id, idUserDevice!)
-                  ];
-                  // Sử dụng Future.wait để chờ lấy tất cả dữ liệu từ các Stream
-                  return FutureBuilder(
-                    future: Future.wait(streams.map((stream) => stream.first)),
-                    builder: (context, AsyncSnapshot<List<QuerySnapshot>> snapshots) {
-                      if (snapshots.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
-                      } else if (snapshots.hasError) {
-                        return Text('Lỗi: ${snapshots.error}');
-                      }
-                      List<DocumentSnapshot> listWatched = [];
-                      List<DocumentSnapshot> listWatch = [];
-                      // Xử lý dữ liệu sau khi đã có kết quả từ các Stream
-                      for (int i = 0; i < snapshots.data!.length; i++) {
-                        bool watched = snapshots.data![i].docs.isNotEmpty && snapshots.data![i].docs.first['watched'];
-                        if (watched) {
-                          listWatched.add(userStories[i]);
-                        } else {
-                          listWatch.add(userStories[i]);
-                        }
-                      }
-                      listWatch.addAll(listWatched); // Đưa các story đã xem xuống cuối danh sách
-                      // for(var wacht in listWatch){
-                      //   print("aaaaaaaaaaaa${wacht.data()}");
-                      // }
-                      listWatch.sort((a, b) {
-                        String idA = a['iduser'];
-                        String idB = b['iduser'];
-
-                        if (idA == idUserDevice && idB != idUserDevice) {
-                          return -1; // Đưa phần tử có iduser là idUserDevice lên trước
-                        } else if (idA != idUserDevice && idB == idUserDevice) {
-                          return 1; // Đưa phần tử có iduser khác idUserDevice xuống sau
-                        } else {
-                          return 0; // Giữ nguyên thứ tự của các phần tử khác
-                        }
-                      });
-
-                      return buildStoryCard(listWatch); // Hiển thị danh sách story đã được sắp xếp
-                    },
-                  );
-                },
-              ),
-            ),
-
-            FutureBuilder<List<DocumentSnapshot>>(
-              future: fetchPosts(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return CircularProgressIndicator();
-                } else if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                } else if (snapshot.data == null || snapshot.data!.isEmpty) {
-                  return Text("không có bài viết nào");
-                }
-                List<DocumentSnapshot> allPosts = snapshot.data!;
-                return ListView.builder(
-                  controller: _controller,
+            // ListView.builder(
+            //   shrinkWrap: true,
+            //   physics: NeverScrollableScrollPhysics(),  // Tránh việc cuộn lồng nhau
+            //   itemCount: posts.length + (hasMore ? 1 : 0),
+            //   itemBuilder: (context, index) {
+            //     if (index == posts.length) {
+            //       // Hiển thị biểu tượng tải khi có thêm bài viết cần tải
+            //       return Center(child: CircularProgressIndicator());
+            //     }
+            //     var data = posts[index];
+            //     return WidgetNewsfeed(
+            //       idUser: data["UserID"] ?? "",
+            //       date: data["newTimestamp"].toDate() ?? DateTime.now(),
+            //       id: data["ID"] ?? "",
+            //       username: data["userName"] ?? "",
+            //       content: data["content"] ?? "",
+            //       time: data["ts"] ?? "",
+            //       image: data["image"] ?? "",
+            //     );
+            //   },
+            // ),
+            Consumer<ItemProvider>(
+              builder: (context, itemProvider, child) {
+                return itemProvider.isLoading && itemProvider.items.isEmpty
+                    ? Center(child: CircularProgressIndicator())
+                    : ListView.builder(
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),  // Avoid nested scrolling
-                  itemCount: allPosts.length,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: itemProvider.items.length + (itemProvider.hasMore ? 1 : 0),
                   itemBuilder: (context, index) {
-                    var data = allPosts[index];
+                    if (index == itemProvider.items.length) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    var data = itemProvider.items[index];
                     return WidgetNewsfeed(
-                      idUser: data["UserID"] ?? "",
-                      date: data["newTimestamp"].toDate() ?? DateTime.now(),
-                      id: data["ID"] ?? "",
-                      username: data["userName"] ?? "",
-                      content: data["content"] ?? "",
-                      time: data["ts"] ?? "",
-                      image: data["image"] ?? "",
-                    );
+                              idUser: data["UserID"] ?? "",
+                              date: data["newTimestamp"].toDate() ?? DateTime.now(),
+                              id: data["ID"] ?? "",
+                              username: data["userName"] ?? "",
+                              content: data["content"] ?? "",
+                              time: data["ts"] ?? "",
+                              image: data["image"] ?? "",
+                            );
                   },
                 );
               },
-            )
+            ),
           ],
         ),
       ),
@@ -470,7 +547,6 @@ class _HomeState extends State<Home> {
           String idUserStory=liststoryDoc[newIndex]["iduser"];
           int time = DateTime.now().millisecondsSinceEpoch;
           int retime = liststoryDoc[newIndex]['times'];
-          print("aaaaaaaaaaaaaaa${idUserStory}");
           if (time - retime < 86400000) {
             return Container(
               height: 200,
