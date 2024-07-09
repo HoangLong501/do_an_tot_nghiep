@@ -921,6 +921,13 @@ class DatabaseMethods {
      return FirebaseFirestore.instance.collection("video")
         .doc(idvideo).update(infoMap);
   }
+
+
+
+
+
+
+
 }
 
 
