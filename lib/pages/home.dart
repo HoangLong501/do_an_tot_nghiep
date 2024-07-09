@@ -33,7 +33,7 @@ class _HomeState extends State<Home> {
   Stream<QuerySnapshot>? listStory;
   final ScrollController _scrollController = ScrollController();
   bool isScrollDown =false,type=false;
-  String? username, idUser;
+  String? username, idUser,imagemyuser;
   int picked = 0;
   List itemCount=[] , tempCount=[];
   Future<List<String>>? listNewFeed;
@@ -194,7 +194,7 @@ class _HomeState extends State<Home> {
   // }
   onLoad()async{
     idUserDevice = await SharedPreferenceHelper().getIdUser();
-
+    imagemyuser = await SharedPreferenceHelper().getImageUser();
 
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
     listFriends=await DatabaseMethods().getFriends(idUserDevice!);
@@ -289,123 +289,103 @@ class _HomeState extends State<Home> {
         controller: _scrollController,
        child: Column(
           children: [
-            // Container(
-            //   padding: EdgeInsets.only(top: 8, left: 8, right: 8),
-            //   height: 240,
-            //   child: StreamBuilder<QuerySnapshot>(
-            //     stream: DatabaseMethods().getAllStory(),
-            //     builder: (context, snapshot) {
-            //       if (!snapshot.hasData) {
-            //         return Center(child: CircularProgressIndicator(),);
-            //       } else if (snapshot.connectionState == ConnectionState.waiting) {
-            //         return CircularProgressIndicator();
-            //       } else if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
-            //         return GestureDetector(
-            //             onTap: () {
-            //               Navigator.push(context, MaterialPageRoute(builder: (context) => EditStory(idUser:idUserDevice! )));
-            //             },
-            //           child: Container(
-            //             padding: EdgeInsets.only(right: MediaQuery.of(context).size.width / 2),
-            //             height: 200,
-            //             child: SizedBox(
-            //               width: 160.0,
-            //               height: 200,
-            //               child: Card(
-            //                 child: Center(
-            //                   child: Icon(Icons.add),
-            //                 ),
-            //               ),
-            //             ),
-            //           ),
-            //         );
-            //       }
-            //       List<DocumentSnapshot> allStories = snapshot.data!.docs;
-            //       List<DocumentSnapshot> userStories=[];
-            //
-            //       // Phân loại story theo iduser
-            //       for (var doc in allStories) {
-            //         List<dynamic> status = doc['status'];
-            //         if (status.isEmpty) {
-            //           userStories.add(doc);
-            //         } else if (status.contains(idUserDevice)) {
-            //           userStories.add(doc);
-            //         }
-            //       }
-            //       // Xây dựng danh sách Stream từ list userStories
-            //       List<Stream<QuerySnapshot>> streams = [
-            //         for (var story in userStories)
-            //           DatabaseMethods().getWatchedStory(story.id, idUserDevice!)
-            //       ];
-            //       // Sử dụng Future.wait để chờ lấy tất cả dữ liệu từ các Stream
-            //       return FutureBuilder(
-            //         future: Future.wait(streams.map((stream) => stream.first)),
-            //         builder: (context, AsyncSnapshot<List<QuerySnapshot>> snapshots) {
-            //           if (snapshots.connectionState == ConnectionState.waiting) {
-            //             return CircularProgressIndicator();
-            //           } else if (snapshots.hasError) {
-            //             return Text('Lỗi: ${snapshots.error}');
-            //           }
-            //           List<DocumentSnapshot> listWatched = [];
-            //           List<DocumentSnapshot> listWatch = [];
-            //           // Xử lý dữ liệu sau khi đã có kết quả từ các Stream
-            //           for (int i = 0; i < snapshots.data!.length; i++) {
-            //             bool watched = snapshots.data![i].docs.isNotEmpty && snapshots.data![i].docs.first['watched'];
-            //             if (watched) {
-            //               listWatched.add(userStories[i]);
-            //             } else {
-            //               listWatch.add(userStories[i]);
-            //             }
-            //           }
-            //           listWatch.addAll(listWatched); // Đưa các story đã xem xuống cuối danh sách
-            //           // for(var wacht in listWatch){
-            //           //   print("aaaaaaaaaaaa${wacht.data()}");
-            //           // }
-            //           listWatch.sort((a, b) {
-            //             String idA = a['iduser'];
-            //             String idB = b['iduser'];
-            //
-            //             if (idA == idUserDevice && idB != idUserDevice) {
-            //               return -1; // Đưa phần tử có iduser là idUserDevice lên trước
-            //             } else if (idA != idUserDevice && idB == idUserDevice) {
-            //               return 1; // Đưa phần tử có iduser khác idUserDevice xuống sau
-            //             } else {
-            //               return 0; // Giữ nguyên thứ tự của các phần tử khác
-            //             }
-            //           });
-            //
-            //           return buildStoryCard(listWatch); // Hiển thị danh sách story đã được sắp xếp
-            //         },
-            //       );
-            //     },
-            //   ),
-            // ),
+            Container(
+              color: Colors.grey.shade100,
+              padding: EdgeInsets.only( left: 8, right: 8),
+              height: 240,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: DatabaseMethods().getAllStory(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator(),);
+                  } else if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
+                    return GestureDetector(
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => EditStory(idUser:idUserDevice! )));
+                        },
+                      child: Container(
+                        padding: EdgeInsets.only(right: MediaQuery.of(context).size.width / 2),
+                        height: 200,
+                        child: SizedBox(
+                          width: 160.0,
+                          height: 200,
+                          child: Card(
+                            child: Center(
+                              child: Icon(Icons.add),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  List<DocumentSnapshot> allStories = snapshot.data!.docs;
+                  List<DocumentSnapshot> userStories=[];
 
-            // ListView.builder(
-            //   shrinkWrap: true,
-            //   physics: NeverScrollableScrollPhysics(),  // Tránh việc cuộn lồng nhau
-            //   itemCount: posts.length + (hasMore ? 1 : 0),
-            //   itemBuilder: (context, index) {
-            //     if (index == posts.length) {
-            //       // Hiển thị biểu tượng tải khi có thêm bài viết cần tải
-            //       return Center(child: CircularProgressIndicator());
-            //     }
-            //     var data = posts[index];
-            //     return WidgetNewsfeed(
-            //       idUser: data["UserID"] ?? "",
-            //       date: data["newTimestamp"].toDate() ?? DateTime.now(),
-            //       id: data["ID"] ?? "",
-            //       username: data["userName"] ?? "",
-            //       content: data["content"] ?? "",
-            //       time: data["ts"] ?? "",
-            //       image: data["image"] ?? "",
-            //     );
-            //   },
-            // ),
+                  // Phân loại story theo iduser
+                  for (var doc in allStories) {
+                    List<dynamic> status = doc['status'];
+                    if (status.isEmpty) {
+                      userStories.add(doc);
+                    } else if (status.contains(idUserDevice)) {
+                      userStories.add(doc);
+                    }
+                  }
+                  // Xây dựng danh sách Stream từ list userStories
+                  List<Stream<QuerySnapshot>> streams = [
+                    for (var story in userStories)
+                      DatabaseMethods().getWatchedStory(story.id, idUserDevice!)
+                  ];
+                  // Sử dụng Future.wait để chờ lấy tất cả dữ liệu từ các Stream
+                  return FutureBuilder(
+                    future: Future.wait(streams.map((stream) => stream.first)),
+                    builder: (context, AsyncSnapshot<List<QuerySnapshot>> snapshots) {
+                      if (snapshots.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshots.hasError) {
+                        return Text('Lỗi: ${snapshots.error}');
+                      }
+                      List<DocumentSnapshot> listWatched = [];
+                      List<DocumentSnapshot> listWatch = [];
+                      // Xử lý dữ liệu sau khi đã có kết quả từ các Stream
+                      for (int i = 0; i < snapshots.data!.length; i++) {
+                        bool watched = snapshots.data![i].docs.isNotEmpty && snapshots.data![i].docs.first['watched'];
+                        if (watched) {
+                          listWatched.add(userStories[i]);
+                        } else {
+                          listWatch.add(userStories[i]);
+                        }
+                      }
+                      listWatch.addAll(listWatched); // Đưa các story đã xem xuống cuối danh sách
+                      // for(var wacht in listWatch){
+                      //   print("aaaaaaaaaaaa${wacht.data()}");
+                      // }
+                      listWatch.sort((a, b) {
+                        String idA = a['iduser'];
+                        String idB = b['iduser'];
+
+                        if (idA == idUserDevice && idB != idUserDevice) {
+                          return -1; // Đưa phần tử có iduser là idUserDevice lên trước
+                        } else if (idA != idUserDevice && idB == idUserDevice) {
+                          return 1; // Đưa phần tử có iduser khác idUserDevice xuống sau
+                        } else {
+                          return 0; // Giữ nguyên thứ tự của các phần tử khác
+                        }
+                      });
+
+                      return buildStoryCard(listWatch); // Hiển thị danh sách story đã được sắp xếp
+                    },
+                  );
+                },
+              ),
+            ),
             Consumer<ItemProvider>(
               builder: (context, itemProvider, child) {
                 return itemProvider.isLoading && itemProvider.items.isEmpty
                     ? Center(child: CircularProgressIndicator())
                     : ListView.builder(
+
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
                   itemCount: itemProvider.items.length + (itemProvider.hasMore ? 1 : 0),
@@ -456,12 +436,13 @@ class _HomeState extends State<Home> {
               children: [
                 GestureDetector(
                     onTap: (){
-
+                      setState(() {
+                        picked = 1;
+                      });
                     Navigator.push(context,MaterialPageRoute(builder: (context)=>Video()));
-
                     },
                     child: Icon(Icons.ondemand_video ,
-                      color:Colors.grey,
+                      color: picked == 1 ? Colors.blueAccent : Colors.grey,
                     )),
               ],
             ),
@@ -522,20 +503,33 @@ class _HomeState extends State<Home> {
       itemBuilder: (context, index) {
         if (index == 0) {
           // Đây là mục "Thêm mới"
-          return Container(
-            height: 200,
-            width: 160,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.grey.shade200,
-            ),
-            child: GestureDetector(
-              onTap: (){
-                Navigator.push(context,MaterialPageRoute(builder: (context)=>EditStory(idUser: idUserDevice!)));
-              },
-              child: Center(
-                child: Icon(Icons.add),
+          return GestureDetector(
+            onTap: (){
+              Navigator.push(context,MaterialPageRoute(builder: (context)=>EditStory(idUser: idUserDevice!)));
+            },
+            child: Container(
+              margin: EdgeInsets.only(top: 10,bottom: 10,right: 10),
+              height: 200,
+              width: 160,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
               ),
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: Image(
+                        image: Image.network(imagemyuser!).image,
+                        fit: BoxFit.fill,
+                      )
+                      ),
+                      Positioned(child:Center(
+                        child: Icon(Icons.add),
+                      ),
+                      ),
+                    ],
+                  ),
+                ),
             ),
           );
 
@@ -549,6 +543,7 @@ class _HomeState extends State<Home> {
           int retime = liststoryDoc[newIndex]['times'];
           if (time - retime < 86400000) {
             return Container(
+              margin: EdgeInsets.only(bottom: 10,top: 10,right: 10),
               height: 200,
               width: 160,
               decoration: BoxDecoration(

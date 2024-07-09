@@ -77,15 +77,12 @@ class MyApp extends StatelessWidget {
      // home: Profile(idProfileUser: "Ly Ly_202405091941",),
       //home: CreateNewsFeed()
       //home: ProfileFriend(idProfileUser:"Ly Ly_202405091941",)
-
      // home: Story(idStory: "story_202406141056",type: true,idUser: "Bach_202405161625",),
       //home: Profile(idProfileUser: "haonguyen16022002"),
-
      // home: EditVideo(idFanpage:"Bach_202405161625" ,),
       //home: EditStory(idUser: "haonguyen16022002"),
       // home: test(idUser: "haonguyen16022002",),
       // home: TestStoryPage(title: 'test',),
-
       //home: Login(),
       //home: Profile(idProfileUser: "haonguyen16022002"),
       //home: MemberChat(idChatRoom: "dYn626pQ53"),

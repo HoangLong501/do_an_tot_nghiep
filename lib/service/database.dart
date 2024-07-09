@@ -155,13 +155,9 @@ class DatabaseMethods {
         Map<String, dynamic> newsfeedData = newsfeedSnapshot.data() as Map<
             String,
             dynamic>;
-
-
         // Lấy danh sách các userId đã react
         List<String> reactUsers = List<String>.from(
             newsfeedData['react'] ?? []);
-        // int reactCount = newsfeedData["reactCount"];
-        // print(reactCount);
         // Kiểm tra xem userId đã có trong danh sách react chưa
         if (reactUsers.contains(idUserLike)) {
           // Nếu có, loại bỏ userId khỏi danh sách
@@ -175,8 +171,6 @@ class DatabaseMethods {
             .collection('video')
             .doc(idVideo)
             .update({'react': reactUsers});
-        print('Cập nhật ${reactUsers.length}');
-        print('Cập nhật react thành công cho newsfeed có ID: $idVideo');
       } else {
         // Nếu newsfeed không tồn tại
         print('Newsfeed với ID: $idVideo không tồn tại');
