@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../service/database.dart';
+import '../lib_class_import/userDetailProvider.dart';
+import 'package:provider/provider.dart';
 class UpdateBorn extends StatefulWidget {
   final String idUser;
   const UpdateBorn({super.key,required this.idUser});
@@ -13,20 +15,9 @@ class _UpdateBornState extends State<UpdateBorn> {
   List<String> _dropdownItemsTinh=[];
   String? _selectedValue;
   final _formKey = GlobalKey<FormState>();
-  Future<void> getData() async {
-    try {
-      QuerySnapshot querySnapshot = await DatabaseMethods().getUserInfoById(widget.idUser);
-      _selectedValue = querySnapshot.docs[0]["born"];
-      if(_selectedValue==""){
-        _selectedValue=null;
-      }
-    }catch(error){
-      print("lỗi lấy thông tin người dùng");
-    }
-  }
+
   onLoad() async {
     _dropdownItemsTinh=await DatabaseMethods().getCity();
-    await getData();
     setState(() {
 
     });
@@ -38,6 +29,8 @@ class _UpdateBornState extends State<UpdateBorn> {
   }
   @override
   Widget build(BuildContext context) {
+    final userDetailProvider = Provider.of<UserDetailProvider>(context);
+    userDetailProvider.getUserDetails();
     return Scaffold(
       appBar: AppBar(
         title: Center(
@@ -183,6 +176,8 @@ class _UpdateBornState extends State<UpdateBorn> {
                               "born":_selectedValue,
                             };
                             await DatabaseMethods().updateUserInfo(widget.idUser, userInfoMap);
+                            userDetailProvider.updateBorn(_selectedValue!);
+
                             showGeneralDialog(
                               barrierColor: Colors.black.withOpacity(0.5),
                               transitionBuilder: (context, a1, a2, widget) {

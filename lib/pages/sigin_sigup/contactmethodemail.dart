@@ -110,14 +110,6 @@ class _ContactMethodEmailState extends State<ContactMethodEmail> {
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
                                     email = emailcontroller.text;
-
-                                    // Thực hiện tác vụ bất đồng bộ ở đây
-                                    String tam="2";
-                                    SharedPreferenceHelper().savesigup(tam).then((result) {
-                                      if (result) {
-                                        print(result);
-                                        // Cập nhật UI bên trong hàm callback của setState
-                                        setState(() {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(builder: (context) => CreatePassWord(
@@ -125,12 +117,9 @@ class _ContactMethodEmailState extends State<ContactMethodEmail> {
                                               name: widget.name,
                                               birthDate: widget.birthDate,
                                               sex: widget.sex,
-                                              phone: email,
+                                              email: email,
                                             )),
                                           );
-                                        });
-                                      }
-                                    });
                                   }
                                 },
                                 style: ButtonStyle(
@@ -148,35 +137,35 @@ class _ContactMethodEmailState extends State<ContactMethodEmail> {
                           SizedBox(
                             height: 20,
                           ),
-                          SizedBox(
-                            height: 45,
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => ContactMethodSTD(
-                                            surname: widget.surname,
-                                            name: widget.name,
-                                            birthDate: widget.birthDate,
-                                            sex: widget.sex,
-                                          )),
-                                );
-                              },
-                              style: ButtonStyle(
-                                side: MaterialStateProperty.all<BorderSide>(
-                                    BorderSide(
-                                        color: Colors.deepPurpleAccent
-                                            .shade200)), // Màu viền
-                              ),
-                              child: Text(
-                                'Đăng kí bằng số điện thoại',
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 20),
-                              ),
-                            ),
-                          ),
+                          // SizedBox(
+                          //   height: 45,
+                          //   width: double.infinity,
+                          //   child: ElevatedButton(
+                          //     onPressed: () {
+                          //       Navigator.push(
+                          //         context,
+                          //         MaterialPageRoute(
+                          //             builder: (context) => ContactMethodSTD(
+                          //                   surname: widget.surname,
+                          //                   name: widget.name,
+                          //                   birthDate: widget.birthDate,
+                          //                   sex: widget.sex,
+                          //                 )),
+                          //       );
+                          //     },
+                          //     style: ButtonStyle(
+                          //       side: MaterialStateProperty.all<BorderSide>(
+                          //           BorderSide(
+                          //               color: Colors.deepPurpleAccent
+                          //                   .shade200)), // Màu viền
+                          //     ),
+                          //     child: Text(
+                          //       'Đăng kí bằng số điện thoại',
+                          //       style: TextStyle(
+                          //           color: Colors.black, fontSize: 20),
+                          //     ),
+                          //   ),
+                          // ),
                           SizedBox(height: 120),
                           Center(
                             child: TextButton(

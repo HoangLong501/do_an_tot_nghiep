@@ -1,4 +1,5 @@
 
+import 'package:do_an_tot_nghiep/pages/sigin_sigup/contactmethodemail.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -20,9 +21,6 @@ class _ChooseGenderState extends State<ChooseGender> {
   String? selectedGender="";
 
   bool seleted=false;
-  void _continuePressed(String value) {
-    String sex = value;
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,10 +128,8 @@ class _ChooseGenderState extends State<ChooseGender> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-
                         // Xử lý đăng nhập ở đây
                         if (selectedGender == "") {
-                          print("ssssssssssssssss");
                           setState(() {
                             seleted=true;
                           });
@@ -141,7 +137,7 @@ class _ChooseGenderState extends State<ChooseGender> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) =>
-                                ContactMethodSTD(
+                                ContactMethodEmail(
                                   surname: widget.surname,
                                   name: widget.name,
                                   birthDate: widget.birthDate,

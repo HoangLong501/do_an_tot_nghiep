@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:do_an_tot_nghiep/pages/home.dart';
-import 'package:do_an_tot_nghiep/pages/share.dart';
+import 'package:do_an_tot_nghiep/pages/share1.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
@@ -362,11 +362,11 @@ class _VideoState extends State<Video> {
                                   ),
                                   GestureDetector(
                                     onTap: () async {
-                                      await CutFromVideo(videoUrl);
-                                      showMaterialModalBottomSheet(
-                                        context: context,
-                                        builder: (context) => Share(idsource: idvideo, image: imageVideo),
-                                      );
+                                      // await CutFromVideo(videoUrl);
+                                      // showMaterialModalBottomSheet(
+                                      //   context: context,
+                                      //   builder: (context) => Share1(idNewsFeed: idvideo,),
+                                      // );
                                     },
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

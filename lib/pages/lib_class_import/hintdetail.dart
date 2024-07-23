@@ -36,10 +36,13 @@ class _HintDetailState extends State<HintDetail> {
     await getData();
     myName=(await SharedPreferenceHelper().getUserName())!;
     myId=(await SharedPreferenceHelper().getIdUser())!;
-    check=await DatabaseMethods().getCkheckHint(myId, id)! ;
-    setState(() {
+    check=await DatabaseMethods().getCkheckHint(myId, id) ;
 
-    });
+    if (mounted) {
+      setState(() {
+        // cập nhật trạng thái
+      });
+    }
   }
   @override
   void initState() {
@@ -85,7 +88,7 @@ class _HintDetailState extends State<HintDetail> {
                       topLeft: Radius.circular(9),
                       topRight: Radius.circular(
                           9)), // Độ cong của góc bo tròn
-                  child:image==""?Image.asset("assets/images/avarta.jpg"): Image.network(
+                  child:image==""?Image.asset("assets/images/avatarEmpty.jpg"): Image.network(
                     image,
                     fit: BoxFit.cover,
                   ),
@@ -102,56 +105,7 @@ class _HintDetailState extends State<HintDetail> {
                       fontWeight: FontWeight.bold),
                 ),
               ),
-              Row(
-                mainAxisAlignment:
-                MainAxisAlignment.start,
-                crossAxisAlignment:
-                CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    height: 30,
-                    // Đặt chiều cao của Container
-                    width: 80,
-                    // Đặt chiều rộng của Container
-                    child: Stack(
-                      children: List.generate(
-                          items.length, (index) {
-                        return Positioned(
-                          right: 15 + index * 15,
-                          // Tăng vị trí của mỗi ảnh trước để nó đè lên ảnh sau một phần
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              // Đảm bảo container có hình dạng tròn
-                              border: Border.all(
-                                // Định nghĩa viền
-                                color: Colors.white,
-                                // Màu của viền
-                                width:
-                                2, // Độ dày của viền
-                              ),
-                            ),
-                            child: CircleAvatar(
-                              radius: 10,
-                              backgroundImage:
-                              NetworkImage(
-                                "https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png",
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-                  Text(
-                    "bạn chung",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                  )
-                ],
-              ),
+             SizedBox(height: 20,),
               check==0?
               Row(
                 children: [

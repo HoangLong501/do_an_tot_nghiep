@@ -95,10 +95,10 @@ class SharedPreferenceHelper{
   }
   Future<bool> addUserInfo(Map<String, dynamic> newUserInfo) async {
     List<Map<String, dynamic>>? userInfoList = await getUserInfoList();
-    if (userInfoList == null) {
-      userInfoList = [];
+    userInfoList ??= [];
+    if(userInfoList.length>=2){
+      userInfoList[0]=newUserInfo;
     }
-    userInfoList.add(newUserInfo);
     return await saveUserInfoListUser(userInfoList);
   }
   String getChatRoomIdUserName(String a, String b) {

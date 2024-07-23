@@ -2,7 +2,6 @@ import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
 import 'package:do_an_tot_nghiep/pages/search.dart';
-import 'package:do_an_tot_nghiep/pages/search1.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/edit_story.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/story.dart';
 import 'package:do_an_tot_nghiep/pages/video.dart';
@@ -62,146 +61,15 @@ class _HomeState extends State<Home> {
     FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
   }
 
-  // Future<List<DocumentSnapshot>> fetchPosts() async {
-  //   // Tạo query để lấy bài viết có 'viewers' chứa idUserDevice
-  //   Query queryWithViewers = FirebaseFirestore.instance
-  //       .collection('newsfeed')
-  //       .where('viewers', arrayContains: idUserDevice);
-  //
-  //   // Tạo query để lấy bài viết có 'viewers' là mảng rỗng
-  //   Query queryWithoutViewers = FirebaseFirestore.instance
-  //       .collection('newsfeed')
-  //       .where('viewers', isEqualTo: []);
-  //
-  //   // Thực hiện cả hai query
-  //   QuerySnapshot querySnapshotWithViewers = await queryWithViewers.get();
-  //   QuerySnapshot querySnapshotWithoutViewers = await queryWithoutViewers.get();
-  //
-  //   // Kết hợp kết quả của cả hai query
-  //   List<DocumentSnapshot> posts = [
-  //     ...querySnapshotWithViewers.docs,
-  //     ...querySnapshotWithoutViewers.docs
-  //   ];
-  //
-  //   // Sắp xếp bài viết theo thời gian
-  //   posts.sort((a, b) => (b['newTimestamp']).compareTo(a['newTimestamp']));
-  //
-  //   return posts;
-  // }
-  // Future<void> fetchPosts() async {
-  //   print("Start fetching posts...");
-  //   if (isLoading) return;
-  //   setState(() => isLoading = true);
-  //
-  //   // Tạo query để lấy bài viết có 'viewers' chứa idUserDevice
-  //   Query queryWithViewers = FirebaseFirestore.instance
-  //       .collection('newsfeed')
-  //       .where('viewers', arrayContains: idUserDevice)
-  //       .orderBy('newTimestamp', descending: true)
-  //       .limit(5);
-  //
-  //   // Tạo query để lấy bài viết có 'viewers' là mảng rỗng
-  //   Query queryWithoutViewers = FirebaseFirestore.instance
-  //       .collection('newsfeed')
-  //       .where('viewers', isEqualTo: [])
-  //       .orderBy('newTimestamp', descending: true)
-  //       .limit(5);
-  //
-  //   // Thực hiện cả hai query
-  //   QuerySnapshot querySnapshotWithViewers = await queryWithViewers.get();
-  //   QuerySnapshot querySnapshotWithoutViewers = await queryWithoutViewers.get();
-  //   print("newsfeed : ${querySnapshotWithViewers.size}");
-  //   print("news : ${querySnapshotWithoutViewers.size}");
-  //   // Kết hợp kết quả của cả hai query
-  //   List<DocumentSnapshot> combinedPosts = [
-  //     ...querySnapshotWithViewers.docs,
-  //     ...querySnapshotWithoutViewers.docs
-  //   ];
-  //
-  //   // Sắp xếp bài viết theo thời gian
-  //   combinedPosts.sort((a, b) => (b['newTimestamp']).compareTo(a['newTimestamp']));
-  //
-  //   // Gán kết quả cho biến posts
-  //   posts = combinedPosts;
-  //
-  //   // Cập nhật lastDocument để phân trang
-  //   if (combinedPosts.isNotEmpty) {
-  //     lastDocument = combinedPosts.last;
-  //   }
-  //
-  //   setState(() {
-  //     isLoading = false;
-  //     hasMore = combinedPosts.length == 10; // Điều kiện hasMore nếu cần
-  //   });
-  //
-  //   print("Fetch posts completed. Total posts: ${posts.length}");
-  // }
-  // Future<void> fetchMorePosts() async {
-  //   if (isLoading || !hasMore) return;
-  //   setState(() => isLoading = true);
-  //
-  //   print("Fetching more posts...");
-  //
-  //   // Tạo query để lấy thêm bài viết có 'viewers' chứa idUserDevice
-  //   Query queryWithViewers = FirebaseFirestore.instance
-  //       .collection('newsfeed')
-  //       .where('viewers', arrayContains: idUserDevice)
-  //       .orderBy('newTimestamp', descending: true)
-  //       .startAfterDocument(lastDocument!)
-  //       .limit(5);
-  //
-  //   // Tạo query để lấy thêm bài viết có 'viewers' là mảng rỗng
-  //   Query queryWithoutViewers = FirebaseFirestore.instance
-  //       .collection('newsfeed')
-  //       .where('viewers', isEqualTo: [])
-  //       .orderBy('newTimestamp', descending: true)
-  //       .startAfterDocument(lastDocument!)
-  //       .limit(5);
-  //
-  //   // Thực hiện cả hai query
-  //   QuerySnapshot querySnapshotWithViewers = await queryWithViewers.get();
-  //   QuerySnapshot querySnapshotWithoutViewers = await queryWithoutViewers.get();
-  //
-  //   // Kết hợp kết quả của cả hai query
-  //   List<DocumentSnapshot> combinedPosts = [
-  //     ...querySnapshotWithViewers.docs,
-  //     ...querySnapshotWithoutViewers.docs
-  //   ];
-  //
-  //   // Sắp xếp bài viết theo thời gian
-  //   combinedPosts.sort((a, b) =>
-  //       (b['newTimestamp']).compareTo(a['newTimestamp']));
-  //
-  //   // Gán kết quả cho biến posts
-  //   posts.addAll(combinedPosts);
-  //
-  //   // Cập nhật lastDocument để phân trang
-  //   if (combinedPosts.isNotEmpty) {
-  //     lastDocument = combinedPosts.last;
-  //   }
-  //
-  //   setState(() {
-  //     isLoading = false;
-  //     hasMore = combinedPosts.length == 10; // Điều kiện hasMore nếu cần
-  //   });
-  //   print("Fetch more posts completed. Total posts: ${posts.length}");
-  // }
-  //   void onScroll() {
-  //   if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent&& hasMore) {
-  //     print('Loading more posts');
-  //     itemProvider.fetchMorePosts();
-  //   }
-  // }
   onLoad()async{
     idUserDevice = await SharedPreferenceHelper().getIdUser();
     imagemyuser = await SharedPreferenceHelper().getImageUser();
-
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
     listFriends=await DatabaseMethods().getFriends(idUserDevice!);
     await setupToken();
-    //_scrollController.addListener(onScroll);
-    // await fetchPosts();
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -260,7 +128,7 @@ class _HomeState extends State<Home> {
                   padding: EdgeInsets.only(left: 8,right: 8),
                   child: GestureDetector(
                       onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Search1()));
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Search()));
                       },
                       child: Icon(Icons.search_outlined,size: 30,)),
                 ),
@@ -296,6 +164,7 @@ class _HomeState extends State<Home> {
               child: StreamBuilder<QuerySnapshot>(
                 stream: DatabaseMethods().getAllStory(),
                 builder: (context, snapshot) {
+
                   if (!snapshot.hasData) {
                     return Center(child: CircularProgressIndicator(),);
                   } else if (snapshot.connectionState == ConnectionState.waiting) {
@@ -306,6 +175,9 @@ class _HomeState extends State<Home> {
                           Navigator.push(context, MaterialPageRoute(builder: (context) => EditStory(idUser:idUserDevice! )));
                         },
                       child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey
+                        ),
                         padding: EdgeInsets.only(right: MediaQuery.of(context).size.width / 2),
                         height: 200,
                         child: SizedBox(
@@ -373,7 +245,6 @@ class _HomeState extends State<Home> {
                           return 0; // Giữ nguyên thứ tự của các phần tử khác
                         }
                       });
-
                       return buildStoryCard(listWatch); // Hiển thị danh sách story đã được sắp xếp
                     },
                   );
@@ -385,7 +256,6 @@ class _HomeState extends State<Home> {
                 return itemProvider.isLoading && itemProvider.items.isEmpty
                     ? Center(child: CircularProgressIndicator())
                     : ListView.builder(
-
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
                   itemCount: itemProvider.items.length + (itemProvider.hasMore ? 1 : 0),
@@ -395,6 +265,7 @@ class _HomeState extends State<Home> {
                     }
                     var data = itemProvider.items[index];
                     return WidgetNewsfeed(
+                              key: ValueKey("${index}_post"),
                               idUser: data["UserID"] ?? "",
                               date: data["newTimestamp"].toDate() ?? DateTime.now(),
                               id: data["ID"] ?? "",

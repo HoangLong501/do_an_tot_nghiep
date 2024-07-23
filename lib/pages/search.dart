@@ -15,7 +15,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import '../service/database.dart';
 import 'lib_class_import/user.dart';
-import 'package:auto_size_text/auto_size_text.dart';
+
 
 class Search extends StatefulWidget {
   const Search({super.key});
@@ -194,7 +194,7 @@ class _SearchState extends State<Search> {
               Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 10, right: 10),
+                    padding:  EdgeInsets.only(left: 10, right: 10),
                     child: Row(
                       children: [
                         Expanded(
@@ -278,56 +278,6 @@ class _SearchState extends State<Search> {
                                                 color: Colors.black,
                                                 fontWeight: FontWeight.bold),
                                           ),
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                              height: 30,
-                                              // Đặt chiều cao của Container
-                                              width: 80,
-                                              // Đặt chiều rộng của Container
-                                              child: Stack(
-                                                children: List.generate(
-                                                    items.length, (index) {
-                                                  return Positioned(
-                                                    right: 15 + index * 15,
-                                                    // Tăng vị trí của mỗi ảnh trước để nó đè lên ảnh sau một phần
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.circle,
-                                                        // Đảm bảo container có hình dạng tròn
-                                                        border: Border.all(
-                                                          // Định nghĩa viền
-                                                          color: Colors.white,
-                                                          // Màu của viền
-                                                          width:
-                                                          2, // Độ dày của viền
-                                                        ),
-                                                      ),
-                                                      child: CircleAvatar(
-                                                        radius: 10,
-                                                        backgroundImage:
-                                                        NetworkImage(
-                                                          "https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png",
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                }),
-                                              ),
-                                            ),
-                                            Text(
-                                              "bạn chung",
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                              ),
-                                            )
-                                          ],
                                         ),
                                         Row(
                                           children: [
@@ -583,60 +533,6 @@ class _SearchState extends State<Search> {
                                             )
                                         ),
 
-                                        Row(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                              height: 30,
-                                              // Đặt chiều cao của Container
-                                              width: 80,
-                                              // Đặt chiều rộng của Container
-                                              child: Stack(
-                                                children: List.generate(
-                                                    items.length, (index) {
-                                                  return Positioned(
-                                                    right: 15 + index * 15,
-                                                    // Tăng vị trí của mỗi ảnh trước để nó đè lên ảnh sau một phần
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.circle,
-                                                        // Đảm bảo container có hình dạng tròn
-                                                        border: Border.all(
-                                                          // Định nghĩa viền
-                                                          color: Colors.white,
-                                                          // Màu của viền
-                                                          width:
-                                                          2, // Độ dày của viền
-                                                        ),
-                                                      ),
-                                                      child: CircleAvatar(
-                                                        radius: 10,
-                                                        backgroundImage:
-                                                        NetworkImage(
-                                                          "https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png",
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                }),
-                                              ),
-                                            ),
-                                            Expanded(
-                                                child: Text(
-                                                  "Những người bạn là thành viên",
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey,
-                                                  ),
-                                                )
-                                            ),
-
-                                          ],
-                                        ),
-
                                         Padding(
                                           padding: const EdgeInsets.only(
                                               left: 20,
@@ -743,7 +639,7 @@ class _SearchState extends State<Search> {
                             Container(
                               width: MediaQuery.of(context).size.width/3.5,
                               margin: EdgeInsets.only(left: 1),
-                              child: AutoSizeText("Nhắc đến bạn",
+                              child: Text("Nhắc đến bạn",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12
@@ -1192,7 +1088,7 @@ class _SearchState extends State<Search> {
               itemCount:snapshot.data!.docs.length, // Số lượng mục trong ListView
               itemBuilder: (BuildContext context, int index) {
                 Map<String, dynamic> data =snapshot.data!.docs[index].data() as Map<String, dynamic>;
-                return HintDetail(id: data["id"],);
+                return HintDetail(key: ValueKey("$index ${data["id"]}"),id: data["id"],);
               },
             ),
           ),

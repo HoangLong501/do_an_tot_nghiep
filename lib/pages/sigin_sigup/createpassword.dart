@@ -14,15 +14,16 @@ class CreatePassWord extends StatefulWidget {
   final String name;
   final String birthDate;
   final String sex;
-  final String phone;
+  final String email;
   const CreatePassWord({super.key, required this.surname,required this.name,
-                        required this.birthDate,required this.sex,required this.phone});
+                        required this.birthDate,required this.sex,required this.email});
 
   @override
   State<CreatePassWord> createState() => _CreatePassWordState();
 }
 
 class _CreatePassWordState extends State<CreatePassWord> {
+  final _auth = FirebaseAuth.instance;
   List listUser=[];
   bool _obscureText = true;
   String passWord ="",rePassWord="",date="";
@@ -30,10 +31,7 @@ class _CreatePassWordState extends State<CreatePassWord> {
   TextEditingController passwordcontroller=TextEditingController();
   TextEditingController repasswordcontroller=TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  getvaluefromfirebase()async{
-    QuerySnapshot querySnapshot= await FirebaseFirestore.instance.collection("test").get();
-    print("do dai: ${querySnapshot.size}" );
-  }
+
   String generateID(String email) {
     return email.replaceAll("@gmail.com", "");
   }
@@ -159,15 +157,14 @@ onLoad()async{
                               height: 45,
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: () {
+                                onPressed: ()async {
                                   if(_formKey.currentState!.validate()){
-                                    setState(() {
-                                        passWord=passwordcontroller.text;
-                                        rePassWord=repasswordcontroller.text;
-                                        _SignUpState();
+                                    _formKey.currentState!.save();
+                                    // passWord=passwordcontroller.text;
+                                    // rePassWord=repasswordcontroller.text;
 
-
-                                    });
+                                    print(passwordcontroller.text);
+                                     _SignUpState();
                                   }
                                   // Xử lý đăng nhập ở đây
 
@@ -186,7 +183,6 @@ onLoad()async{
                           SizedBox(height: 190),
                           Center(
                             child: TextButton(
-
                               onPressed: () {
                                 Navigator.push(
                                   context,
@@ -236,102 +232,88 @@ onLoad()async{
     return searchKeys.toList();
   }
   Future<void> _SignUpState() async {
-    String userName = "",
-        birthDate = "",
-        sex = "",
-        phone = "",
-        email = "",
-        image = "";
-    String? resualString = await SharedPreferenceHelper().getUerSinup();
-    int resual = int.parse(resualString.toString());
-    if (resual == 1) {
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: widget.email,
+        password: passwordcontroller.text,
+      );
+      User? user = userCredential.user;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Xác thực email'),
+            content: Text('Xác thực đã được gửi đến ${widget.email} . Hãy xác thực email của bạn!.'),
+            actions: [
+              TextButton(
+                onPressed: ()async{
+                  await SharedPreferenceHelper().saveUserEmail(widget.email);
+                  String userName = "${widget.surname} ${widget.name}";
+                  String birthDate = widget.birthDate;
+                  String sex = widget.sex;
+                  String email = widget.email;
+                  List<String> searchKey=generateSearchKeys(userName);
+                  String id = generateID(email);
+                  Map<String, dynamic> userInfoMap = {
+                    "IdUser": id,
+                    "Username": userName,
+                    "SearchKey":searchKey,
+                    "E-mail": email,
+                    "Sex": sex,
+                    "Birthdate": birthDate,
+                    "Phone": "",
+                    "imageAvatar": "https://i.ibb.co/jzk0j6j/image.png",
+                    "News": [],
+                    "Search":[]
+                  };
+                  DatabaseMethods().addUserDetail(id, userInfoMap);
+                  for(int i=0;i<listUser.length;i++){
+                    if(listUser[i].id==id){
+                      continue;
+                    }
+                    Map<String , dynamic> statusInfoMap={
+                      "id":listUser[i].id,
+                      "check":0
+                    };
+                    await DatabaseMethods().addHints(id, listUser[i].id, statusInfoMap);
+                  }
+                  Map<String,dynamic> userInfoMap1={
+                    "relationship":"",
+                    "born":"",
+                    "address":"",
+                    "since": date,
+                    "imageBackground":"https://i.ibb.co/9WYddvb/image.png"
+                  };
+                  await DatabaseMethods().addUserInfo(id, userInfoMap1);
+                  await FirebaseFirestore.instance.collection("relationship").doc(id).collection("follow").doc(id).set({"data":[]});
+                  await FirebaseFirestore.instance.collection("relationship").doc(id).collection("follower").doc(id).set({"data":[]});
 
-      phone = widget.phone;
-    } else {
-      //print("else 1");
-      email = widget.phone;
-    }
-    userName = "${widget.surname} ${widget.name}";
-    birthDate = widget.birthDate;
-    sex = widget.sex;
-
-      if (passWord != null ) {
-       // print("dong 216");
-        if (resual == 2) {
-          //print("vao if");
-          try {
-        List<String> searchKey=generateSearchKeys(userName);
-            UserCredential userCredential = await FirebaseAuth.instance
-                .createUserWithEmailAndPassword(
-                email: email, password: passWord);
-            String id = generateID(email);
-            Map<String, dynamic> userInfoMap = {
-              "IdUser": id,
-              "Username": userName,
-              "SearchKey":searchKey,
-              "E-mail": email,
-              "Sex": sex,
-              "Birthdate": birthDate,
-              "Phone": "",
-              "imageAvatar": "https://i.ibb.co/jzk0j6j/image.png",
-              "News": [],
-              "Search":[]
-            };
-            DatabaseMethods().addUserDetail(id, userInfoMap);
-            // Map<String, dynamic> relaInfoMap = {
-            //   "ID":id,
-            // };
-            //DatabaseMethods().addRelationship(id,relaInfoMap );
-            for(int i=0;i<listUser.length;i++){
-              if(listUser[i].id==id){
-                continue;
-              }
-              Map<String , dynamic> statusInfoMap={
-                "id":listUser[i].id,
-                "check":0
-              };
-              await DatabaseMethods().addHints(id, listUser[i].id, statusInfoMap);
-            }
-            Map<String,dynamic> userInfoMap1={
-              "id":id,
-              "relationship":"",
-              "born":"",
-              "address":"",
-              "since": date,
-              "imageBackground":"https://i.ibb.co/9WYddvb/image.png"
-            };
-            await DatabaseMethods().addUserInfo(id, userInfoMap1);
-            await SharedPreferenceHelper().saveUserName(userName);
-            await SharedPreferenceHelper().saveIdUser(id);
-            await SharedPreferenceHelper().saveUserPhone(phone);
-            await SharedPreferenceHelper().saveUserEmail(email);
-            await SharedPreferenceHelper().saveImageUser(image);
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Đăng kí tài khoản thành công!"),));
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Login()));
-          } on FirebaseAuthException catch (e) {
-            print("lỗi code FirebaseAuth: ${e.code}");
-            if (e.code == 'Mật khẩu yếu') {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: Colors.orange,
-                  content: Text("Mật khẩu quá yếu "),
-                ),
-              );
-            } else if (e.code == 'email đã được sử dụng') {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("Tài khoản đã tồn tại"),
-                  backgroundColor: Colors.orange,
-                ),
-              );
-            }
-          } catch (ex) {
-            print(ex);
-          }
-        }else{
-          print("else");
-        }
-
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Login()));
+                },
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      print(e);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(
+              onPressed: (){
+              Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
   }
 }

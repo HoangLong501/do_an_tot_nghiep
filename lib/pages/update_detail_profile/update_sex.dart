@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import '../../service/database.dart';
+import '../lib_class_import/userDetailProvider.dart';
+import 'package:provider/provider.dart';
 class UpdateSex extends StatefulWidget {
   final String idUser;
   const UpdateSex({super.key, required this.idUser});
@@ -12,17 +14,9 @@ class UpdateSex extends StatefulWidget {
 
 class _UpdateSexState extends State<UpdateSex> {
   String? selectedGender="";
-  Future<void> getData() async {
-    try {
-      QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(widget.idUser);
-      selectedGender = querySnapshot.docs[0]["Sex"];
-    }catch(error){
-      print("lỗi lấy thông tin người dùng");
-    }
-  }
+
   onLoad() async {
     print(widget.idUser);
-    await getData();
     setState(() {
 
     });
@@ -34,6 +28,8 @@ class _UpdateSexState extends State<UpdateSex> {
   }
   @override
   Widget build(BuildContext context) {
+    final userDetailProvider = Provider.of<UserDetailProvider>(context);
+    userDetailProvider.getUser();
     return Scaffold(
       appBar: AppBar(
         title: Center(
@@ -131,6 +127,7 @@ class _UpdateSexState extends State<UpdateSex> {
                             "Sex":selectedGender
                           };
                           await DatabaseMethods().updateUser(widget.idUser, userInfoMap);
+                          userDetailProvider.updateSex(selectedGender!);
                           showGeneralDialog(
                             barrierColor: Colors.black.withOpacity(0.5),
                             transitionBuilder: (context, a1, a2, widget) {

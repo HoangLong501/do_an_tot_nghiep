@@ -1,3 +1,4 @@
+import 'package:do_an_tot_nghiep/pages/lib_class_import/report_detail.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +26,11 @@ class _MenuNewsfeedState extends State<MenuNewsfeed> {
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(widget.idNewsfeed).get();
     myNewsfeed = myId == data.get("UserID");
     nameUserNews = data.get("userName");
-    setState(() {
-
-    });
+    if (mounted) {
+      setState(() {
+        // cập nhật trạng thái
+      });
+    }
   }
 
 
@@ -119,7 +122,11 @@ class _MenuNewsfeedState extends State<MenuNewsfeed> {
                         DocumentSnapshot docu = await FirebaseFirestore.instance.collection("user")
                             .doc(myId).collection("advance").doc(myId).get();
                         if(docu.exists){
-                          temp = docu.get("newsfeed");
+                          try{
+                            temp = docu.get("hideNewsfeed");
+                          }catch(e){
+                            temp=[];
+                          }
                         }
                         temp.add(widget.idNewsfeed);
                         Map<String , dynamic> data = {
@@ -156,7 +163,27 @@ class _MenuNewsfeedState extends State<MenuNewsfeed> {
               ),
             ):SizedBox(),
             !myNewsfeed? TextButton(
-              onPressed: (){},
+              onPressed: (){
+                showGeneralDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                  barrierColor: Colors.black45,
+                  transitionDuration: Duration(milliseconds: 200),
+                  pageBuilder: (BuildContext buildContext, Animation animation, Animation secondaryAnimation) {
+                    return ReportDetail(idNewsfeed: widget.idNewsfeed,);
+                  },
+                  transitionBuilder: (context, a1, a2, widget) {
+                    return Transform.scale(
+                      scale: a1.value,
+                      child: Opacity(
+                        opacity: a1.value,
+                        child: widget,
+                      ),
+                    );
+                  },
+                );
+              },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

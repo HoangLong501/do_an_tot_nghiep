@@ -703,12 +703,12 @@ class DatabaseMethods {
 
   Future<void> updateUserInfo(String idUser, Map<String, dynamic> userInfoMap) {
     return FirebaseFirestore.instance.collection("userinfo").doc(idUser)
-        .update(userInfoMap)
+        .set(userInfoMap, SetOptions(merge: true))
         .then((_) {
-      print("Thêm info thành công");
+      print("Cập nhật info thành công");
     })
         .catchError((error) {
-      print("lỗi info: $error");
+      print("Lỗi info: $error");
     });
   }
 

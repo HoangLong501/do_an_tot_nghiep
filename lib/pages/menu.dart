@@ -1,4 +1,4 @@
-import 'package:do_an_tot_nghiep/fan_page/create_new_page.dart';
+// import 'package:do_an_tot_nghiep/fan_page/create_new_page.dart';
 import 'package:do_an_tot_nghiep/pages/add_friend/received.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/profile.dart';
@@ -9,11 +9,12 @@ import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:provider/provider.dart';
+import 'lib_class_import/userDetailProvider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class Menu extends StatefulWidget {
   const Menu({super.key});
 
@@ -22,14 +23,13 @@ class Menu extends StatefulWidget {
 }
 
 class _MenuState extends State<Menu> {
-  int picked=4;
-  String? idUserCurrent , nameUser , image;
   List<Map<String,dynamic>>? listUserLogin;
+  String? idUserCurrent;
+
+  final _auth = FirebaseAuth.instance;
 
   onLoad()async{
     idUserCurrent = await SharedPreferenceHelper().getIdUser();
-    nameUser = await SharedPreferenceHelper().getUserName();
-    image = await SharedPreferenceHelper().getImageUser();
     listUserLogin=await SharedPreferenceHelper().getUserInfoList();
     setState(() {
 
@@ -45,6 +45,8 @@ class _MenuState extends State<Menu> {
 
   @override
   Widget build(BuildContext context) {
+    final userDetailProvider = Provider.of<UserDetailProvider>(context);
+    userDetailProvider.getUser();
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       body: Container(
@@ -87,9 +89,10 @@ class _MenuState extends State<Menu> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              CircleAvatar(backgroundImage: Image.network("https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png").image,),
+                              userDetailProvider.avatar==""?CircleAvatar(backgroundImage: Image.network("https://cdn.picrew.me/app/image_maker/333657/icon_sz1dgJodaHzA1iVN.png").image,):
+                              CircleAvatar(backgroundImage: Image.network(userDetailProvider.avatar).image,),
                               SizedBox(width: 10,),
-                              Text(nameUser ?? "NameUser",style: TextStyle(
+                              Text(userDetailProvider.name,style: TextStyle(
                                   fontSize: 18
                                 ),
                               ),
@@ -100,7 +103,6 @@ class _MenuState extends State<Menu> {
                       GestureDetector(
                         onTap: (){
                           showUserLoginDialog(context,listUserLogin!);
-
                         },
                           child: Icon(
                             Icons.arrow_drop_down_circle_outlined,
@@ -113,7 +115,7 @@ class _MenuState extends State<Menu> {
                   SizedBox(height: 20,),
                   GestureDetector(
                     onTap: (){
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context)=>CreateNewPage()));
+                       // Navigator.of(context).push(MaterialPageRoute(builder: (context)=>CreateNewPage()));
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -317,8 +319,10 @@ class _MenuState extends State<Menu> {
               ],
             ),
             GestureDetector(
-              onTap: (){
-                logOut();
+              onTap: ()async{
+                await _auth.signOut();
+                //logOut();
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>Login()));
               },
               child: Container(
                 margin: EdgeInsets.only(top: 100),
@@ -351,7 +355,7 @@ class _MenuState extends State<Menu> {
                       Navigator.pushReplacement(
                         context,
                         PageTransition(
-                          duration: Duration(milliseconds: 500),
+                          duration: Duration(milliseconds: 900),
                           type: PageTransitionType.rightToLeft,
                           isIos: true,
                           child: Home(),

@@ -1,3 +1,6 @@
+import 'dart:ui';
+import 'package:provider/provider.dart';
+import 'package:do_an_tot_nghiep/pages/lib_class_import/userDetailProvider.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_address.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_birthday.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/update_born.dart';
@@ -15,354 +18,374 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../service/database.dart';
 import 'package:random_string/random_string.dart';
-import 'package:rxdart/rxdart.dart';
-
 class EditProfileDetail extends StatefulWidget {
   final String idUser;
-  const EditProfileDetail({super.key, required this.idUser});
+  const EditProfileDetail({super.key,required this.idUser});
 
   @override
   State<EditProfileDetail> createState() => _EditProfileDetailState();
 }
 
 class _EditProfileDetailState extends State<EditProfileDetail> {
-  String imageAvata = "",
-      imageBackground = "",
-      username = "",
-      relationship = "",
-      address = "",
-      born = "",
-      phone = "",
-      sex = "",
-      birthday = "",
-      email = "",
-      urlImage = "";
+  String urlImage="";
   final picker = ImagePicker();
-  File? imageFile, imageFileBackground;
+  File? imageFile,imageFileBackground;
 
   String convertToStars(String text) {
     return '*' * text.length;
   }
-  Future getImage() async {
+   getImage() async {
     final returnImage = await ImagePicker().pickImage(source: ImageSource.gallery);
-    imageFile = File(returnImage!.path);
-    setState(() {});
-  }
+     if(returnImage!=null){
+       imageFile = File(returnImage.path);
+     }
 
-  Future getImageBackground() async {
+  }
+   getImageBackground() async {
     final returnImage = await ImagePicker().pickImage(source: ImageSource.gallery);
-    imageFileBackground = File(returnImage!.path);
-    setState(() {});
-  }
+    if(returnImage!=null){
+      imageFileBackground = File(returnImage.path);
+    }
 
-  Future uploadImage(File image) async {
+  }
+   uploadImage(File image) async {
     String nameImage = randomAlphaNumeric(10);
     final ref = FirebaseStorage.instance.ref().child('${widget.idUser}/images/$nameImage.jpg');
     final taskSnapshot = await ref.putFile(image);
     final imageUrl = await taskSnapshot.ref.getDownloadURL();
     urlImage = imageUrl;
-    setState(() {});
   }
 
-  Stream<List<dynamic>> combineStreams() {
-    return CombineLatestStream.list([
-      DatabaseMethods().getUserByIdStream(widget.idUser),
-      DatabaseMethods().getUserInfoByIdStream(widget.idUser),
-    ]);
-  }
+  onLoad() async {
+    setState(() {
 
+    });
+  }
+  @override
+  void initState() {
+    super.initState();
+    onLoad();
+  }
   @override
   Widget build(BuildContext context) {
+    final userDetailProvider = Provider.of<UserDetailProvider>(context);
+    userDetailProvider.getUser();
+    userDetailProvider.getUserDetails();
     return Scaffold(
       appBar: AppBar(
         title: Center(
           child: Text(
             "Chỉnh sửa trang cá nhân",
             style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold
+                fontSize:18,
+                fontWeight:FontWeight.bold
             ),
           ),
         ),
       ),
-      body: StreamBuilder<List<dynamic>>(
-        stream: combineStreams(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Lỗi lấy thông tin người dùng'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('Không có dữ liệu người dùng'));
-          }
-          // Dữ liệu từ hai streams
-          DocumentSnapshot userSnapshot = snapshot.data![0].docs[0];
-          DocumentSnapshot userInfoSnapshot = snapshot.data![1].docs[0];
-          username = userSnapshot["Username"];
-          imageAvata = userSnapshot["imageAvatar"];
-          phone = userSnapshot["Phone"];
-          email = userSnapshot["E-mail"];
-          birthday = userSnapshot["Birthdate"];
-          sex = userSnapshot["Sex"];
-          imageBackground = userInfoSnapshot["imageBackground"];
-          relationship = userInfoSnapshot["relationship"];
-          born = userInfoSnapshot["born"];
-          address = userInfoSnapshot["address"];
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Divider(height: 0.1,color: Colors.grey,),
+            Padding(
+              padding: const EdgeInsets.only(left: 20,bottom: 10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "Ảnh đại diện",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          await getImage();
+                          if(imageFile!=null){
+                            await uploadImage(imageFile!);
+                            Map<String,dynamic> imageInfoMap={
+                              "imageAvatar":urlImage,
+                            };
+                            await DatabaseMethods().updateUser(widget.idUser, imageInfoMap);
+                            userDetailProvider.updateAvatar(urlImage);
+                            // print("đã thay đổi ảnh thành công");
+                            // setState(() {
+                            //   imageAvatar = urlImage;
+                            // });
+                          }
+                          showDialog(context: context, builder: (context){
+                            return AlertDialog(
+                              title: Text("Thông báo"),
+                              content: Text("Bạn đã thay đổi ảnh đại diện thành công"),
+                            );
+                          });
 
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                Divider(height: 0.1, color: Colors.grey,),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, bottom: 10),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Ảnh đại diện",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                        },
+                        child: Text(
+                          "Chỉnh sửa",
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w400
                           ),
-                          TextButton(
-                            onPressed: () async {
-                              await getImage();
-                              await uploadImage(imageFile!);
-                              Map<String, dynamic> imageInfoMap = {
-                                "imageAvatar": urlImage,
-                              };
-                              await DatabaseMethods().updateUser(widget.idUser, imageInfoMap);
-                              print("đã thay đổi ảnh thành công");
-                              showGeneralDialog(
-                                barrierColor: Colors.black.withOpacity(0.5),
-                                transitionBuilder: (context, a1, a2, widget) {
-                                  return Transform.scale(
-                                    scale: a1.value,
-                                    child: Opacity(
-                                      opacity: a1.value,
-                                      child: AlertDialog(
-                                        shape: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16.0),
-                                        ),
-                                        title: Column(
-                                          children: [
-                                            Text('Thông báo'),
-                                            Divider(height: 0.1, color: Colors.grey.shade400,),
-                                          ],
-                                        ),
-                                        content: Text('Bạn đã đổi ảnh đại diện thành công',
-                                          style: TextStyle(
-                                              fontSize: 16
-                                          ),
-                                        ),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            child: Text('OK'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                                transitionDuration: Duration(milliseconds: 200),
-                                barrierDismissible: true,
-                                barrierLabel: '',
-                                context: context,
-                                pageBuilder: (context, animation1, animation2) {
-                                  return SizedBox.shrink();
-                                },
-                              );
-                            },
-                            child: Text(
-                              "Chỉnh sửa",
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w400
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                        ],
-                      ),
-                      Container(
-                        height: 160,
-                        child: CircleAvatar(
-                          radius: 80,
-                          backgroundImage: imageFile == null ? NetworkImage(imageAvata) : Image.file(imageFile!).image,
                         ),
                       ),
+                      SizedBox(height: 20),
                     ],
                   ),
-                ),
-                Divider(height: 0.1, color: Colors.grey,),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, bottom: 10),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Ảnh bìa",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              await getImageBackground();
-                              await uploadImage(imageFileBackground!);
-                              Map<String, dynamic> imageInfoMap = {
-                                "imageBackground": urlImage,
-                              };
-                              await DatabaseMethods().updateUserInfo(widget.idUser, imageInfoMap);
-                              print("đã thay đổi ảnh thành công");
-                            },
-                            child: Text(
-                              "Chỉnh sửa",
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w400
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                        ],
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(right: 20),
-                        child: Container(
-                            height: MediaQuery
-                                .of(context)
-                                .size
-                                .height / 4,
-                            width: MediaQuery
-                                .of(context)
-                                .size
-                                .width,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10)
-                            ),
-                            child: Image(
-                              image: imageFileBackground == null ? Image
-                                  .network(imageBackground,).image
-                                  : Image.file(imageFileBackground!).image,
-                            )
-                        ),
-                      ),
-                    ],
+                  Container(
+                    height: 160,
+                    child: userDetailProvider.avatar!=""? CircleAvatar(
+                      radius: 80,
+                      backgroundImage:Image.network(userDetailProvider.avatar).image,
+                    ):CircleAvatar(backgroundColor: Colors.blueAccent,),
                   ),
-                ),
-                SizedBox(height: 10),
-                Divider(height: 0.1, color: Colors.grey,),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, bottom: 10),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Chi tiết",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              "Chỉnh sửa",
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w400
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          _buildDetailItem("Tên", username, Icons.account_circle,
-                                  () {
-                                Navigator.push(context, MaterialPageRoute(
-                                    builder: (context) =>
-                                        UpdateUserName(idUser: widget.idUser)));
-                              }),
-                          _buildDetailItem("Password", convertToStars(
-                              "Lybach12345@"), Icons.lock, () {
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (context) =>
-                                    UpdatePassword(idUser: widget.idUser)));
-                          }),
-                          _buildDetailItem("Mối quan hệ", relationship,
-                              Icons.favorite, () {
-                                Navigator.push(context, MaterialPageRoute(
-                                    builder: (context) =>
-                                        UpdateRelationShip(
-                                            idUser: widget.idUser)));
-                              }),
-                          _buildDetailItem("Địa chỉ", address, Icons.home_outlined,
-                                  () {
-                                Navigator.push(context, MaterialPageRoute(
-                                    builder: (context) =>
-                                        UpdateAddress(idUser: widget.idUser)));
-                              }),
-                          _buildDetailItem("Quê quán", born,
-                              Icons.location_on_outlined, () {
-                                Navigator.push(context, MaterialPageRoute(
-                                    builder: (context) =>
-                                        UpdateBorn(idUser: widget.idUser)));
-                              }),
-                          _buildDetailItem("Số điện thoại", phone, Icons.phone, () {
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (context) =>
-                                    UpdatePhone(idUser: widget.idUser)));
-                          }),
-                          _buildDetailItem("Giới tính", sex, Icons.person, () {
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (context) =>
-                                    UpdateSex(idUser: widget.idUser)));
-                          }),
-                          _buildDetailItem("Ngày sinh", birthday, Icons.cake, () {
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (context) =>
-                                    UpdateBirthDay(idUser: widget.idUser)));
-                          }),
-                          _buildDetailItem("Email", email, Icons.alternate_email_rounded,
-                                  () {
-                                Navigator.push(context, MaterialPageRoute(
-                                    builder: (context) =>
-                                        UpdateEmail(idUser: widget.idUser)));
-                              }),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          );
-        },
+            Divider(height: 0.1,color: Colors.grey,),
+            Padding(
+              padding: const EdgeInsets.only(left: 20,bottom: 10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "Ảnh bìa",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          await getImageBackground();
+                          if(imageFileBackground!=null){
+                            await uploadImage(imageFileBackground!);
+                            Map<String,dynamic> imageInfoMap={
+                              "imageBackground":urlImage,
+                            };
+                            await DatabaseMethods().updateUserInfo(widget.idUser, imageInfoMap);
+                            userDetailProvider.updateBackground(urlImage);
+                            // setState(() {
+                            //   imageBackground = urlImage;
+                            // });
+                          }
+
+                        },
+                        child: Text(
+                          "Chỉnh sửa",
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w400
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(right: 20),
+                    child: Container(
+                        height: MediaQuery.of(context).size.height/4,
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10)
+                        ),
+                        child:userDetailProvider.background!=""? Image(
+                          image: Image.network(userDetailProvider.background,).image
+                        ):Image(image: Image.asset("assets/images/backgroundEmpty.png").image)
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10),
+            Divider(height: 0.1,color: Colors.grey,),
+            Padding(
+              padding: const EdgeInsets.only(left: 20,bottom: 10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "Chi tiết",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          "Chỉnh sửa",
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w400
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      TextButton(
+                          onPressed: (){
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateUserName(idUser: widget.idUser)));
+                      }, child: Row(
+                        children: [
+                          Icon(Icons.account_circle ,size: 32,),
+                          SizedBox(width: 20,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Tên" , style: TextStyle(color: Colors.grey.shade600 , fontSize: 18 ,fontWeight:FontWeight.w600 ),),
+                              Text(userDetailProvider.name, style: TextStyle(color: Colors.black , fontSize: 20 ,fontWeight:FontWeight.w500 ),),
+                            ],
+                          )
+                        ],
+                      )
+                      ),
+                      TextButton(
+                          onPressed: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => UpdatePassword(idUser: widget.idUser)));
+                          }, child: Row(
+                        children: [
+                          Icon(Icons.lock ,size: 32,),
+                          SizedBox(width: 20,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Password" , style: TextStyle(color: Colors.grey.shade600 , fontSize: 18 ,fontWeight:FontWeight.w600 ),),
+                              Text(convertToStars("Lybach12345@"), style: TextStyle(color: Colors.black , fontSize: 20 ,fontWeight:FontWeight.w500 ),),
+                            ],
+                          )
+                        ],
+                      )
+                      ),
+                      TextButton(
+                          onPressed: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateRelationShip(idUser: widget.idUser)));
+                          }, child: Row(
+                        children: [
+                          Icon(Icons.favorite ,size: 32,),
+                          SizedBox(width: 20,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Mối quan hệ" , style: TextStyle(color: Colors.grey.shade600 , fontSize: 18 ,fontWeight:FontWeight.w600 ),),
+                              Text(userDetailProvider.relationship!=""?userDetailProvider.relationship:"Chưa có thông tin", style: TextStyle(color: Colors.black , fontSize: 20 ,fontWeight:FontWeight.w500 ),),
+                            ],
+                          )
+                        ],
+                      )
+                      ),
+                      TextButton(
+                          onPressed: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateAddress(idUser: widget.idUser)));
+                          }, child: Row(
+                        children: [
+                          Icon(Icons.home_outlined ,size: 32,),
+                          SizedBox(width: 20,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Địa chỉ" , style: TextStyle(color: Colors.grey.shade600 , fontSize: 18 ,fontWeight:FontWeight.w600 ),),
+                              Text(userDetailProvider.address!=""?userDetailProvider.address:"Chưa có thông tin", style: TextStyle(color: Colors.black , fontSize: 20 ,fontWeight:FontWeight.w500 ),),
+                            ],
+                          )
+                        ],
+                      )
+                      ),
+                      TextButton(
+                          onPressed: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateBorn(idUser: widget.idUser)));
+                          }, child: Row(
+                        children: [
+                          Icon(Icons.location_on_outlined ,size: 32,),
+                          SizedBox(width: 20,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Quê quán" , style: TextStyle(color: Colors.grey.shade600 , fontSize: 18 ,fontWeight:FontWeight.w600 ),),
+                              Text(userDetailProvider.born!=""?userDetailProvider.born:"Chưa có thông tin", style: TextStyle(color: Colors.black , fontSize: 20 ,fontWeight:FontWeight.w500 ),),
+                            ],
+                          )
+                        ],
+                      )
+                      ),
+                      TextButton(
+                          onPressed: (){
+                           // Navigator.push(context, MaterialPageRoute(builder: (context) => UpdatePhone(idUser: widget.idUser)));
+                          }, child: Row(
+                        children: [
+                          Icon(Icons.phone ,size: 32,),
+                          SizedBox(width: 20,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Số điện thoại" , style: TextStyle(color: Colors.grey.shade600 , fontSize: 18 ,fontWeight:FontWeight.w600 ),),
+                              Text(userDetailProvider.phone!=""?userDetailProvider.phone:"Chưa có thông tin", style: TextStyle(color: Colors.black , fontSize: 20 ,fontWeight:FontWeight.w500 ),),
+                            ],
+                          )
+                        ],
+                      )
+                      ),
+                      TextButton(
+                          onPressed: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateSex(idUser: widget.idUser)));
+                          }, child: Row(
+                        children: [
+                          Icon(Icons.person ,size: 32,),
+                          SizedBox(width: 20,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Giới tính" , style: TextStyle(color: Colors.grey.shade600 , fontSize: 18 ,fontWeight:FontWeight.w600 ),),
+                              Text(userDetailProvider.sex!=""?userDetailProvider.sex:"Chưa có thông tin", style: TextStyle(color: Colors.black , fontSize: 20 ,fontWeight:FontWeight.w500 ),),
+                            ],
+                          )
+                        ],
+                      )
+                      ),
+                      TextButton(
+                          onPressed: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateBirthDay(idUser: widget.idUser)));
+                          }, child: Row(
+                        children: [
+                          Icon(Icons.cake ,size: 32,),
+                          SizedBox(width: 20,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Ngày sinh" , style: TextStyle(color: Colors.grey.shade600 , fontSize: 18 ,fontWeight:FontWeight.w600 ),),
+                              Text(userDetailProvider.birthday!=""?userDetailProvider.birthday:"Chưa có thông tin", style: TextStyle(color: Colors.black , fontSize: 20 ,fontWeight:FontWeight.w500 ),),
+                            ],
+                          )
+                        ],
+                      )
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -385,10 +408,7 @@ class _EditProfileDetailState extends State<EditProfileDetail> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: MediaQuery
-                        .of(context)
-                        .size
-                        .width / 1.3,
+                    width: MediaQuery.of(context).size.width / 1.3,
                     child: Text(
                       value,
                       style:
@@ -408,10 +428,7 @@ class _EditProfileDetailState extends State<EditProfileDetail> {
           ),
         ),
         Container(
-          padding: EdgeInsets.only(left: MediaQuery
-              .of(context)
-              .size
-              .width / 9),
+          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width / 9),
           child: Divider(height: 0.1, color: Colors.grey.shade300),
         ),
       ],

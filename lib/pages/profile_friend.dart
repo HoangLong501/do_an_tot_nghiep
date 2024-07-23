@@ -2,7 +2,6 @@ import 'dart:async';
 //import 'dart:js_interop';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:do_an_tot_nghiep/pages/comment.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/newsfeed_detail.dart';
 import 'package:do_an_tot_nghiep/pages/option_profile.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
@@ -24,14 +23,28 @@ class ProfileFriend extends StatefulWidget {
 
 class _ProfileState extends State<ProfileFriend> {
   Stream<QuerySnapshot>? myNewsfeedStream;
-  String name="",image="",background="",myId="",myName="";
-  bool myProfile=true;
+  String name="",image="",myId="",myName="",background="",relationship="",born="",address="",since="";
   List<String> tokens=[];
   int check=0;
   List follower =[] , follow=[] , friends=[] , temp=[];
   int quantityFriend=0;
   bool followed = true;
-
+  getDetail()async{
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("userinfo").doc(widget.idProfileUser).get();
+    try{
+      relationship = data.get("relationship");
+      born = data.get("born");
+      address = data.get("address");
+      since = data.get("since");
+      background = data.get("imageBackground");
+    }catch(e){
+      relationship ="";
+      born = "";
+      address = "";
+      since = "";
+      background = "";
+    }
+  }
   upCheck() async {
      QuerySnapshot listFriend= await FirebaseFirestore.instance
          .collection("relationship").doc(myId).collection("friend")
@@ -205,7 +218,7 @@ class _ProfileState extends State<ProfileFriend> {
                     )else if(check==2)
                    GestureDetector(
                      onTap: (){
-                       print("press");
+
                        showMaterialModalBottomSheet(
                            context: context, builder: (context)=>Container(
                          height: MediaQuery.of(context).size.height/3.4,
@@ -225,7 +238,7 @@ class _ProfileState extends State<ProfileFriend> {
                                  };
                                  await FirebaseFirestore.instance.collection("user").doc(myId)
                                      .collection("advance").doc(myId).update(dataInfo);
-                                 print("theo dõi");
+
                                  setState(() {
                                    followed =true;
                                  });
@@ -264,7 +277,7 @@ class _ProfileState extends State<ProfileFriend> {
                                    await FirebaseFirestore.instance.collection("user").doc(myId)
                                        .collection("advance").doc(myId).set(data);
                                  }
-                                 print("Bỏ theo dõi");
+
                                  setState(() {
                                    followed =false;
                                  });
@@ -407,8 +420,8 @@ class _ProfileState extends State<ProfileFriend> {
                       };
                       await FirebaseFirestore.instance.collection("relationship").doc(myId)
                           .collection("follow").doc(myId).update(dataInfoFollow);
-                      print("Nguoi theo doi     $follower");
-                      print("Theo doi     $follow");
+
+
                       // print(widget.idProfileUser);
                       // print(myId);
                   },
@@ -473,41 +486,55 @@ class _ProfileState extends State<ProfileFriend> {
               padding:EdgeInsets.only(top: 10,left: 20),
               child: Column(
                 children: [
-                  Row(
+                  address!=""? Row(
                     children: [
-                      Icon(Icons.favorite , color: Colors.grey.shade600,),
+                      Icon(Icons.home_sharp , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
-                      Text("Độc thân",style: TextStyle(fontSize: 16),),
-
+                      Text("Sống tại ",style: TextStyle(fontSize: 16),),
+                      Text(address,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
                     ],
-                  ),
+                  ):SizedBox(),
                   SizedBox(height: 8,),
-                  Row(
+                  born!=""? Row(
                     children: [
                       Icon(Icons.location_pin , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
                       Text("Đến từ ",style: TextStyle(fontSize: 16),),
-                      Text("Thành phố Hồ Chính Minh",style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
+                      Text(born,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
                     ],
-                  ),
+                  ):SizedBox(),
                   SizedBox(height: 8,),
-                  Row(
+                  since!=""? Row(
                     children: [
                       Icon(Icons.access_time_filled_outlined , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
                       Text("Tham gia vào ",style: TextStyle(fontSize: 16),),
-                      Text("Tháng ? Năm ?",style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
+                      Text(since,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
                     ],
-                  ),
+                  ):SizedBox(),
                   SizedBox(height: 8,),
-                  Row(
+                  relationship!=""? Row(
+                    children: [
+                      Icon(CupertinoIcons.heart , color: Colors.grey.shade600,),
+                      SizedBox(width: 10,),
+                      Text("Đang",style: TextStyle(fontSize: 16),),
+                      Text(relationship,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
+                    ],
+                  ):SizedBox(),
+                  SizedBox(height: 8,),
+                  address!="" && born!="" && since!="" && relationship !="" ? Row(
                     children: [
                       Icon(Icons.list , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
-                      Text("Xem thông tin giới thiệu của $name",style: TextStyle(fontSize: 16),),
+                      Text("Xem thêm thông tin giới thiệu",style: TextStyle(fontSize: 16),),
                     ],
+                  ):Center(
+                    child: Text("Người dùng hiện không có thông tin chi tiết",
+                      style: TextStyle(fontSize: 16),
+
+                    ),
                   ),
-        
+                  SizedBox(height: 4,),
                 ],
               ),
             ),

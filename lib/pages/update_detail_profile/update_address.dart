@@ -1,6 +1,8 @@
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import '../lib_class_import/userDetailProvider.dart';
 class UpdateAddress extends StatefulWidget {
   final String idUser;
   const UpdateAddress({super.key,required this.idUser});
@@ -14,20 +16,8 @@ class _UpdateAddressState extends State<UpdateAddress> {
   List<String> _dropdownItemsTinh=[];
   String? _selectedValue;
   final _formKey = GlobalKey<FormState>();
-  Future<void> getData() async {
-    try {
-      QuerySnapshot querySnapshot = await DatabaseMethods().getUserInfoById(widget.idUser);
-      _selectedValue = querySnapshot.docs[0]["address"];
-      if(_selectedValue==""){
-        _selectedValue=null;
-      }
-    }catch(error){
-      print("lỗi lấy thông tin người dùng");
-    }
-  }
   onLoad() async {
     _dropdownItemsTinh=await DatabaseMethods().getCity();
-    await getData();
     print(_selectedValue);
     setState(() {
 
@@ -40,6 +30,8 @@ class _UpdateAddressState extends State<UpdateAddress> {
   }
   @override
   Widget build(BuildContext context) {
+    final userDetailProvider = Provider.of<UserDetailProvider>(context);
+    userDetailProvider.getUserDetails();
     return Scaffold(
       appBar: AppBar(
         title: Center(
@@ -141,6 +133,7 @@ class _UpdateAddressState extends State<UpdateAddress> {
                             "address":_selectedValue,
                           };
                           await DatabaseMethods().updateUserInfo(widget.idUser, userInfoMap);
+                          userDetailProvider.updateAddress(_selectedValue!);
                           showGeneralDialog(
                             barrierColor: Colors.black.withOpacity(0.5),
                             transitionBuilder: (context, a1, a2, widget) {

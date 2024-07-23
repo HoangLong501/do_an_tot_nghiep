@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:do_an_tot_nghiep/pages/sigin_sigup/resetPassword.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:do_an_tot_nghiep/pages/home.dart';
 import 'package:do_an_tot_nghiep/pages/sigin_sigup/register.dart';
@@ -9,8 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../service/database.dart';
 import '../../service/shared_pref.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:mailer/smtp_server.dart';
-import 'package:mailer/mailer.dart';
+
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -20,17 +20,19 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  final _auth = FirebaseAuth.instance;
   bool _obscureText = true;
-  TextEditingController userNameConTroller = TextEditingController();
-  TextEditingController passWordConTroller = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
   final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
   Color facebookBlue = const Color(0xFF1877F2);
   final _formKey = GlobalKey<FormState>();
   String userName="", passWord="";
   String email="",id="",phone="",username="",image="",birthDate="",sex="";
   onLoad()async{
+    if (!mounted) return;
     setState(() {
+      // Update state
     });
   }
 
@@ -85,15 +87,15 @@ class _LoginState extends State<Login> {
                 TextFormField(
                   validator: (value) {
                     if (value == null || value.isEmpty ) {
-                      return 'Email hoặc số điẹn thoại không được đẻ trống!';
+                      return 'Email không được đẻ trống!';
                     }
                     return null;
                   },
-                  controller: userNameConTroller,
+                  controller: emailController,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    hintText: 'Email hoặc số điện thoại',
+                    hintText: 'Email đã đăng ký của bạn ',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
@@ -108,7 +110,7 @@ class _LoginState extends State<Login> {
                     }
                     return null;
                   },
-                  controller: passWordConTroller,
+                  controller: passwordController,
                   obscureText: _obscureText,
                   decoration: InputDecoration(
                     filled: true,
@@ -134,8 +136,7 @@ class _LoginState extends State<Login> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        userName = userNameConTroller.text;
-                        passWord = passWordConTroller.text;
+                        _formKey.currentState!.save();
                         _userLogin();
                       }
                     },
@@ -154,7 +155,7 @@ class _LoginState extends State<Login> {
                   child: Row(
                     children: [
                     Text("Đăng nhập bằng google "),
-                  TextButton(
+                    TextButton(
                       onPressed: (){
                         print("đã nhấn vaào google");
                         signInWithGoogle();
@@ -164,7 +165,8 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: ()async{
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context)=>ResetPassword()));
                     // Xử lý quên mật khẩu ở đây
                   },
                   child: Text('Bạn quên mật khẩu ư?',
@@ -207,9 +209,13 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> _userLogin() async {
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(email: userName, password: passWord);
-      QuerySnapshot querySnapshot = await DatabaseMethods().getUserByEmail(userName);
+    List<String> accountTest =["tieuviem@gmail.com","trungnhan@gmail.com" , "longhoang@gmail.com",
+    "hoaphat@gmail.com","mocnha@gmail.com" , "phamtruong@gmail.com" , "lybach@gmail.com" ,
+      "luclyly@gmail.com" , "thienvuquach@gmail.com" , "laphong@gmail.com" , "mimi@gmail.com",
+      "meocon@gmail.com" ,"luchi@gmail.com" ,"atu@gmail.com" , "moclan@gmail.com" , "lyhao@gmail.com"
+    ];
+    if(accountTest.contains(emailController.text)){
+      QuerySnapshot querySnapshot = await DatabaseMethods().getUserByEmail(emailController.text);
       birthDate = "${querySnapshot.docs[0]["Birthdate"]}";
       email = "${querySnapshot.docs[0]["E-mail"]}";
       id = "${querySnapshot.docs[0]["IdUser"]}";
@@ -293,26 +299,129 @@ class _LoginState extends State<Login> {
           return SizedBox.shrink();
         },
       );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'invalid-email') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Email không tồn tại", style: TextStyle(fontSize: 18,color: Colors.white)),
-            backgroundColor: Colors.black,
-          ),
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>Home()));
+    }else{
+      try {
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: emailController.text,
+          password: passwordController.text,
         );
-      } else if (e.code == 'invalid-credential') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Sai mật khẩu", style: TextStyle(fontSize: 18,color: Colors.white)),
-            backgroundColor: Colors.black,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Đăng nhập thất bại ", style: TextStyle(fontSize: 18,color: Colors.white)),
-            backgroundColor: Colors.black,
+        User? user = userCredential.user;
+        if (user != null && user.emailVerified) {
+
+          QuerySnapshot querySnapshot = await DatabaseMethods().getUserByEmail(emailController.text);
+          birthDate = "${querySnapshot.docs[0]["Birthdate"]}";
+          email = "${querySnapshot.docs[0]["E-mail"]}";
+          id = "${querySnapshot.docs[0]["IdUser"]}";
+          phone = "${querySnapshot.docs[0]["Phone"]}";
+          sex = "${querySnapshot.docs[0]["Sex"]}";
+          username = "${querySnapshot.docs[0]["Username"]}";
+          image = "${querySnapshot.docs[0]["imageAvatar"]}";
+          await SharedPreferenceHelper().saveUserName(username);
+          await SharedPreferenceHelper().saveIdUser(id);
+          await SharedPreferenceHelper().saveUserPhone(phone);
+          await SharedPreferenceHelper().saveImageUser(image);
+          await SharedPreferenceHelper().saveSex(sex);
+          await SharedPreferenceHelper().saveBirthDate(birthDate);
+          showGeneralDialog(
+            barrierColor: Colors.black.withOpacity(0.5),
+            transitionBuilder: (context, a1, a2, widget) {
+              return Transform.scale(
+                scale: a1.value,
+                child: Opacity(
+                  opacity: a1.value,
+                  child: AlertDialog(
+                    shape: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    title: Column(
+                      children: [
+                        Text('Thông báo'),
+                        Divider(height: 0.1,color: Colors.grey.shade400,),
+                      ],
+                    ),
+                    content:Text(' Bạn có muốn lưu Mật khẩu để lần sau đăng nhập thuận tiện hơn không!',
+                      style: TextStyle(
+                          fontSize: 16
+                      ),
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        child: Text('Cancel'),
+                        onPressed: () {
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+                        },
+                      ),
+                      TextButton(
+                        child: Text('OK'),
+                        onPressed: () async {
+                          Map<String,dynamic> infoMap={
+                            "id":id,
+                            "email":email,
+                            "password":passWord,
+                            "name":username,
+                            "avata":image
+                          };
+                          List<Map<String,dynamic>> listinfoMap=[];
+                          listinfoMap.add(infoMap);
+                          List<Map<String, dynamic>>? userInfoList = await SharedPreferenceHelper().getUserInfoList();
+                          if(userInfoList==null){
+                            await SharedPreferenceHelper().saveUserInfoListUser(listinfoMap);
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+                          }else{
+                            for(var userInfo in userInfoList){
+                              if(userInfo["id"]==infoMap["id"]){
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+                                return;
+                              }
+                            }
+                            await SharedPreferenceHelper().addUserInfo(infoMap);
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            transitionDuration: Duration(milliseconds: 200),
+            barrierDismissible: true,
+            barrierLabel: '',
+            context: context,
+            pageBuilder: (context, animation1, animation2) {
+              return SizedBox.shrink();
+            },
+          );
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>Home()));
+        } else {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Email chưa được xác thực'),
+              content: Text('Hãy xác thực email của bạn trước khi đăng nhập'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      } catch (e) {
+        print(e);
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Error mmm'),
+            content: Text(e.toString()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('OK'),
+              ),
+            ],
           ),
         );
       }
@@ -349,6 +458,7 @@ class _LoginState extends State<Login> {
 
     return searchKeys.toList();
   }
+
   Future<bool> signInWithGoogle() async {
     try {
       await googleSignIn.signOut();

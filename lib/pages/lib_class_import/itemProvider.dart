@@ -6,9 +6,10 @@ class ItemProvider with ChangeNotifier {
   List<DocumentSnapshot> _items = [];
   bool _isLoading = false;
   bool _hasMore = true;
-  DocumentSnapshot? _lastDocument;
+  DocumentSnapshot? _lastDocumentWithViewers;
+  DocumentSnapshot? _lastDocumentWithoutViewers;
   List<String> _hideNewsfeed = [];
-  List _unfollowedUsers = [];
+  List<String> _unfollowedUsers = [];
   List<DocumentSnapshot> get items => _items;
   bool get isLoading => _isLoading;
   bool get hasMore => _hasMore;
@@ -27,17 +28,17 @@ class ItemProvider with ChangeNotifier {
       _hideNewsfeed = [];
     }
   }
+
   Future<void> getUnfollowedUsers(String id) async {
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(id)
         .collection("advance").doc(id).get();
-    try{
-      _unfollowedUsers = data.get("unfollow");
-
-    }catch(e){
-      _unfollowedUsers=[];
+    try {
+      _unfollowedUsers = List<String>.from(data.get("unfollow"));
+    } catch (e) {
+      _unfollowedUsers = [];
     }
-    // print("unfollowedUsers: $_unfollowedUsers");
   }
+
   Future<void> fetchPosts() async {
     await getidUserDevice();
     await getHideItem(idUserDevice!);
@@ -71,18 +72,30 @@ class ItemProvider with ChangeNotifier {
     List<DocumentSnapshot> newItems = combinedPosts.where((doc) =>
     !_hideNewsfeed.contains(doc.id) &&
         !_unfollowedUsers.contains(doc['UserID'])).toList();
+
     _items = newItems;
 
     if (_items.isNotEmpty) {
-      _lastDocument = _items.last;
+      _lastDocumentWithViewers = querySnapshotWithViewers.docs.isNotEmpty ? querySnapshotWithViewers.docs.last : null;
+      _lastDocumentWithoutViewers = querySnapshotWithoutViewers.docs.isNotEmpty ? querySnapshotWithoutViewers.docs.last : null;
+    }
+    // _items.shuffle();
+    _isLoading = false;
+    if(combinedPosts.length==10){
+      _hasMore = true;
+    }else{
+      if(querySnapshotWithViewers.size==5 ||querySnapshotWithoutViewers.size==5){
+        _hasMore = true;
+      }else{
+        _hasMore = false;
+      }
     }
 
-    _isLoading = false;
-    _hasMore = combinedPosts.length == 10;
     notifyListeners();
   }
 
   Future<void> fetchMorePosts() async {
+    print("get more");
     await getidUserDevice();
     await getHideItem(idUserDevice!);
     await getUnfollowedUsers(idUserDevice!);
@@ -90,19 +103,27 @@ class ItemProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+
     Query queryWithViewers = FirebaseFirestore.instance
         .collection('newsfeed')
         .where('viewers', arrayContains: idUserDevice)
-        .orderBy('newTimestamp', descending: true)
-        .startAfterDocument(_lastDocument!)
-        .limit(5);
+        .orderBy('newTimestamp', descending: true);
+
+    if (_lastDocumentWithViewers != null) {
+      queryWithViewers = queryWithViewers.startAfterDocument(_lastDocumentWithViewers!);
+    }
+    queryWithViewers = queryWithViewers.limit(5);
+
 
     Query queryWithoutViewers = FirebaseFirestore.instance
         .collection('newsfeed')
         .where('viewers', isEqualTo: [])
-        .orderBy('newTimestamp', descending: true)
-        .startAfterDocument(_lastDocument!)
-        .limit(5);
+        .orderBy('newTimestamp', descending: true);
+
+    if (_lastDocumentWithoutViewers != null) {
+      queryWithoutViewers = queryWithoutViewers.startAfterDocument(_lastDocumentWithoutViewers!);
+    }
+    queryWithoutViewers = queryWithoutViewers.limit(5);
 
     QuerySnapshot querySnapshotWithViewers = await queryWithViewers.get();
     QuerySnapshot querySnapshotWithoutViewers = await queryWithoutViewers.get();
@@ -111,19 +132,31 @@ class ItemProvider with ChangeNotifier {
       ...querySnapshotWithViewers.docs,
       ...querySnapshotWithoutViewers.docs
     ];
-
+    print(combinedPosts.length);
     combinedPosts.sort((a, b) => (b['newTimestamp']).compareTo(a['newTimestamp']));
 
     List<DocumentSnapshot> newItems = combinedPosts.where((doc) =>
     !_hideNewsfeed.contains(doc.id) &&
         !_unfollowedUsers.contains(doc['UserID'])).toList();
 
+    print(newItems.length);
     if (newItems.isNotEmpty) {
-      _lastDocument = newItems.last;
+      _lastDocumentWithViewers = querySnapshotWithViewers.docs.isNotEmpty ? querySnapshotWithViewers.docs.last : null;
+      _lastDocumentWithoutViewers = querySnapshotWithoutViewers.docs.isNotEmpty ? querySnapshotWithoutViewers.docs.last : null;
     }
 
+    _items.addAll(newItems.where((item) => !_items.contains(item)).toList());
     _isLoading = false;
-    _hasMore = combinedPosts.length == 10;
+    if(combinedPosts.length==10){
+      _hasMore = true;
+    }else{
+      if(querySnapshotWithViewers.size==5 &&querySnapshotWithoutViewers.size==0  || querySnapshotWithoutViewers.size==5 && querySnapshotWithViewers.size==0 ){
+        _hasMore=true;
+      }else{
+        _hasMore=false;
+      }
+    }
+    // _items.shuffle();
     notifyListeners();
   }
 

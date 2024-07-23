@@ -62,7 +62,7 @@ onLoad() async{
                   height: 100,
                   child:image==""? CircleAvatar(
                     radius: 50,
-                    backgroundImage:AssetImage("assets/images/avarta.jpg"),
+                    backgroundImage:AssetImage("assets/images/avatar.jpg"),
                   ):CircleAvatar(
                     radius: 50,
                     backgroundImage: NetworkImage(image),

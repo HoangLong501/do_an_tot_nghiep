@@ -110,24 +110,24 @@ class _ContactMethodSTDState extends State<ContactMethodSTD> {
                     phoneNumbwr = phonecontroller.text;
                     // Thực hiện tác vụ bất đồng bộ ở đây
                     String tam="1";
-                    SharedPreferenceHelper().savesigup(tam).then((result) {
-                      if (result) {
-                        print(result);
-                        // Cập nhật UI bên trong hàm callback của setState
-                        setState(() {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => CreatePassWord(
-                              surname: widget.surname,
-                              name: widget.name,
-                              birthDate: widget.birthDate,
-                              sex: widget.sex,
-                              phone: phoneNumbwr,
-                            )),
-                          );
-                        });
-                      }
-                    });
+                    // SharedPreferenceHelper().savesigup(tam).then((result) {
+                    //   if (result) {
+                    //     print(result);
+                    //     // Cập nhật UI bên trong hàm callback của setState
+                    //     setState(() {
+                    //       Navigator.push(
+                    //         context,
+                    //         MaterialPageRoute(builder: (context) => CreatePassWord(
+                    //           surname: widget.surname,
+                    //           name: widget.name,
+                    //           birthDate: widget.birthDate,
+                    //           sex: widget.sex,
+                    //           phone: phoneNumbwr,
+                    //         )),
+                    //       );
+                    //     });
+                    //   }
+                    // });
                   }
 
                   // Xử lý đăng nhập ở đây

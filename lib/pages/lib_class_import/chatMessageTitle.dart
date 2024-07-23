@@ -56,7 +56,7 @@ class _ChatMessageTitleState extends State<ChatMessageTitle> {
       children: [
         widget.group? who?SizedBox():
         CircleAvatar(
-          backgroundImage: image!=""? Image.network(image).image :Image.asset("assets/images/avarta.jpg").image,
+          backgroundImage: image!=""? Image.network(image).image :Image.asset("assets/images/avatar.jpg").image,
         ):SizedBox(),
         Flexible(
           child: Column(

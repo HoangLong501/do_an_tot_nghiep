@@ -22,7 +22,7 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
   TextEditingController contentController =TextEditingController();
   File? _selectedImage;
   bool typed=false;
-  String idUser="" , username="" , newsFeedId="" , urlImage="";
+  String idUser="" , username="",avatar="" , newsFeedId="" , urlImage="";
   int _selectedValue = 1;
   String status="";
   List viewers =[] , custom=[];
@@ -104,14 +104,15 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
 
 
   onLoad()async{
-      username=(await SharedPreferenceHelper().getUserName())!;
       idUser =(await SharedPreferenceHelper().getIdUser())!;
+      username=(await SharedPreferenceHelper().getUserName())!;
+      DocumentSnapshot data1 = await FirebaseFirestore.instance.collection("user")
+          .doc(idUser).get();
+      avatar = data1.get("imageAvatar");
       List followers=[];
         DocumentSnapshot data = await FirebaseFirestore.instance.collection("relationship")
             .doc(idUser).collection("follower").doc(idUser).get();
         followers = data.get("data");
-        print(followers);
-      print(idUser);
       setState(() {
 
       });
@@ -138,8 +139,11 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                                children: [
                                  Row(
                                    children: [
-                                     Icon(Icons.arrow_back,size: 30,),
-                                     SizedBox(width: 10,),
+                                     IconButton(
+                                         onPressed:(){
+                                            Navigator.of(context).pop();
+                                         },
+                                         icon: Icon(Icons.arrow_back,size: 30,)),
                                      Text("Tạo bài viết",style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
                                    ],
                                  ),
@@ -173,8 +177,11 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                             margin: EdgeInsets.only(top: 10),
                             child: Row(
                               children: [
-                                CircleAvatar(
+                                avatar==""? CircleAvatar(
                                   backgroundImage: Image.network("https://www.dolldivine.com/rinmaru/cartoon-avatar-creator-thumbnail.jpg").image,
+                                  radius: 30,
+                                ):CircleAvatar(
+                                  backgroundImage: Image.network(avatar).image,
                                   radius: 30,
                                 ),
                                 SizedBox(width: 14,),

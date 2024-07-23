@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:do_an_tot_nghiep/pages/comment.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/edit_profile_detail.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/newsfeed_detail.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/edit_story.dart';
@@ -10,6 +9,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
+import 'lib_class_import/userDetailProvider.dart';
 
 class Profile extends StatefulWidget {
   final String idProfileUser;
@@ -19,12 +20,10 @@ class Profile extends StatefulWidget {
 }
 class _ProfileState extends State<Profile> {
   Stream<QuerySnapshot>? myNewsfeedStream;
-  String name="",image="",background="",relationship="",born="",address="",since="";
+  // String name="",image="",background="",relationship="",born="",address="",since="";
   bool myProfile=true;
   int quantityFriend=0;
   List friends=[] , temp=[];
-
-
   onLoad()async{
     friends = await DatabaseMethods().getFriends(widget.idProfileUser);
     friends.remove(widget.idProfileUser);
@@ -34,9 +33,6 @@ class _ProfileState extends State<Profile> {
     }else{
       temp=friends;
     }
-    DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(widget.idProfileUser).get();
-    name = data.get("Username");
-    image = data.get("imageAvatar");
     myNewsfeedStream = DatabaseMethods().getOnlyMyNews(widget.idProfileUser);
     setState(() {
 
@@ -50,6 +46,9 @@ class _ProfileState extends State<Profile> {
   }
   @override
   Widget build(BuildContext context) {
+    final userDetailProvider = Provider.of<UserDetailProvider>(context);
+    userDetailProvider.getUser();
+    userDetailProvider.getUserDetails();
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -65,7 +64,7 @@ class _ProfileState extends State<Profile> {
                         Navigator.of(context).pop();
                       },
                       child: Icon(Icons.arrow_back,size: 30,)),
-                  Text( name!,style: TextStyle(
+                  Text( userDetailProvider.name ,style: TextStyle(
                     fontSize: 18
                   ),),
                   Icon(Icons.search_outlined,size: 30,),
@@ -75,7 +74,7 @@ class _ProfileState extends State<Profile> {
             Stack(
               children: [
                 Image(
-                    image: Image.network(background==""?"https://i.ibb.co/9WYddvb/image.png":background).image,
+                    image: Image.network(userDetailProvider.background==""?"https://i.ibb.co/9WYddvb/image.png":userDetailProvider.background).image,
                     height: 240,
                     width: MediaQuery.of(context).size.width/1.0,
                     fit: BoxFit.fitWidth,
@@ -86,11 +85,11 @@ class _ProfileState extends State<Profile> {
                      child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(backgroundImage:  Image.network(image==""?"https://i.ibb.co/jzk0j6j/image.png":image).image,
+                        CircleAvatar(backgroundImage:  Image.network(userDetailProvider.avatar==""?"https://i.ibb.co/jzk0j6j/image.png":userDetailProvider.avatar).image,
                             radius: 80,
                         ),
                         SizedBox(height: 8,),
-                        Text(name ,style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
+                        Text(userDetailProvider.name ,style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
                         Row(
                           children: [
                             Text("$quantityFriend" ,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w500),),
@@ -119,11 +118,9 @@ class _ProfileState extends State<Profile> {
                           child: Text("+ Thêm vào tin",style: TextStyle(fontSize: 18,color: Colors.white),))),
             ),
             GestureDetector(
-                onTap: () async {
-               await Navigator.push(context,MaterialPageRoute(builder: (context)=>EditProfileDetail( key: ValueKey(widget.idProfileUser),idUser: widget.idProfileUser)));
-                  setState(() {
-
-                  });
+                onTap: ()  {
+                Navigator.push(context,MaterialPageRoute(builder: (context)=>
+                    EditProfileDetail(idUser: widget.idProfileUser)));
                 },
            child:  Container(
               margin: EdgeInsets.only(top: 10,left: 20,right: 20),
@@ -180,41 +177,62 @@ class _ProfileState extends State<Profile> {
               padding:EdgeInsets.only(top: 10,left: 20),
               child: Column(
                 children: [
-                  Row(
+                  userDetailProvider.address!=""? Row(
                     children: [
                       Icon(Icons.home_sharp , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
                       Text("Sống tại ",style: TextStyle(fontSize: 16),),
-                      Text(address,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
+                      Text(userDetailProvider.address,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
                     ],
-                  ),
+                  ):SizedBox(),
                   SizedBox(height: 8,),
-                  Row(
+                  userDetailProvider.born!=""? Row(
                     children: [
                       Icon(Icons.location_pin , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
                       Text("Đến từ ",style: TextStyle(fontSize: 16),),
-                      Text(born,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
+                      Text(userDetailProvider.born,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
                     ],
-                  ),
+                  ):SizedBox(),
                   SizedBox(height: 8,),
-                  Row(
+                  userDetailProvider.sex!=""? Row(
                     children: [
-                      Icon(Icons.access_time_filled_outlined , color: Colors.grey.shade600,),
+                      Icon(CupertinoIcons.profile_circled , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
-                      Text("Tham gia vào ",style: TextStyle(fontSize: 16),),
-                      Text(since,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
+                      Text("Giới tính  ",style: TextStyle(fontSize: 16),),
+                      Text(userDetailProvider.sex,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
                     ],
-                  ),
+                  ):SizedBox(),
                   SizedBox(height: 8,),
-                  Row(
+                  userDetailProvider.relationship!=""? Row(
+                    children: [
+                      Icon(CupertinoIcons.heart , color: Colors.grey.shade600,),
+                      SizedBox(width: 10,),
+                      Text("Đang ",style: TextStyle(fontSize: 16),),
+                      Text(userDetailProvider.relationship,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700),)
+                    ],
+                  ):SizedBox(),
+                  userDetailProvider.address!="" && userDetailProvider.born!="" && userDetailProvider.sex!=""
+                      && userDetailProvider.relationship !="" ?SizedBox(height: 8,):SizedBox(),
+                  userDetailProvider.address!="" && userDetailProvider.born!="" && userDetailProvider.sex!=""
+                      && userDetailProvider.relationship !="" ? Row(
                     children: [
                       Icon(Icons.list , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
                       Text("Xem thêm thông tin giới thiệu",style: TextStyle(fontSize: 16),),
                     ],
+                  ):Center(
+                    child: TextButton(
+                      onPressed: (){
+                        Navigator.push(context,MaterialPageRoute(builder: (context)=>
+                            EditProfileDetail(idUser: widget.idProfileUser)));
+                      },
+                      child: Text("Hãy cho mọi người biết thêm về bạn",
+                        style: TextStyle(fontSize: 16),
+
+                      ),
+                    ),
                   ),
-        
                 ],
               ),
             ),
@@ -331,9 +349,10 @@ class _FriendDetailState extends State<FriendDetail> {
       child: Column(
         children: [
           Expanded(
-            child: Image(image: Image.network(image).image,
+            child: image!=""? Image(image: Image.network(image).image
+              ,
               fit: BoxFit.fitHeight,
-            ),
+            ): CircleAvatar(backgroundColor: Colors.blue,),
           ),
           Text(name,style: TextStyle(fontSize: 17,fontWeight: FontWeight.w600),),
         ],

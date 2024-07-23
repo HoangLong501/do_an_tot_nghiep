@@ -1,4 +1,4 @@
-import 'package:do_an_tot_nghiep/pages/comment.dart';
+
 import 'package:do_an_tot_nghiep/pages/comment2.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/menu_newsfeed.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
@@ -9,8 +9,6 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:random_string/random_string.dart';
 import 'package:intl/intl.dart';
-
-import '../share.dart';
 import '../share1.dart';
 
 class WidgetNewsfeed extends StatefulWidget {
@@ -223,7 +221,6 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
                       }else{
                         return SizedBox();
                       }
-                      // Hiển thị số lượng sản phẩm từ snapshot
                     }
                   },
                 ),

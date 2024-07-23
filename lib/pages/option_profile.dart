@@ -1,3 +1,4 @@
+import 'package:do_an_tot_nghiep/pages/lib_class_import/report_user.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../service/database.dart';
@@ -51,8 +52,28 @@ class _OptionProfileState extends State<OptionProfile> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              padding: EdgeInsets.only(left: 10),
+            TextButton(
+              onPressed: (){
+                showGeneralDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                  barrierColor: Colors.black45,
+                  transitionDuration: Duration(milliseconds: 200),
+                  pageBuilder: (BuildContext buildContext, Animation animation, Animation secondaryAnimation) {
+                    return ReportUser(idUser: widget.idProfile,);
+                  },
+                  transitionBuilder: (context, a1, a2, widget) {
+                    return Transform.scale(
+                      scale: a1.value,
+                      child: Opacity(
+                        opacity: a1.value,
+                        child: widget,
+                      ),
+                    );
+                  },
+                );
+              },
               child: Row(
                 children: [
                   Icon(
@@ -73,8 +94,10 @@ class _OptionProfileState extends State<OptionProfile> {
               padding: EdgeInsets.only(left: 58),
               child: Divider(color: Colors.grey,),
             ),
-            Container(
-              padding: EdgeInsets.only(left: 10),
+            TextButton(
+              onPressed: (){
+
+              },
               child: Row(
                 children: [
                   Icon(
@@ -94,8 +117,10 @@ class _OptionProfileState extends State<OptionProfile> {
               padding: EdgeInsets.only(left: 58),
               child: Divider(color: Colors.grey,),
             ),
-            Container(
-              padding: EdgeInsets.only(left: 10),
+            TextButton(
+              onPressed: (){
+
+              },
               child: Row(
                 children: [
                   Icon(
@@ -115,8 +140,10 @@ class _OptionProfileState extends State<OptionProfile> {
               padding: EdgeInsets.only(left: 58),
               child: Divider(color: Colors.grey,),
             ),
-            Container(
-              padding: EdgeInsets.only(left: 10),
+            TextButton(
+              onPressed: (){
+
+              },
               child: Row(
                 children: [
                   Icon(
@@ -136,8 +163,10 @@ class _OptionProfileState extends State<OptionProfile> {
               padding: EdgeInsets.only(left: 58),
               child: Divider(color: Colors.grey,),
             ),
-            Container(
-              padding: EdgeInsets.only(left: 10),
+            TextButton(
+              onPressed: (){
+
+              },
               child: Row(
                 children: [
                   Icon(
@@ -157,8 +186,10 @@ class _OptionProfileState extends State<OptionProfile> {
               padding: EdgeInsets.only(left: 58),
               child: Divider(color: Colors.grey,),
             ),
-            Container(
-              padding: EdgeInsets.only(left: 10),
+            TextButton(
+              onPressed: (){
+
+              },
               child: Row(
                 children: [
                   Icon(

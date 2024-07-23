@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:provider/provider.dart';
 import '../../service/database.dart';
+import '../lib_class_import/userDetailProvider.dart';
 class UpdateRelationShip extends StatefulWidget {
   final String idUser;
   const UpdateRelationShip({super.key,required this.idUser});
@@ -14,26 +15,15 @@ class UpdateRelationShip extends StatefulWidget {
 
 class _UpdateRelationShipState extends State<UpdateRelationShip> {
   String? _selectedValue;
-  List<String> _dropdownItems =
+  final List<String> _dropdownItems =
   [
     'Độc thân','Đang hẹn hò', 'Đã đính hôn',
     'Đã kết hôn','Chung sống có đăng kí','Chung sống',
     'Đang tìm hiểu','Phức tạp','Ly thân','Đã ly hôn','Góa'
  ];
   final _formKey = GlobalKey<FormState>();
-  Future<void> getData() async {
-    try {
-      QuerySnapshot querySnapshot = await DatabaseMethods().getUserInfoById(widget.idUser);
-      _selectedValue = querySnapshot.docs[0]["relationship"];
-      if(_selectedValue==""){
-        _selectedValue=null;
-      }
-    }catch(error){
-      print("lỗi lấy thông tin người dùng");
-    }
-  }
+
   onLoad() async {
-    await getData();
     setState(() {
 
     });
@@ -45,6 +35,8 @@ class _UpdateRelationShipState extends State<UpdateRelationShip> {
   }
   @override
   Widget build(BuildContext context) {
+    final userDetailProvider = Provider.of<UserDetailProvider>(context);
+    userDetailProvider.getUserDetails();
     return Scaffold(
       appBar: AppBar(
         title: Center(
@@ -189,6 +181,7 @@ class _UpdateRelationShipState extends State<UpdateRelationShip> {
                                 "relationship":_selectedValue,
                               };
                               await DatabaseMethods().updateUserInfo(widget.idUser, userInfoMap);
+                              userDetailProvider.updateRelationship(_selectedValue!);
                               showGeneralDialog(
                                 barrierColor: Colors.black.withOpacity(0.5),
                                 transitionBuilder: (context, a1, a2, widget) {
