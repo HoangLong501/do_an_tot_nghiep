@@ -1,17 +1,15 @@
 
+import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/itemProvider.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/userDetailProvider.dart';
-import 'package:do_an_tot_nghiep/pages/sigin_sigup/login.dart';
-import 'package:do_an_tot_nghiep/pages/home.dart';
+import 'package:do_an_tot_nghiep/pages/noti_page.dart';
 import 'package:do_an_tot_nghiep/service/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   VisibilityDetectorController.instance.updateInterval = Duration.zero;
@@ -38,13 +36,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         useMaterial3: true,
       ),
-      home: AuthUser(),
-     //  home: FutureBuilder(
-     //      future: Firebase.initializeApp(),
-     //      builder: (context , snapshot){
-     //        print(snapshot.data);
-     //        return AuthUser();
-     //      },)
+       home: AuthUser(),
+      //home: ChatPage(),
+
     );
   }
 }

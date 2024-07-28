@@ -1,3 +1,4 @@
+import 'package:do_an_tot_nghiep/pages/chat_with_gemini.dart';
 import 'package:do_an_tot_nghiep/pages/message.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +56,12 @@ class _ChatRoomState extends State<ChatRoom> {
     return GestureDetector(
       onTap: (){
         if(widget.nameGroup==""){
-          Navigator.of(context).push(MaterialPageRoute(builder: (context)=>Message(contactUser: contactUser,group: false,name: name, image: image, chatRoomId: widget.chatRoomId)));
+          if(widget.idUser=="openai"){
+            Navigator.of(context).push(MaterialPageRoute(builder: (context)=>ChatWithGemini(chatRoomId: widget.chatRoomId,)));
+          }else{
+            Navigator.of(context).push(MaterialPageRoute(builder: (context)=>Message(contactUser: contactUser,group: false,name: name, image: image, chatRoomId: widget.chatRoomId)));
+          }
+
         }else{
           Navigator.of(context).push(MaterialPageRoute(builder: (context)=>Message(contactUser: contactUser,group: true,name: widget.nameGroup, image: "", chatRoomId: widget.chatRoomId)));
         }

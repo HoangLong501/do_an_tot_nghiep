@@ -59,12 +59,12 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
         viewers.add(idUser);
       }else if(_selectedValue==2){
         viewers =await DatabaseMethods().getFriends(idUser);
+        viewers.add(idUser);
       }else if(_selectedValue==4){
         custom.add(idUser);
         viewers = custom;
       }else{
         List friends = await DatabaseMethods().getFriends(idUser);
-
         try{
           DocumentSnapshot data = await FirebaseFirestore.instance.collection("relationship")
               .doc(idUser).collection("follower").doc(idUser).get();
@@ -73,6 +73,7 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
           followers=[];
         }
         viewers = [...friends, ...followers];
+        viewers.add(idUser);
       }
       print(viewers);
       Map<String, dynamic> newsInfoMap = {

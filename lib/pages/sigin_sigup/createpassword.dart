@@ -289,6 +289,18 @@ onLoad()async{
                   await FirebaseFirestore.instance.collection("relationship").doc(id).collection("follow").doc(id).set({"data":[]});
                   await FirebaseFirestore.instance.collection("relationship").doc(id).collection("follower").doc(id).set({"data":[]});
 
+                  String idRoomChat = SharedPreferenceHelper().getChatRoomIdUserName(id, "openai");
+                  String theme = Colors.cyan.shade200.value.toString();
+                  Map<String , dynamic> chatRoomInfoMap={
+                    "LastMessage":"Xin chào $userName , Hôm nay tôi có thể giúp gì cho bạn?",
+                    "UserContact":"openai",
+                    "ID":idRoomChat,
+                    "Time":DateTime.now().toString(),
+                    "user":["openai",id],
+                    "Theme":theme,
+                  };
+                  DatabaseMethods().createChatRoom(idRoomChat, chatRoomInfoMap);
+                  await FirebaseFirestore.instance.collection("gemini").doc(id).set({});
                   Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Login()));
                 },
                 child: Text('OK'),

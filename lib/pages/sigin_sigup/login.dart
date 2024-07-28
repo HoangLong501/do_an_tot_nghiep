@@ -414,7 +414,7 @@ class _LoginState extends State<Login> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Error mmm'),
+            title: Text('Đã có lỗi xảy ra'),
             content: Text(e.toString()),
             actions: [
               TextButton(

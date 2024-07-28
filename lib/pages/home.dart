@@ -1,6 +1,7 @@
 import 'package:do_an_tot_nghiep/pages/chatPage.dart';
 import 'package:do_an_tot_nghiep/pages/createNewsfeed.dart';
 import 'package:do_an_tot_nghiep/pages/menu.dart';
+import 'package:do_an_tot_nghiep/pages/noti_page.dart';
 import 'package:do_an_tot_nghiep/pages/search.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/edit_story.dart';
 import 'package:do_an_tot_nghiep/pages/update_detail_profile/story.dart';
@@ -333,6 +334,7 @@ class _HomeState extends State<Home> {
               children: [
                 GestureDetector(
                     onTap: (){
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context)=>NotificationPage()));
                       print("press ---TREND-- Bottom Appbar");
                       // setState(() {
                       //

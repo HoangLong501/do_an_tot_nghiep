@@ -132,14 +132,14 @@ class ItemProvider with ChangeNotifier {
       ...querySnapshotWithViewers.docs,
       ...querySnapshotWithoutViewers.docs
     ];
-    print(combinedPosts.length);
+
     combinedPosts.sort((a, b) => (b['newTimestamp']).compareTo(a['newTimestamp']));
 
     List<DocumentSnapshot> newItems = combinedPosts.where((doc) =>
     !_hideNewsfeed.contains(doc.id) &&
         !_unfollowedUsers.contains(doc['UserID'])).toList();
 
-    print(newItems.length);
+
     if (newItems.isNotEmpty) {
       _lastDocumentWithViewers = querySnapshotWithViewers.docs.isNotEmpty ? querySnapshotWithViewers.docs.last : null;
       _lastDocumentWithoutViewers = querySnapshotWithoutViewers.docs.isNotEmpty ? querySnapshotWithoutViewers.docs.last : null;
@@ -147,15 +147,19 @@ class ItemProvider with ChangeNotifier {
 
     _items.addAll(newItems.where((item) => !_items.contains(item)).toList());
     _isLoading = false;
-    if(combinedPosts.length==10){
+    print(querySnapshotWithViewers.size);
+    print(querySnapshotWithoutViewers.size);
+    if(newItems.length==10){
       _hasMore = true;
     }else{
-      if(querySnapshotWithViewers.size==5 &&querySnapshotWithoutViewers.size==0  || querySnapshotWithoutViewers.size==5 && querySnapshotWithViewers.size==0 ){
-        _hasMore=true;
+      if(querySnapshotWithViewers.size==5||querySnapshotWithoutViewers.size==5){
+        _hasMore = true;
       }else{
         _hasMore=false;
       }
+
     }
+    print(_hasMore);
     // _items.shuffle();
     notifyListeners();
   }

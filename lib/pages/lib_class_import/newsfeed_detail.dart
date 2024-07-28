@@ -104,7 +104,7 @@ class _WidgetNewsfeedState extends State<WidgetNewsfeed> {
             children: [
               Row(
                 children: [
-                  imageUser!="" ? CircleAvatar(backgroundImage: Image.network(imageUser).image,
+                  imageUser!="" ? CircleAvatar(key: ValueKey(idUserShare),backgroundImage: Image.network(imageUser).image,
                     radius: 24,
                   ):CircleAvatar(
                     backgroundColor: Colors.grey,
