@@ -5,6 +5,8 @@ import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:random_string/random_string.dart';
+
+import 'notifications/noti.dart';
 class Comment2 extends StatefulWidget {
  final String  idNewsfeed , idPoster;
   const Comment2({super.key ,required this.idNewsfeed , required this.idPoster});
@@ -21,18 +23,21 @@ class _CommentState extends State<Comment2> {
   String myName="", myImageAvatar="";
   bool reply=false;
   List<bool> showCustomWidget=[];
+  String idOwner="";
   onLoad()async{
     idUserComment = await SharedPreferenceHelper().getIdUser();
     streamComment = DatabaseMethods().getCommentStream(widget.idNewsfeed);
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("newsfeed").doc(widget.idNewsfeed).get();
     react=data.get("react") ;
+    idOwner=data.get("UserID");
     sumReact= react.length;
 
     DocumentSnapshot documentSnapshot1 = await FirebaseFirestore.instance.collection("user").doc(idUserComment).get();
     myName = documentSnapshot1.get("Username");
     myImageAvatar = documentSnapshot1.get("imageAvatar");
-    setState(() {
-    });
+    if (mounted) {
+      setState(() {});
+    }
   }
 
 
@@ -173,7 +178,6 @@ class _CommentState extends State<Comment2> {
                                                                       suffixIcon: IconButton(onPressed: ()async{
                                                                         DateTime now = DateTime.now();
                                                                         String timeNow = DateFormat('h:mma').format(now);
-                                                                        String id = randomAlphaNumeric(10);
                                                                         Timestamp timestamp = Timestamp.fromDate(now);
                                                                         Map<String, dynamic> commentInfoMap = {
                                                                           "id_comment": snapshot.data!.docs[index]["id_comment"],
@@ -184,6 +188,16 @@ class _CommentState extends State<Comment2> {
                                                                         };
                                                                         await DatabaseMethods().addReplyCommentDetail(widget.idNewsfeed, snapshot.data!.docs[index]["id_comment"], commentInfoMap);
                                                                         replyController.clear();
+                                                                        NotificationDetail().sendNotificationToAnyDevice(idUserComment!,
+                                                                            "$myName vừa trả lời 1 bình luận của bạn ở một bài viết",
+                                                                            "Bạn có thông báo mới");
+                                                                        await FirebaseFirestore.instance.collection("notification").doc(idUserComment).collection("detail").doc().set({
+                                                                          "ID":idUserComment,
+                                                                          "content":"$myName vừa bình luận ở 1 bài viết của bạn",
+                                                                          "ts": timeNow,
+                                                                          "timestamp":timestamp,
+                                                                          "check":false
+                                                                        });
                                                                         setState(() {
                                                                           showCustomWidget[index] = false;
                                                                         });
@@ -250,12 +264,19 @@ class _CommentState extends State<Comment2> {
                           "time": timeNow,
                           "timestamp":timestamp
                         };
-
-                        print(commentInfoMap);
                         await DatabaseMethods()
                             .addCommentDetail(widget.idNewsfeed,id, commentInfoMap);
-                        print(commentInfoMap);
                         contentController.clear();
+                        NotificationDetail().sendNotificationToAnyDevice(idOwner,
+                            "$myName vừa bình luận ở 1 bài viết của bạn",
+                            "Bạn có thông báo mới");
+                        await FirebaseFirestore.instance.collection("notification").doc(idOwner).collection("detail").doc().set({
+                          "ID":idUserComment,
+                          "content":"$myName vừa bình luận ở 1 bài viết của bạn",
+                          "ts": timeNow,
+                          "timestamp":timestamp,
+                          "check":false
+                        });
                       }
                       setState(() {
                        // showCustomWidget.add(false);

@@ -105,7 +105,6 @@ Widget getFriends(){
                     ],
                   ),
                 ),
-
                 ListView.builder(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),// Ngăn ListView.builder cuộn độc lập

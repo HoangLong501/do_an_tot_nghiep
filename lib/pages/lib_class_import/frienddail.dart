@@ -81,7 +81,7 @@ onLoad()async{
                       " bạn chung",
                       style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w300
+                          fontWeight: FontWeight.w400
                       ),
                     ),
                   ),

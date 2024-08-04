@@ -24,6 +24,7 @@ class _ProfileState extends State<Profile> {
   bool myProfile=true;
   int quantityFriend=0;
   List friends=[] , temp=[];
+  bool openEye = true;
   onLoad()async{
     friends = await DatabaseMethods().getFriends(widget.idProfileUser);
     friends.remove(widget.idProfileUser);
@@ -241,14 +242,29 @@ class _ProfileState extends State<Profile> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Bạn bè",style: TextStyle(fontWeight: FontWeight.w600,fontSize: 18),),
+                  Row(
+                    children: [
+                      Text("Bạn bè",style: TextStyle(fontWeight: FontWeight.w600,fontSize: 18),),
+                      IconButton(onPressed: ()async{
+
+                        setState(() {
+                          openEye = !openEye;
+                        });
+                        await FirebaseFirestore.instance.collection("user").doc(widget.idProfileUser).collection("advance").doc(widget.idProfileUser)
+                            .set({
+                          "privateFriend":openEye,
+                        });
+                        print(openEye);
+                      }, icon: Icon(openEye==true ? CupertinoIcons.eye : CupertinoIcons.eye_slash , color: openEye==true ? Colors.blue :Colors.grey,))
+                    ],
+                  ),
                   TextButton(onPressed: (){}, child: Text("Tìm bạn bè",style: TextStyle(fontSize: 16,color: Colors.blue),)),
                 ],
               ),
             ),
             Container(
               padding:EdgeInsets.only(left: 20,right: 20),
-              height: 300,
+              height: temp.isEmpty? 10: temp.length>3? 300 :150,
               child: GridView.builder(
                 physics: NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

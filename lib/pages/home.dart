@@ -14,6 +14,7 @@ import 'package:flutter/rendering.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
+import 'add_friend/received.dart';
 import 'lib_class_import/itemProvider.dart';
 import 'lib_class_import/newsfeed_detail.dart';
 import 'package:page_transition/page_transition.dart';
@@ -29,7 +30,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  Stream? myNewsfeedStream;
+  
   Stream<QuerySnapshot>? listStory;
   final ScrollController _scrollController = ScrollController();
   bool isScrollDown =false,type=false;
@@ -44,7 +45,7 @@ class _HomeState extends State<Home> {
   bool hasMore = true;
   DocumentSnapshot? lastDocument;
   List<DocumentSnapshot> posts = [];
-
+  Stream<QuerySnapshot>? notiStream;
   Future<void> saveTokenToDatabase(String token ) async {
     // Assume user is logged in for this example
     await FirebaseFirestore.instance
@@ -58,7 +59,6 @@ class _HomeState extends State<Home> {
     // Get the token each time the application loads
     String? token = await FirebaseMessaging.instance.getToken();
     await saveTokenToDatabase(token!);
-    // Any time the token refreshes, store this in the database too.
     FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
   }
 
@@ -67,6 +67,7 @@ class _HomeState extends State<Home> {
     imagemyuser = await SharedPreferenceHelper().getImageUser();
     listNewFeed= DatabaseMethods().getFriends(idUserDevice!);
     listFriends=await DatabaseMethods().getFriends(idUserDevice!);
+    notiStream =  FirebaseFirestore.instance.collection("notification").doc(idUserDevice).collection("detail").where("check",isEqualTo: false).snapshots();
     await setupToken();
     if (mounted) {
       setState(() {});
@@ -322,8 +323,7 @@ class _HomeState extends State<Home> {
               children: [
                 GestureDetector(
                     onTap: (){
-                      print("press ---TREND-- Bottom Appbar");
-
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>Received()));
                     },
                     child: Icon(Icons.people ,
                       color:Colors.grey,
@@ -335,13 +335,37 @@ class _HomeState extends State<Home> {
                 GestureDetector(
                     onTap: (){
                       Navigator.of(context).push(MaterialPageRoute(builder: (context)=>NotificationPage()));
-                      print("press ---TREND-- Bottom Appbar");
-                      // setState(() {
-                      //
-                      // });
                     },
-                    child: Icon(Icons.notifications_none_outlined ,
-                      color: Colors.grey,
+                    child: StreamBuilder(
+                        stream: notiStream,
+                        builder: (context , snapshot){
+                          if(snapshot.hasData){
+                            if(snapshot.data!.size!=0){
+                              return Stack(
+                                  alignment: AlignmentDirectional.topEnd,
+                                  children: [
+                                    Positioned(
+                                        top:-5,
+                                        right: -1,
+                                        child: Text("${snapshot.data!.size}",style: TextStyle(
+                                            color: Colors.red
+                                        ),)),
+                                    Icon(Icons.notifications_none_outlined ,
+                                      color: Colors.red.shade300,
+                                    ),
+                                  ]
+                              );
+                            }else{
+                              return Icon(Icons.notifications_none_outlined ,
+                                color: Colors.grey,
+                              );
+                            }
+                          }else{
+                            return Icon(Icons.notifications_none_outlined ,
+                              color: Colors.grey,
+                            );
+                          }
+                        },
                     )),
               ],
             ),

@@ -4,7 +4,7 @@ import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:intl/intl.dart';
 import '../notifications/noti.dart';
 class HintDetail extends StatefulWidget {
   final String id ;
@@ -121,13 +121,23 @@ class _HintDetailState extends State<HintDetail> {
                       };
                       //print("send noti");
                       String title="thông báo mới ";
-                      String body="Bạn có lơ mời kết bạn từ $myName";
+                      String body="Bạn có lời mời kết bạn từ $myName";
                       DatabaseMethods().updateCheckHint(myId, id, hintInfoMap);
                       DatabaseMethods().addFriends(myId, id, friendInfoMap);
                       for(int i=0; i<tokens.length;i++) {
                         NotificationDetail().sendAndroidNotification(
                             tokens[i], title, body);
                       }
+                      DateTime now = DateTime.now();
+                      Timestamp timestamp = Timestamp.fromDate(now);
+                      String timeNow = DateFormat('h:mma').format(now);
+                      await FirebaseFirestore.instance.collection("notification").doc(id).collection("detail").doc().set({
+                        "ID":myId,
+                        "content":"$myName đã gửi cho bạn lời mời kết bạn",
+                        "ts": timeNow,
+                        "timestamp":timestamp,
+                        "check":false
+                      });
                       setState(() {
                         check=1;
                       });

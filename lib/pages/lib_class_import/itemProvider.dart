@@ -20,13 +20,18 @@ class ItemProvider with ChangeNotifier {
   }
 
   Future<void> getHideItem(String id) async {
-    DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(id)
-        .collection("advance").doc(id).get();
-    if (data.exists) {
-      _hideNewsfeed = List<String>.from(data.get("hideNewsfeed"));
-    } else {
+    try{
+      DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(id)
+          .collection("advance").doc(id).get();
+      if (data.exists) {
+        _hideNewsfeed = List<String>.from(data.get("hideNewsfeed"));
+      } else {
+        _hideNewsfeed = [];
+      }
+    }catch(e){
       _hideNewsfeed = [];
     }
+
   }
 
   Future<void> getUnfollowedUsers(String id) async {

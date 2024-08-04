@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
-
-import '../service/database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../service/shared_pref.dart';
 
 class NotificationPage extends StatefulWidget {
@@ -14,30 +12,14 @@ class NotificationPage extends StatefulWidget {
 class _NotificationPageState extends State<NotificationPage> {
   TextEditingController questionController = TextEditingController();
   String? myId;
+  List item=[];
 
   onLoad()async{
-    // final model = GenerativeModel(
-    //   model: 'gemini-1.5-flash',
-    //   apiKey: "AIzaSyBilZaA-VH8wpnhQxPqkBhYpEORWsU8pks",
-    // );
-    // final prompt = 'Xin chào , bạn có biết tiếng Việt không';
-    //
-    // final response = await model.generateContent([Content.text(prompt)]);
-    // print(response.text);
-    // myId = await SharedPreferenceHelper().getIdUser();
-    // String idRoomChat = SharedPreferenceHelper().getChatRoomIdUserName("openai", myId!);
-    // String theme = Colors.cyan.shade200.value.toString();
-    // Map<String , dynamic> chatRoomInfoMap={
-    //   "LastMessage":"Tôi là trợ lý ảo , bạn có thể hỏi tôi hoặc tâm sự với tôi",
-    //   "UserContact":"openai",
-    //   "ID":idRoomChat,
-    //   "Time":DateTime.now().toString(),
-    //   "user":[myId,"openai"],
-    //   "Theme":theme,
-    // };
-    // print(chatRoomInfoMap);
-    // DatabaseMethods().createChatRoom(idRoomChat, chatRoomInfoMap);
-
+    myId = await SharedPreferenceHelper().getIdUser();
+    QuerySnapshot data = await FirebaseFirestore.instance.collection("notification").doc(myId).collection("detail").get();
+    for(var value in data.docs){
+      item.add(value);
+    }
     setState(() {
 
     });
@@ -54,32 +36,103 @@ class _NotificationPageState extends State<NotificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('OpenAI Interaction'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+        automaticallyImplyLeading: false,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            TextField(
-              controller: questionController,
-              decoration: InputDecoration(
-                labelText: 'Enter your question',
-              ),
+            Row(
+              children: [
+                IconButton(onPressed: (){
+                  Navigator.of(context).pop();
+                }, icon: Icon(Icons.arrow_back , size: 32,)),
+                Text('Thông báo' , style: TextStyle(fontWeight: FontWeight.w700),),
+              ],
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // if (questionController.text.isNotEmpty) {
-                //   _getResponse(_controller.text);
-                // }
-              },
-              child: Text('Get Response'),
-            ),
-            SizedBox(height: 20),
-
+            IconButton(onPressed: (){}, icon: Icon(Icons.search , size: 32,))
           ],
         ),
       ),
+      body: Container(
+        margin: EdgeInsets.only(top: 10),
+        height: MediaQuery.of(context).size.height/1.2,
+        child: ListView.builder(
+            itemCount: item.length,
+            itemBuilder:(context , index){
+              return DetailNoti(id: item[index].get("ID"),content: item[index].get("content"),ts: item[index].get("ts"),);
+            }
+        ),
+      )
     );
   }
+}
+
+class DetailNoti extends StatefulWidget {
+  final String id , content , ts;
+  const DetailNoti({super.key , required this.id , required this.content , required this.ts});
+
+  @override
+  State<DetailNoti> createState() => _DetailNotiState();
+}
+
+class _DetailNotiState extends State<DetailNoti> {
+  String image = "";
+  String? myId;
+
+  updateCheckNotification(String id)async{
+    QuerySnapshot data = await FirebaseFirestore.instance.collection("notification").doc(id).collection("detail").where("check",isEqualTo: false).get();
+    for( var value in data.docs){
+      await FirebaseFirestore.instance.collection("notification").doc(id).collection("detail").doc(value.id).update({"check":true});
+    }
+  }
+
+  onLoad()async{
+    myId = await SharedPreferenceHelper().getIdUser();
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(widget.id).get();
+    image = data.get("imageAvatar");
+    await updateCheckNotification(myId!);
+    setState(() {
+
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    onLoad();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.all(10),
+      padding: EdgeInsets.all(4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          image!=""? CircleAvatar(
+            backgroundImage: Image.network(image).image,
+            radius: 36,
+          ):CircleAvatar(
+            backgroundColor: Colors.grey,
+            radius: 36,
+          ),
+          SizedBox(width: 10,),
+          Container(
+            height: 80,
+            width: MediaQuery.of(context).size.width/1.4,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.content , style: TextStyle(fontSize: 16 ,),),
+                Text(widget.ts , style: TextStyle(color: Colors.grey.shade600),)
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 }

@@ -1,6 +1,6 @@
 import 'dart:async';
 //import 'dart:js_interop';
-
+import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:do_an_tot_nghiep/pages/lib_class_import/newsfeed_detail.dart';
 import 'package:do_an_tot_nghiep/pages/option_profile.dart';
@@ -24,11 +24,17 @@ class ProfileFriend extends StatefulWidget {
 class _ProfileState extends State<ProfileFriend> {
   Stream<QuerySnapshot>? myNewsfeedStream;
   String name="",image="",myId="",myName="",background="",relationship="",born="",address="",since="";
-  List<String> tokens=[];
+  List tokens=[];
   int check=0;
   List follower =[] , follow=[] , friends=[] , temp=[];
   int quantityFriend=0;
   bool followed = true;
+  bool privateFriend = false;
+  
+  getTokens()async{
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(widget.idProfileUser).get();
+    tokens = data.get("tokens");
+  }
   getDetail()async{
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("userinfo").doc(widget.idProfileUser).get();
     try{
@@ -47,13 +53,27 @@ class _ProfileState extends State<ProfileFriend> {
   }
   upCheck() async {
      QuerySnapshot listFriend= await FirebaseFirestore.instance
-         .collection("relationship").doc(myId).collection("friend")
-         .where("status", isEqualTo: "friend").get();
-     var doc=listFriend.docs;
-    for(int i=0;i<doc.length;i++){
-      if(doc[i]["id"]==widget.idProfileUser){
-        check=2;
+         .collection("relationship").doc(widget.idProfileUser).collection("friend")
+         .get();
+    for(var data in listFriend.docs){
+      if(data.id==myId){
+        print(data.id==myId);
+        if(data["status"]=="pending"){
+            check = 1;
+        }else{
+          check = 2;
+        }
       }
+    }
+
+  }
+  getStatusPrivate()async{
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(widget.idProfileUser)
+        .collection("advance").doc(widget.idProfileUser).get();
+    try{
+      privateFriend = data.get("privateFriend");
+    }catch(e){
+      privateFriend = false;
     }
   }
   getStatusFollow()async{
@@ -84,7 +104,6 @@ class _ProfileState extends State<ProfileFriend> {
     name = data2.get("Username");
     myName=(await SharedPreferenceHelper().getUserName())!;
     myNewsfeedStream = DatabaseMethods().getMyNewsProfile(widget.idProfileUser , myId);
-    check=await DatabaseMethods().getCkheckHint(myId, widget.idProfileUser) ;
     await upCheck();
     friends = await DatabaseMethods().getFriends(widget.idProfileUser);
     friends.remove(myId);
@@ -95,6 +114,8 @@ class _ProfileState extends State<ProfileFriend> {
       temp=friends;
     }
     await getStatusFollow();
+    await getStatusPrivate();
+    await getTokens();
     setState(() {
     });
   }
@@ -178,23 +199,30 @@ class _ProfileState extends State<ProfileFriend> {
                       ),
                       child:
                           GestureDetector(
-                            onTap: (){
-                              Map<String, dynamic>hintInfoMap={
-                                "check":1
-                              };
+                            onTap: ()async{
                               Map<String,dynamic> friendInfoMap={
                                 "id": myId,
                                 "status":"pending"
                               };
-                              //print("send noti");
-                              String title="thông báo mới ";
-                              String body="Bạn có lơ mời kết bạn từ $myName";
-                              DatabaseMethods().updateCheckHint(myId, widget.idProfileUser, hintInfoMap);
+                              String title="Thông báo mới ";
+                              String body="Bạn có lời mời kết bạn từ $myName";
                               DatabaseMethods().addFriends(myId, widget.idProfileUser, friendInfoMap);
+                              print("token lenghth ${tokens.length}");
                               for(int i=0; i<tokens.length;i++) {
                                 NotificationDetail().sendAndroidNotification(
-                                    tokens[i], title, body);
+                                    tokens[i], body,title);
+                                print(tokens[i]);
                               }
+                              DateTime now = DateTime.now();
+                              Timestamp timestamp = Timestamp.fromDate(now);
+                              String timeNow = DateFormat('h:mma').format(now);
+                              await FirebaseFirestore.instance.collection("notification").doc(widget.idProfileUser).collection("detail").doc().set({
+                                  "ID":myId,
+                                  "content":body,
+                                  "ts": timeNow,
+                                  "timestamp":timestamp,
+                                  "check":false
+                              });
                               setState(() {
                                 check=1;
                               });
@@ -218,7 +246,6 @@ class _ProfileState extends State<ProfileFriend> {
                     )else if(check==2)
                    GestureDetector(
                      onTap: (){
-
                        showMaterialModalBottomSheet(
                            context: context, builder: (context)=>Container(
                          height: MediaQuery.of(context).size.height/3.4,
@@ -330,10 +357,6 @@ class _ProfileState extends State<ProfileFriend> {
                         child:
                         GestureDetector(
                           onTap: (){
-                            Map<String, dynamic>hintInfoMap={
-                              "check":0
-                            };
-                            DatabaseMethods().updateCheckHint(myId, widget.idProfileUser, hintInfoMap);
                             DatabaseMethods().deleteReceived(myId, widget.idProfileUser);
                             setState(() {
                               check=0;
@@ -414,16 +437,11 @@ class _ProfileState extends State<ProfileFriend> {
                       };
                       await FirebaseFirestore.instance.collection("relationship").doc(widget.idProfileUser)
                       .collection("follower").doc(widget.idProfileUser).update(dataInfoFollower);
-
                       Map<String , dynamic> dataInfoFollow ={
                         "data":follow
                       };
                       await FirebaseFirestore.instance.collection("relationship").doc(myId)
                           .collection("follow").doc(myId).update(dataInfoFollow);
-
-
-                      // print(widget.idProfileUser);
-                      // print(myId);
                   },
                   child:  Container(
                     margin: EdgeInsets.only(top: 10,left: 10),
@@ -544,24 +562,26 @@ class _ProfileState extends State<ProfileFriend> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text("Bạn bè",style: TextStyle(fontWeight: FontWeight.w600,fontSize: 18),),
-                  TextButton(onPressed: (){}, child: Text("Tìm bạn bè",style: TextStyle(fontSize: 16,color: Colors.blue),)),
+                  TextButton(onPressed: (){
+                    print(privateFriend);
+                  }, child: Text("Tìm bạn bè",style: TextStyle(fontSize: 16,color: Colors.blue),)),
                 ],
               ),
             ),
             Container(
               padding:EdgeInsets.only(left: 20,right: 20),
-              height: 300,
-              child: GridView.builder(
+              height:privateFriend? 10: temp.length>3? 300 :150,
+              child: !privateFriend ? GridView.builder(
                 physics: NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  mainAxisSpacing: 20,// Số lượng cột
+                  mainAxisSpacing: 20,
                 ),
                 itemBuilder: (BuildContext context, int index) {
                   return FriendDetail(id: temp[index]);
                 },
                 itemCount: temp.length, // Tổng số item trong grid
-              ),
+              ):SizedBox(),
             ),
             Container(
               margin: EdgeInsets.only(left: 20,right: 20,top: 10,bottom: 10),

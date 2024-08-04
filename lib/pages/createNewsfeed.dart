@@ -97,7 +97,18 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
         NotificationDetail().sendNotificationToAnyDevice(follower,
             "$username vừa đăng một tin mới",
             "Bạn có thông báo mới");
+        DateTime now = DateTime.now();
+        Timestamp timestamp = Timestamp.fromDate(now);
+        String timeNow = DateFormat('h:mma').format(now);
+        await FirebaseFirestore.instance.collection("notification").doc(follower).collection("detail").doc().set({
+          "ID":idUser,
+          "content":"$username vừa đăng một tin mới",
+          "ts": timeNow,
+          "timestamp":timestamp,
+          "check":false
+        });
       }
+
 
 
     }

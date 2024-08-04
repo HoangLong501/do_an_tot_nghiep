@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:do_an_tot_nghiep/pages/home.dart';
-import 'package:do_an_tot_nghiep/pages/share1.dart';
 import 'package:do_an_tot_nghiep/service/database.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
@@ -152,6 +151,7 @@ class _VideoState extends State<Video> {
   @override
   void dispose() {
     videoControllers.forEach((_, controller) => controller.dispose());
+    currentController?.dispose();
     super.dispose();
   }
 
@@ -227,7 +227,6 @@ class _VideoState extends State<Video> {
               String videoContent = videoData['content'];
               Map<String, dynamic> user = listUser[index];
               String idvideo = videoData['idvideo'];
-
               return VisibilityDetector(
                 key: Key(index.toString()),
                 onVisibilityChanged: (info) {

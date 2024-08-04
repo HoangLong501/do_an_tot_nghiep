@@ -20,7 +20,7 @@ class _FriendsState extends State<Received> {
   String id="";
   onLoad()async{
   id= (await SharedPreferenceHelper().getIdUser())! ;
-  getListReceived=await DatabaseMethods().getReceived(id);
+  getListReceived= DatabaseMethods().getReceived(id);
   setState(() {
 
   });

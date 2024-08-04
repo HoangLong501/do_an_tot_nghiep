@@ -112,7 +112,6 @@ class _HintFriendState extends State<HintFriend> {
                         Map<String, dynamic> data =snapshot.data!.docs[index].data() as Map<String, dynamic>;
                         //print("id laf : ${data['id']}");
                         return AllHintDetail(idHint: data["id"]);
-
                       }
                   ),
 
