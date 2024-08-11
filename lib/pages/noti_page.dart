@@ -52,7 +52,7 @@ class _NotificationPageState extends State<NotificationPage> {
           ],
         ),
       ),
-      body: Container(
+      body:item.isNotEmpty ? Container(
         margin: EdgeInsets.only(top: 10),
         height: MediaQuery.of(context).size.height/1.2,
         child: ListView.builder(
@@ -61,7 +61,7 @@ class _NotificationPageState extends State<NotificationPage> {
               return DetailNoti(id: item[index].get("ID"),content: item[index].get("content"),ts: item[index].get("ts"),);
             }
         ),
-      )
+      ):Center(child: Text("Bạn chưa có thông báo",style: TextStyle(fontSize: 20),),)
     );
   }
 }

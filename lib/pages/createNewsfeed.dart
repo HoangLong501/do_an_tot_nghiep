@@ -325,20 +325,25 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
                                             ),
                                           ),
                                         ),
-                                        Container(
-                                          margin: EdgeInsets.only(left: 8),
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(4),
-                                              color: Colors.lightBlueAccent.shade100
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(2),
-                                            child: Row(
-                                              children: [
-                                                Icon(Icons.add,size: 16,color: Colors.blue.shade600,),
-                                                Text("Album",style: TextStyle(color:Colors.blue.shade600, ),),
-                                                Icon(Icons.arrow_drop_down,size: 16,color: Colors.blue.shade600,),
-                                              ],
+                                        TextButton(
+                                          onPressed: (){
+                                            _pickImageGallery();
+                                          },
+                                          child: Container(
+                                            margin: EdgeInsets.only(left: 8),
+                                            decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(4),
+                                                color: Colors.lightBlueAccent.shade100
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(2),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.add,size: 16,color: Colors.blue.shade600,),
+                                                  Text("Album",style: TextStyle(color:Colors.blue.shade600, ),),
+                                                  Icon(Icons.arrow_drop_down,size: 16,color: Colors.blue.shade600,),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -463,7 +468,7 @@ class _CreateNewsFeedState extends State<CreateNewsFeed> {
 }
 class ViewerDialog extends StatefulWidget {
   final List friends;
-  ViewerDialog({required this.friends});
+  ViewerDialog({super.key, required this.friends});
 
   @override
   _ViewerDialogState createState() => _ViewerDialogState();

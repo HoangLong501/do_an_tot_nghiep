@@ -1,4 +1,5 @@
 import 'package:do_an_tot_nghiep/pages/lib_class_import/report_user.dart';
+import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../service/database.dart';
@@ -12,6 +13,8 @@ class OptionProfile extends StatefulWidget {
 
 class _OptionProfileState extends State<OptionProfile> {
   String username="";
+  String? myId;
+  bool checkFriend = false;
   Future<void> getData() async {
     try {
       QuerySnapshot querySnapshot = await DatabaseMethods().getUserById(
@@ -21,10 +24,20 @@ class _OptionProfileState extends State<OptionProfile> {
     }catch(error){
       print("lỗi lấy thông tin người dùng");
     }
-
   }
-  onLooad() async {
+  getCheckFriend()async{
+    QuerySnapshot data = await FirebaseFirestore.instance.collection("relationship").doc(widget.idProfile).collection("friend")
+        .where("status" , isEqualTo: "friend").get();
+    for(var value in data.docs){
+      if(value.id == myId){
+        checkFriend = true;
+      }
+    }
+  }
+  onLoad() async {
+    myId =await SharedPreferenceHelper().getIdUser();
     await getData();
+    await getCheckFriend();
     setState(() {
 
     });
@@ -33,7 +46,7 @@ class _OptionProfileState extends State<OptionProfile> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    onLooad();
+    onLoad();
   }
   @override
   Widget build(BuildContext context) {
@@ -209,6 +222,31 @@ class _OptionProfileState extends State<OptionProfile> {
               padding: EdgeInsets.only(left: 58),
               child: Divider(color: Colors.grey,),
             ),
+            checkFriend ? TextButton(
+              onPressed: ()async{
+                print(widget.idProfile);
+                print(myId);
+                await FirebaseFirestore.instance.collection("relationship").doc(widget.idProfile)
+                .collection("friend").doc(myId).delete();
+                await FirebaseFirestore.instance.collection("relationship").doc(myId)
+                    .collection("friend").doc(widget.idProfile).delete();
+                //Navigator.of(context).pop(0);
+              },
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.person_off,
+                    size: 35,
+                  ),
+                  SizedBox(width: 10,),
+                  Text("Hủy bạn bè",
+                    style: TextStyle(
+                        fontSize: 18
+                    ),
+                  )
+                ],
+              ),
+            ):SizedBox(),
           ],
         ),
       ),

@@ -30,6 +30,7 @@ class _ProfileState extends State<ProfileFriend> {
   int quantityFriend=0;
   bool followed = true;
   bool privateFriend = false;
+  bool privateDetail = false;
   
   getTokens()async{
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(widget.idProfileUser).get();
@@ -38,17 +39,30 @@ class _ProfileState extends State<ProfileFriend> {
   getDetail()async{
     DocumentSnapshot data = await FirebaseFirestore.instance.collection("userinfo").doc(widget.idProfileUser).get();
     try{
-      relationship = data.get("relationship");
-      born = data.get("born");
-      address = data.get("address");
-      since = data.get("since");
       background = data.get("imageBackground");
     }catch(e){
-      relationship ="";
-      born = "";
-      address = "";
-      since = "";
       background = "";
+    }
+    try{
+      since = data.get("since");
+    }catch(e){
+      since = "";
+    }
+    try{
+      address = data.get("address");
+    }catch(e){
+      address = "";
+    }
+    try{
+      born = data.get("born");
+    }catch(e){
+      born = "";
+    }
+    try{
+      relationship = data.get("relationship");
+
+    }catch(e){
+      relationship ="";
     }
   }
   upCheck() async {
@@ -74,6 +88,15 @@ class _ProfileState extends State<ProfileFriend> {
       privateFriend = data.get("privateFriend");
     }catch(e){
       privateFriend = false;
+    }
+  }
+  getStatusPrivateDetail()async{
+    DocumentSnapshot data = await FirebaseFirestore.instance.collection("user").doc(widget.idProfileUser)
+        .collection("advance").doc(widget.idProfileUser).get();
+    try{
+      privateDetail = data.get("privateDetail");
+    }catch(e){
+      privateDetail = false;
     }
   }
   getStatusFollow()async{
@@ -115,7 +138,9 @@ class _ProfileState extends State<ProfileFriend> {
     }
     await getStatusFollow();
     await getStatusPrivate();
+    await getStatusPrivateDetail();
     await getTokens();
+    await getDetail();
     setState(() {
     });
   }
@@ -150,12 +175,17 @@ class _ProfileState extends State<ProfileFriend> {
             ),
             Stack(
               children: [
-                // Image(
-                //     image: Image.network("https://static.vecteezy.com/system/resources/thumbnails/001/849/553/small_2x/modern-gold-background-free-vector.jpg").image,
-                //     height: 240,
-                //     width: MediaQuery.of(context).size.width/1.0,
-                //     fit: BoxFit.fitWidth,
-                // ),
+                background!=""? Image(
+                    image: Image.network(background).image,
+                    height: 240,
+                    width: MediaQuery.of(context).size.width/1.0,
+                    fit: BoxFit.fitWidth,
+                ):Image(
+                  image: Image.asset("assets/images/backgroundEmpty.png").image,
+                  height: 240,
+                  width: MediaQuery.of(context).size.width/1.0,
+                  fit: BoxFit.fitWidth,
+                ),
                 Container(
                   height: 240,
                   width: MediaQuery.of(context).size.width/1.0,
@@ -410,8 +440,11 @@ class _ProfileState extends State<ProfileFriend> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child:GestureDetector(
-                        onTap: (){
-                          Navigator.push(context,MaterialPageRoute(builder: (context)=>OptionProfile(idProfile:widget.idProfileUser)));
+                        onTap: ()async{
+                          var kq=await Navigator.push(context,MaterialPageRoute(builder: (context)=>OptionProfile(idProfile:widget.idProfileUser)));
+                          setState(() {
+                            check = kq;
+                          });
                         },
                     child: Center(child: Icon(Icons.more_horiz)),
                       )
@@ -500,7 +533,7 @@ class _ProfileState extends State<ProfileFriend> {
               padding:EdgeInsets.only(top: 10,left: 20),
               child: Text("Chi tiết",style: TextStyle(fontSize: 20,fontWeight: FontWeight.w600),),
             ),
-            Container(
+            !privateDetail ? Container(
               padding:EdgeInsets.only(top: 10,left: 20),
               child: Column(
                 children: [
@@ -540,7 +573,7 @@ class _ProfileState extends State<ProfileFriend> {
                     ],
                   ):SizedBox(),
                   SizedBox(height: 8,),
-                  address!="" && born!="" && since!="" && relationship !="" ? Row(
+                  address!="" && born!="" || since!="" && relationship !="" ? Row(
                     children: [
                       Icon(Icons.list , color: Colors.grey.shade600,),
                       SizedBox(width: 10,),
@@ -555,7 +588,7 @@ class _ProfileState extends State<ProfileFriend> {
                   SizedBox(height: 4,),
                 ],
               ),
-            ),
+            ):Center(child: Text("Người dùng đã ẩn thông tin chi tiết"),),
             Container(
               padding: EdgeInsets.only(left: 20,right: 20,top: 10),
               child: Row(
@@ -570,7 +603,7 @@ class _ProfileState extends State<ProfileFriend> {
             ),
             Container(
               padding:EdgeInsets.only(left: 20,right: 20),
-              height:privateFriend? 10: temp.length>3? 300 :150,
+              height:privateFriend? 40: temp.length>3? 300 :150,
               child: !privateFriend ? GridView.builder(
                 physics: NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -581,7 +614,7 @@ class _ProfileState extends State<ProfileFriend> {
                   return FriendDetail(id: temp[index]);
                 },
                 itemCount: temp.length, // Tổng số item trong grid
-              ):SizedBox(),
+              ):Center(child: Text("Người dùng đã ẩn thông tin bạn bè"),),
             ),
             Container(
               margin: EdgeInsets.only(left: 20,right: 20,top: 10,bottom: 10),

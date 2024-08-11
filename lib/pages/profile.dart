@@ -25,6 +25,7 @@ class _ProfileState extends State<Profile> {
   int quantityFriend=0;
   List friends=[] , temp=[];
   bool openEye = true;
+  bool openEyeDetail = true;
   onLoad()async{
     friends = await DatabaseMethods().getFriends(widget.idProfileUser);
     friends.remove(widget.idProfileUser);
@@ -172,7 +173,21 @@ class _ProfileState extends State<Profile> {
             ),
             Container(
               padding:EdgeInsets.only(top: 10,left: 20),
-              child: Text("Chi tiết",style: TextStyle(fontSize: 20,fontWeight: FontWeight.w600),),
+              child: Row(
+                children: [
+                  Text("Chi tiết",style: TextStyle(fontSize: 20,fontWeight: FontWeight.w600),),
+                  IconButton(onPressed: ()async{
+                    setState(() {
+                      openEyeDetail = !openEyeDetail;
+                    });
+                    await FirebaseFirestore.instance.collection("user").doc(widget.idProfileUser).collection("advance").doc(widget.idProfileUser)
+                        .set({
+                      "privateDetail":openEyeDetail,
+                      "privateFriend":openEye,
+                    });
+                  }, icon: Icon(openEyeDetail==true ? CupertinoIcons.eye : CupertinoIcons.eye_slash , color: openEyeDetail==true ? Colors.blue :Colors.grey,))
+                ],
+              ),
             ),
             Container(
               padding:EdgeInsets.only(top: 10,left: 20),
@@ -252,6 +267,7 @@ class _ProfileState extends State<Profile> {
                         });
                         await FirebaseFirestore.instance.collection("user").doc(widget.idProfileUser).collection("advance").doc(widget.idProfileUser)
                             .set({
+                          "privateDetail":openEyeDetail,
                           "privateFriend":openEye,
                         });
                         print(openEye);

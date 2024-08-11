@@ -521,6 +521,19 @@ class _LoginState extends State<Login> {
 
           DatabaseMethods().addUserInfo(id, userInfoMap1);
           DatabaseMethods().addUserDetail(id, userInfoMap);
+
+          String idRoomChat = SharedPreferenceHelper().getChatRoomIdUserName(id, "openai");
+          String theme = Colors.cyan.shade200.value.toString();
+          Map<String , dynamic> chatRoomInfoMap={
+            "LastMessage":"Xin chào $userName , Hôm nay tôi có thể giúp gì cho bạn?",
+            "UserContact":"openai",
+            "ID":idRoomChat,
+            "Time":DateTime.now().toString(),
+            "user":["openai",id],
+            "Theme":theme,
+          };
+          DatabaseMethods().createChatRoom(idRoomChat, chatRoomInfoMap);
+          await FirebaseFirestore.instance.collection("gemini").doc(id).set({});
         }
         QuerySnapshot querySnapshot = await DatabaseMethods().getUserByEmail(email);
         birthDate = "${querySnapshot.docs[0]["Birthdate"]}";

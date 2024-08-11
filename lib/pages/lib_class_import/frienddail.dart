@@ -1,3 +1,4 @@
+import 'package:do_an_tot_nghiep/pages/profile_friend.dart';
 import 'package:do_an_tot_nghiep/service/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,15 +21,13 @@ Future<void> getData() async {
         widget.idFriend);
     username = querySnapshot.docs[0]["Username"];
     image = querySnapshot.docs[0]["imageAvatar"];
-    print("dã vào");
-    print(username);
+
   }catch(error){
     print("Lỗi khi lấy dữ liệu người dùng");
   }
 }
 onLoad()async{
-  print(widget.idFriend);
-  print("ssssssssssssssssssssssssssssssss");
+
   id=(await SharedPreferenceHelper().getIdUser())!;
 
   await  getData();
@@ -45,6 +44,10 @@ onLoad()async{
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: (){
+        print(widget.idFriend);
+        Navigator.of(context).push(MaterialPageRoute(builder: (context)=>ProfileFriend(idProfileUser: widget.idFriend)));
+
+
       },
       child: Padding(
         padding: const EdgeInsets.only(left: 5,bottom: 10),
@@ -52,10 +55,12 @@ onLoad()async{
           children: [
             Container(
               height: 70,
-              child: CircleAvatar(
+              child: image !=""? CircleAvatar(
                 radius: 50,
                 backgroundImage: NetworkImage(image,
                 ),
+              ):CircleAvatar(radius: 50 ,
+              backgroundColor: Colors.grey,
               ),
             ),
             Padding(
@@ -78,7 +83,7 @@ onLoad()async{
                   ),
                   Container(
                     child: Text(
-                      " bạn chung",
+                      "... bạn chung",
                       style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400

@@ -118,11 +118,11 @@ class _MenuState extends State<Menu> {
                        // Navigator.of(context).push(MaterialPageRoute(builder: (context)=>CreateNewPage()));
                     },
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Icon(CupertinoIcons.plus_circle_fill,color: Colors.grey.shade700,size: 30,),
+                        SizedBox(width: 10,),
                         Text("Tạo trang cá nhân hoặc Trang mới",
-                        style: TextStyle(fontSize: 20,color: Colors.grey.shade700),
+                        style: TextStyle(fontSize: 17,color: Colors.grey.shade700),
                         ),
                       ],
                     ),
